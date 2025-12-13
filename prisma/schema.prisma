@@ -1,0 +1,144 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// プレイヤー
+model Player {
+  id        Int      @id @default(autoincrement())
+  memberId  String   @unique @map("member_id") // 難波店独自ID
+  gameId    String?  @map("game_id")
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  visitations Visit[]
+  storeCoin   StoreCoin?
+
+  @@map("players")
+}
+
+// トーナメント定義（日付ごと）
+model Tournament {
+  id        Int      @id @default(autoincrement())
+  name      String
+  eventDate DateTime @map("event_date")
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  entries   TournamentEntry[]
+
+  @@map("tournaments")
+}
+
+// 来店（1日1プレイヤー1レコード）
+model Visit {
+  id             Int      @id @default(autoincrement())
+  playerId       Int      @map("player_id")
+  player         Player   @relation(fields: [playerId], references: [id])
+  visitDate      DateTime @map("visit_date")
+  entranceFee    Int?     @map("entrance_fee")
+  foodAmount     Int?     @map("food_amount")
+  discountAmount Int?     @map("discount_amount")
+  createdAt      DateTime @default(now()) @map("created_at")
+  
+  tournamentEntries TournamentEntry[]
+  ringGameEntry     RingGameEntry?
+  settlements       Settlement[]
+
+  @@map("visits")
+}
+
+// トナメ参加
+model TournamentEntry {
+  id           Int      @id @default(autoincrement())
+  visitId      Int      @map("visit_id")
+  visit        Visit    @relation(fields: [visitId], references: [id])
+  tournamentId Int      @map("tournament_id")
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  finalRank    Int?     @map("final_rank")
+  bountyCount  Int?     @map("bounty_count")
+  createdAt    DateTime @default(now()) @map("created_at")
+  
+  chipEvents   TournamentChipEvent[]
+
+  @@unique([visitId, tournamentId])
+  @@map("tournament_entries")
+}
+
+// ENTRY / REENTRY / ADD-ON
+enum TournamentChipEventType {
+  ENTRY
+  REENTRY
+  ADD_ON @map("ADD-ON")
+}
+
+model TournamentChipEvent {
+  id                Int                   @id @default(autoincrement())
+  tournamentEntryId Int                   @map("tournament_entry_id")
+  tournamentEntry   TournamentEntry       @relation(fields: [tournamentEntryId], references: [id])
+  eventType         TournamentChipEventType @map("event_type")
+  chipAmount        Int                   @map("chip_amount")
+  createdAt         DateTime              @default(now()) @map("created_at")
+
+  @@map("tournament_chip_events")
+}
+
+// リングゲーム参加
+model RingGameEntry {
+  id        Int      @id @default(autoincrement())
+  visitId   Int      @unique @map("visit_id")
+  visit     Visit    @relation(fields: [visitId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  chipEvents RingGameChipEvent[]
+
+  @@map("ring_game_entries")
+}
+
+// BUY_IN / CASH_OUT
+enum RingGameChipEventType {
+  BUY_IN
+  CASH_OUT
+}
+
+// リングゲームのチップの動きを記録する
+model RingGameChipEvent {
+  id              Int                   @id @default(autoincrement())
+  ringGameEntryId Int                   @map("ring_game_entry_id")
+  ringGameEntry   RingGameEntry         @relation(fields: [ringGameEntryId], references: [id])
+  eventType       RingGameChipEventType @map("event_type")
+  chipAmount      Int                   @map("chip_amount")
+  createdAt       DateTime              @default(now()) @map("created_at")
+
+  @@map("ring_game_chip_events")
+}
+
+// 来店ごとの最終的な収支
+model Settlement {
+  id          Int      @id @default(autoincrement())
+  visitId     Int      @map("visit_id")
+  visit       Visit    @relation(fields: [visitId], references: [id])
+  totalAmount Int      @map("total_amount")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("settlements")
+}
+
+// 店内コイン残高
+model StoreCoin {
+  id       Int    @id @default(autoincrement())
+  playerId Int    @unique @map("player_id")
+  player   Player @relation(fields: [playerId], references: [id])
+  balance  Int
+  
+  @@map("store_coins")
+}
