@@ -1,0 +1,186 @@
+"use client"
+
+import { useState } from "react"
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow
+} from "@/components/ui/table"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle
+} from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu"
+import { Search, MoreHorizontal, UserPlus, Filter, ArrowUpDown } from "lucide-react"
+
+// Mock Data
+type Player = {
+    id: number
+    memberId: string
+    name: string
+    balance: number
+    visitCount: number
+    lastVisit: string
+    status: "active" | "inactive" | "banned"
+}
+
+const mockPlayers: Player[] = [
+    { id: 1, memberId: "M001", name: "田中 太郎", balance: 15000, visitCount: 12, lastVisit: "2023-12-10", status: "active" },
+    { id: 2, memberId: "M002", name: "佐藤 花子", balance: 5000, visitCount: 5, lastVisit: "2023-12-05", status: "active" },
+    { id: 3, memberId: "M003", name: "鈴木 一郎", balance: 0, visitCount: 1, lastVisit: "2023-11-20", status: "inactive" },
+    { id: 4, memberId: "M004", name: "高橋 次郎", balance: 23000, visitCount: 20, lastVisit: "2023-12-12", status: "active" },
+    { id: 5, memberId: "M005", name: "伊藤 三郎", balance: -2000, visitCount: 3, lastVisit: "2023-10-15", status: "banned" },
+]
+
+export default function PlayersPage() {
+    const [searchTerm, setSearchTerm] = useState("")
+
+    const filteredPlayers = mockPlayers.filter(player =>
+        player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        player.memberId.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+
+    return (
+        <div className="container mx-auto py-10 space-y-8">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">プレイヤー一覧</h1>
+                    <p className="text-muted-foreground">
+                        登録されているプレイヤーの管理、検索、詳細確認が行えます。
+                    </p>
+                </div>
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                    <UserPlus className="mr-2 h-4 w-4" /> 新規登録
+                </Button>
+            </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>プレイヤーリスト</CardTitle>
+                    <CardDescription>
+                        全{mockPlayers.length}名中 {filteredPlayers.length}名を表示
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex items-center justify-between mb-4 gap-4">
+                        <div className="relative flex-1 max-w-sm">
+                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="名前または会員IDで検索..."
+                                className="pl-8"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm">
+                                <Filter className="mr-2 h-4 w-4" /> フィルター
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div className="rounded-md border">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-[100px]">会員ID</TableHead>
+                                    <TableHead>名前</TableHead>
+                                    <TableHead>ステータス</TableHead>
+                                    <TableHead className="text-right cursor-pointer hover:bg-muted/50 transition-colors">
+                                        <div className="flex items-center justify-end">
+                                            所持チップ
+                                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                                        </div>
+                                    </TableHead>
+                                    <TableHead className="text-right">来店回数</TableHead>
+                                    <TableHead className="text-right">最終来店日</TableHead>
+                                    <TableHead className="w-[50px]"></TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {filteredPlayers.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={7} className="h-24 text-center">
+                                            該当するプレイヤーが見つかりません。
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    filteredPlayers.map((player) => (
+                                        <TableRow key={player.id}>
+                                            <TableCell className="font-medium">{player.memberId}</TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar className="h-8 w-8">
+                                                        <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${player.name}`} alt={player.name} />
+                                                        <AvatarFallback>{player.name.slice(0, 2)}</AvatarFallback>
+                                                    </Avatar>
+                                                    <span>{player.name}</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge
+                                                    variant={
+                                                        player.status === "active" ? "default" :
+                                                            player.status === "inactive" ? "secondary" : "destructive"
+                                                    }
+                                                >
+                                                    {player.status === "active" ? "有効" :
+                                                        player.status === "inactive" ? "休眠" : "利用停止"}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right font-bold">
+                                                {player.balance.toLocaleString()} G
+                                            </TableCell>
+                                            <TableCell className="text-right">{player.visitCount}回</TableCell>
+                                            <TableCell className="text-right">{player.lastVisit}</TableCell>
+                                            <TableCell>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" className="h-8 w-8 p-0">
+                                                            <span className="sr-only">メニューを開く</span>
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuLabel>アクション</DropdownMenuLabel>
+                                                        <DropdownMenuItem onClick={() => navigator.clipboard.writeText(player.memberId)}>
+                                                            会員IDをコピー
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuItem>詳細を表示</DropdownMenuItem>
+                                                        <DropdownMenuItem>編集する</DropdownMenuItem>
+                                                        <DropdownMenuItem className="text-destructive">削除する</DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                    <div className="mt-4 text-xs text-muted-foreground text-center">
+                        全データ表示中
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    )
+}
