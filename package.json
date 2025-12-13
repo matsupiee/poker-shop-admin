@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "prisma:dev": "npx prisma dev --db-port 5432"
   },
   "dependencies": {
     "@prisma/client": "^7.1.0",
