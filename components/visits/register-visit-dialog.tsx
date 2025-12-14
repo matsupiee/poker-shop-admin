@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label"
 
 interface RegisterVisitDialogProps {
     player: {
-        id: number
+        id: string
         name: string
     } | null
     open: boolean

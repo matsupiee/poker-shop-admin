@@ -36,8 +36,8 @@ export async function createPlayer(prevState: CreatePlayerState, formData: FormD
         await prisma.player.create({
             data: {
                 name,
-                memberId,
-                gameId: gameId && gameId.trim() !== "" ? gameId : null,
+                memberId: parseInt(memberId),
+                webCoinGameId: gameId && gameId.trim() !== "" ? gameId : null,
                 storeCoin: {
                     create: {
                         balance: 0

@@ -5,9 +5,9 @@ import { format } from "date-fns"
 import { revalidatePath } from "next/cache"
 
 export type TournamentEntryInfo = {
-    id: number
+    id: string
     tournamentName: string
-    tournamentId: number
+    tournamentId: string
     status: "playing" | "eliminated" | "finished"
     rank?: number
     entryCount: number
@@ -21,12 +21,12 @@ export type RingGameInfo = {
 }
 
 export type DailyVisit = {
-    id: number
+    id: string
     visitDate: string
     checkInTime: string
     player: {
-        id: number
-        memberId: string
+        id: string
+        memberId: number
         name: string
         image?: string
     }
@@ -81,9 +81,9 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
             }
 
             return {
-                id: entry.id,
+                id: entry.id.toString(),
                 tournamentName: entry.tournament.name,
-                tournamentId: entry.tournament.id,
+                tournamentId: entry.tournament.id.toString(),
                 status,
                 rank: entry.finalRank ?? undefined,
                 entryCount: entryEvents.length
@@ -120,11 +120,11 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
         }
 
         return {
-            id: visit.id,
+            id: visit.id.toString(),
             visitDate: visit.visitDate.toISOString().split('T')[0],
             checkInTime: format(visit.createdAt, "HH:mm"),
             player: {
-                id: visit.player.id,
+                id: visit.player.id.toString(),
                 memberId: visit.player.memberId,
                 name: visit.player.name,
                 // image: visit.player.image // Add if available in schema later
@@ -187,7 +187,7 @@ export async function registerVisit(prevState: RegisterVisitState, formData: For
 
         const existing = await prisma.visit.findFirst({
             where: {
-                playerId: parseInt(playerId),
+                playerId: playerId,
                 visitDate: {
                     gte: startOfDay,
                     lte: endOfDay
@@ -205,7 +205,7 @@ export async function registerVisit(prevState: RegisterVisitState, formData: For
 
         await prisma.visit.create({
             data: {
-                playerId: parseInt(playerId),
+                playerId: playerId,
                 visitDate: visitDate,
                 entranceFee: entranceFee,
             }

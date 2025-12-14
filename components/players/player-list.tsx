@@ -33,7 +33,7 @@ import { CreatePlayerDialog } from "./create-player-dialog"
 import { RegisterVisitDialog } from "@/components/visits/register-visit-dialog"
 
 export type Player = {
-    id: number
+    id: string
     memberId: string
     name: string
     balance: number

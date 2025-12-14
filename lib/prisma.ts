@@ -1,5 +1,5 @@
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "@/generated/prisma/client";
+import { PrismaClient } from "@/lib/generated/prisma/client";
 
 // @see https://www.prisma.io/docs/guides/nextjs#26-set-up-prisma-client
 

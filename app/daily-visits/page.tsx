@@ -58,7 +58,7 @@ export default function DailyVisitsPage() {
     // フィルタリング処理 (名前検索)
     const filteredVisits = visits.filter(visit =>
         visit.player.name.includes(searchTerm) ||
-        visit.player.memberId.includes(searchTerm)
+        visit.player.memberId.toString().includes(searchTerm)
     )
 
     const displayDate = date ? format(date, "yyyy年MM月dd日 (E)", { locale: ja }) : "日付を選択"
