@@ -42,6 +42,8 @@ export function AssignGameDialog({ visitId, playerName, tournaments, onSuccess }
     const [mode, setMode] = React.useState<"tournament" | "ring">("tournament")
     const [selectedTournamentId, setSelectedTournamentId] = React.useState<string>("")
     const [chipAmount, setChipAmount] = React.useState<string>("")
+    const [entrySource, setEntrySource] = React.useState<"BUY_IN" | "FREE" | "SATELLITE">("BUY_IN")
+    const [paymentAmount, setPaymentAmount] = React.useState<string>("")
     const [isSubmitting, setIsSubmitting] = React.useState(false)
     const [error, setError] = React.useState<string | null>(null)
 
@@ -63,7 +65,20 @@ export function AssignGameDialog({ visitId, playerName, tournaments, onSuccess }
                     setIsSubmitting(false)
                     return
                 }
-                const result = await addTournamentEntry(visitId, selectedTournamentId, amount)
+                const payment = parseInt(paymentAmount)
+                if (isNaN(payment) || payment < 0) {
+                    setError("支払い金額は0以上の数値を入力してください")
+                    setIsSubmitting(false)
+                    return
+                }
+
+                const result = await addTournamentEntry(
+                    visitId,
+                    selectedTournamentId,
+                    amount,
+                    entrySource,
+                    payment
+                )
                 if (!result.success) {
                     setError(result.errors?._form?.[0] || "エラーが発生しました")
                 } else {
@@ -128,26 +143,53 @@ export function AssignGameDialog({ visitId, playerName, tournaments, onSuccess }
 
                 <div className="grid gap-4 py-4">
                     {mode === "tournament" ? (
-                        <div className="grid gap-2">
-                            <Label htmlFor="tournament">トーナメント選択</Label>
-                            {tournaments.length === 0 ? (
-                                <p className="text-sm text-muted-foreground">
-                                    開催予定のトーナメントがありません。
-                                </p>
-                            ) : (
-                                <Select value={selectedTournamentId} onValueChange={setSelectedTournamentId}>
-                                    <SelectTrigger id="tournament">
-                                        <SelectValue placeholder="トーナメントを選択" />
+                        <div className="grid gap-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="tournament">トーナメント選択</Label>
+                                {tournaments.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground">
+                                        開催予定のトーナメントがありません。
+                                    </p>
+                                ) : (
+                                    <Select value={selectedTournamentId} onValueChange={setSelectedTournamentId}>
+                                        <SelectTrigger id="tournament">
+                                            <SelectValue placeholder="トーナメントを選択" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {tournaments.map((t) => (
+                                                <SelectItem key={t.id} value={t.id}>
+                                                    {t.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="entrySource">参加区分</Label>
+                                <Select value={entrySource} onValueChange={(val: any) => setEntrySource(val)}>
+                                    <SelectTrigger id="entrySource">
+                                        <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {tournaments.map((t) => (
-                                            <SelectItem key={t.id} value={t.id}>
-                                                {t.name}
-                                            </SelectItem>
-                                        ))}
+                                        <SelectItem value="BUY_IN">通常参加 (BUY_IN)</SelectItem>
+                                        <SelectItem value="FREE">無料参加 (FREE)</SelectItem>
+                                        <SelectItem value="SATELLITE">サテライト通過 (SATELLITE)</SelectItem>
                                     </SelectContent>
                                 </Select>
-                            )}
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="paymentAmount">支払い金額</Label>
+                                <Input
+                                    id="paymentAmount"
+                                    type="number"
+                                    placeholder="例: 5000"
+                                    value={paymentAmount}
+                                    onChange={(e) => setPaymentAmount(e.target.value)}
+                                />
+                            </div>
                         </div>
                     ) : (
                         <div className="p-4 border rounded-md bg-muted/20 text-center">
@@ -174,7 +216,7 @@ export function AssignGameDialog({ visitId, playerName, tournaments, onSuccess }
                 </div>
 
                 <DialogFooter>
-                    <Button onClick={handleSubmit} disabled={isSubmitting || (mode === "tournament" && !selectedTournamentId) || !chipAmount}>
+                    <Button onClick={handleSubmit} disabled={isSubmitting || (mode === "tournament" && (!selectedTournamentId || !paymentAmount)) || !chipAmount}>
                         {isSubmitting ? "処理中..." : "参加する"}
                     </Button>
                 </DialogFooter>

@@ -35,7 +35,15 @@ export async function createTournament(prevState: CreateTournamentState, formDat
     let prizes: { rank: number; amount: number }[] = []
     if (prizesStr) {
         try {
-            prizes = JSON.parse(prizesStr)
+            const parsed = JSON.parse(prizesStr)
+            if (Array.isArray(parsed)) {
+                prizes = parsed
+                    .map((p: any) => ({
+                        rank: Number(p.rank),
+                        amount: Number(p.amount)
+                    }))
+                    .filter(p => !isNaN(p.rank) && !isNaN(p.amount) && p.amount >= 0)
+            }
         } catch (e) {
             console.error("Failed to parse prizes", e)
         }

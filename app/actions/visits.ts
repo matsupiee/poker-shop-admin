@@ -42,9 +42,11 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
     const endOfDay = new Date(date)
     endOfDay.setHours(23, 59, 59, 999)
 
+    console.log({ startOfDay, endOfDay })
+
     const visits = await prisma.visit.findMany({
         where: {
-            visitDate: {
+            createdAt: {
                 gte: startOfDay,
                 lte: endOfDay
             }
@@ -68,12 +70,11 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
         }
     })
 
+    console.log({ visits })
+
     return visits.map(visit => {
         // Map tournaments
         const tournaments: TournamentEntryInfo[] = visit.tournamentEntries.map(entry => {
-            const entryEvents = entry.chipEvents.filter(e => e.eventType === "ENTRY" || e.eventType === "REENTRY")
-            const entryCount = entryEvents.length > 0 ? entryEvents.length : 1
-
             // Determine status
             let status: "playing" | "eliminated" | "finished" = "playing"
             if (entry.finalRank) {
@@ -86,7 +87,7 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
                 tournamentId: entry.tournament.id.toString(),
                 status,
                 rank: entry.finalRank ?? undefined,
-                entryCount: entryEvents.length
+                entryCount: 1
             }
         })
 

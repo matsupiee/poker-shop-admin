@@ -13,38 +13,30 @@ export type GameParticipationState = {
     message?: string
 }
 
-export async function addTournamentEntry(visitId: string, tournamentId: string, chipAmount: number): Promise<GameParticipationState> {
+export async function addTournamentEntry(
+    visitId: string,
+    tournamentId: string,
+    chipAmount: number,
+    entrySource: "BUY_IN" | "FREE" | "SATELLITE",
+    paymentAmount: number
+): Promise<GameParticipationState> {
     if (!visitId) return { errors: { visitId: ["Visit ID is required"] } }
     if (!tournamentId) return { errors: { tournamentId: ["Tournament ID is required"] } }
     if (chipAmount < 0) return { errors: { _form: ["チップ量は0以上である必要があります"] } }
+    if (paymentAmount < 0) return { errors: { _form: ["支払い額は0以上である必要があります"] } }
 
     try {
-        // Check if entry already exists
-        const existingEntry = await prisma.tournamentEntry.findUnique({
-            where: {
-                visitId_tournamentId: {
-                    visitId,
-                    tournamentId
-                }
-            }
-        })
-
-        if (existingEntry) {
-            return {
-                success: false,
-                errors: { _form: ["すでにこのトーナメントに参加しています"] }
-            }
-        }
-
         // Create entry with initial chip event
         await prisma.tournamentEntry.create({
             data: {
                 visitId,
                 tournamentId,
+                entrySource,
                 chipEvents: {
                     create: {
                         eventType: "ENTRY",
-                        chipAmount: chipAmount
+                        chipAmount: chipAmount,
+                        paymentAmount: paymentAmount
                     }
                 }
             }
