@@ -32,21 +32,22 @@ export default function DailyTournamentsPage() {
     const [tournaments, setTournaments] = React.useState<any[]>([])
     const [loading, setLoading] = React.useState(true)
 
-    React.useEffect(() => {
-        const fetchTournaments = async () => {
-            if (!date) return
-            setLoading(true)
-            try {
-                const data = await getTournaments(date)
-                setTournaments(data)
-            } catch (e) {
-                console.error(e)
-            } finally {
-                setLoading(false)
-            }
+    const fetchTournaments = React.useCallback(async () => {
+        if (!date) return
+        setLoading(true)
+        try {
+            const data = await getTournaments(date)
+            setTournaments(data)
+        } catch (e) {
+            console.error(e)
+        } finally {
+            setLoading(false)
         }
-        fetchTournaments()
     }, [date])
+
+    React.useEffect(() => {
+        fetchTournaments()
+    }, [fetchTournaments])
 
     // In a real app, fetch tournaments for 'date' here
     const displayDate = date ? format(date, "yyyy年MM月dd日 (E)", { locale: ja }) : "日付を選択"
@@ -83,7 +84,7 @@ export default function DailyTournamentsPage() {
                             />
                         </PopoverContent>
                     </Popover>
-                    <CreateTournamentDialog />
+                    <CreateTournamentDialog onTournamentCreated={fetchTournaments} />
                 </div>
             </div>
 
@@ -169,14 +170,16 @@ export default function DailyTournamentsPage() {
                 )}
 
                 {/* Empty state card if no tournaments - mocked to show create option */}
-                <Card className="flex flex-col items-center justify-center border-dashed h-full min-h-[200px] cursor-pointer hover:bg-muted/50 transition-colors">
-                    <div className="flex flex-col items-center gap-2 text-muted-foreground p-6">
-                        <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
-                            <Plus className="h-6 w-6" />
+                <CreateTournamentDialog onTournamentCreated={fetchTournaments}>
+                    <Card className="flex flex-col items-center justify-center border-dashed h-full min-h-[200px] cursor-pointer hover:bg-muted/50 transition-colors">
+                        <div className="flex flex-col items-center gap-2 text-muted-foreground p-6">
+                            <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                                <Plus className="h-6 w-6" />
+                            </div>
+                            <span className="font-medium">イベントを追加</span>
                         </div>
-                        <span className="font-medium">イベントを追加</span>
-                    </div>
-                </Card>
+                    </Card>
+                </CreateTournamentDialog>
             </div>
         </div>
     )

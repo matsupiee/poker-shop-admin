@@ -21,15 +21,25 @@ const initialState = {
     success: false
 }
 
-export function CreateTournamentDialog() {
+
+interface CreateTournamentDialogProps {
+    onTournamentCreated?: () => void
+    children?: React.ReactNode
+}
+
+export function CreateTournamentDialog({ onTournamentCreated, children }: CreateTournamentDialogProps) {
+
     const [open, setOpen] = useState(false)
     const [state, action, isPending] = useActionState(createTournament, initialState)
 
     useEffect(() => {
         if (state.success) {
             setOpen(false)
+            if (onTournamentCreated) {
+                onTournamentCreated()
+            }
         }
-    }, [state.success])
+    }, [state.success, onTournamentCreated])
 
     // Default to today's date for convenience
     const today = new Date().toISOString().split('T')[0]
@@ -37,9 +47,11 @@ export function CreateTournamentDialog() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-                    <Plus className="mr-2 h-4 w-4" /> 新規作成
-                </Button>
+                {children ? children : (
+                    <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                        <Plus className="mr-2 h-4 w-4" /> 新規作成
+                    </Button>
+                )}
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
