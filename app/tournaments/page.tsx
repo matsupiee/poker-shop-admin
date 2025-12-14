@@ -21,6 +21,7 @@ import {
     CardFooter
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { CreateTournamentDialog } from "@/components/tournaments/create-tournament-dialog"
 
 // Mock Data
 type Tournament = {
@@ -78,9 +79,7 @@ export default function DailyTournamentsPage() {
                             />
                         </PopoverContent>
                     </Popover>
-                    <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-                        <Plus className="mr-2 h-4 w-4" /> 新規作成
-                    </Button>
+                    <CreateTournamentDialog />
                 </div>
             </div>
 

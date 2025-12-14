@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { format } from "date-fns"
+import { revalidatePath } from "next/cache"
 
 export type TournamentEntryInfo = {
     id: number
@@ -71,8 +72,7 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
         // Map tournaments
         const tournaments: TournamentEntryInfo[] = visit.tournamentEntries.map(entry => {
             const entryEvents = entry.chipEvents.filter(e => e.eventType === "ENTRY" || e.eventType === "REENTRY")
-            const entryCount = entryEvents.length > 0 ? entryEvents.length : 1 // Default to 1 if no events recorded but entry exists?
-            // Actually usually there should be at least 1 ENTRY event.
+            const entryCount = entryEvents.length > 0 ? entryEvents.length : 1
 
             // Determine status
             let status: "playing" | "eliminated" | "finished" = "playing"
@@ -133,4 +133,93 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
             ringGame
         }
     })
+}
+
+export type RegisterVisitState = {
+    errors?: {
+        playerId?: string[]
+        visitDate?: string[]
+        entranceFee?: string[]
+        _form?: string[]
+    }
+    success?: boolean
+}
+
+export async function registerVisit(prevState: RegisterVisitState, formData: FormData): Promise<RegisterVisitState> {
+    const playerId = formData.get("playerId") as string
+    const visitDateStr = formData.get("visitDate") as string // Expecting YYYY-MM-DD
+    const entranceFeeStr = formData.get("entranceFee") as string
+
+    const errors: RegisterVisitState["errors"] = {}
+
+    if (!playerId) {
+        errors.playerId = ["プレイヤーが選択されていません"]
+    }
+
+    let visitDate = new Date()
+    if (visitDateStr) {
+        visitDate = new Date(visitDateStr)
+        if (isNaN(visitDate.getTime())) {
+            errors.visitDate = ["日付の形式が正しくありません"]
+        }
+    }
+
+    let entranceFee: number | null = null
+    if (entranceFeeStr && entranceFeeStr.trim() !== "") {
+        const fee = parseInt(entranceFeeStr)
+        if (isNaN(fee) || fee < 0) {
+            errors.entranceFee = ["入場料は0以上の数値を入力してください"]
+        } else {
+            entranceFee = fee
+        }
+    }
+
+    if (Object.keys(errors).length > 0) {
+        return { errors }
+    }
+
+    try {
+        // Check for existing visit on the same day
+        const startOfDay = new Date(visitDate)
+        startOfDay.setHours(0, 0, 0, 0)
+        const endOfDay = new Date(visitDate)
+        endOfDay.setHours(23, 59, 59, 999)
+
+        const existing = await prisma.visit.findFirst({
+            where: {
+                playerId: parseInt(playerId),
+                visitDate: {
+                    gte: startOfDay,
+                    lte: endOfDay
+                }
+            }
+        })
+
+        if (existing) {
+            return {
+                errors: {
+                    _form: ["このプレイヤーは指定された日に既に来店済みです"]
+                }
+            }
+        }
+
+        await prisma.visit.create({
+            data: {
+                playerId: parseInt(playerId),
+                visitDate: visitDate,
+                entranceFee: entranceFee,
+            }
+        })
+
+        revalidatePath("/players")
+        revalidatePath("/daily-visits")
+        return { success: true }
+    } catch (e: any) {
+        console.error(e)
+        return {
+            errors: {
+                _form: ["来店登録に失敗しました。時間をおいて再度お試しください。"]
+            }
+        }
+    }
 }

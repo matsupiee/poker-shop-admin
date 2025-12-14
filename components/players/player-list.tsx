@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Search, MoreHorizontal, UserPlus, Filter, ArrowUpDown } from "lucide-react"
 import { CreatePlayerDialog } from "./create-player-dialog"
+import { RegisterVisitDialog } from "@/components/visits/register-visit-dialog"
 
 export type Player = {
     id: number
@@ -47,6 +48,8 @@ interface PlayerListProps {
 
 export function PlayerList({ initialPlayers }: PlayerListProps) {
     const [searchTerm, setSearchTerm] = useState("")
+    const [selectedPlayerForVisit, setSelectedPlayerForVisit] = useState<Player | null>(null)
+    const [isVisitDialogOpen, setIsVisitDialogOpen] = useState(false)
 
     const filteredPlayers = initialPlayers.filter(player =>
         player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -158,6 +161,13 @@ export function PlayerList({ initialPlayers }: PlayerListProps) {
                                                             会員IDをコピー
                                                         </DropdownMenuItem>
                                                         <DropdownMenuSeparator />
+                                                        <DropdownMenuItem onClick={() => {
+                                                            setSelectedPlayerForVisit(player)
+                                                            setIsVisitDialogOpen(true)
+                                                        }}>
+                                                            来店登録
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuSeparator />
                                                         <DropdownMenuItem>詳細を表示</DropdownMenuItem>
                                                         <DropdownMenuItem>編集する</DropdownMenuItem>
                                                         <DropdownMenuItem className="text-destructive">削除する</DropdownMenuItem>
@@ -172,6 +182,12 @@ export function PlayerList({ initialPlayers }: PlayerListProps) {
                     </div>
                 </CardContent>
             </Card>
-        </div>
+
+            <RegisterVisitDialog
+                player={selectedPlayerForVisit}
+                open={isVisitDialogOpen}
+                onOpenChange={setIsVisitDialogOpen}
+            />
+        </div >
     )
 }
