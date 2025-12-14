@@ -29,14 +29,35 @@ model Player {
   @@map("players")
 }
 
+// 来店（1日1プレイヤー1レコード）
+model Visit {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  playerId       String @map("player_id")
+  entranceFee    Int?   @map("entrance_fee")
+  foodAmount     Int?   @map("food_amount")
+  discountAmount Int?   @map("discount_amount")
+
+  player            Player            @relation(fields: [playerId], references: [id])
+  tournamentEntries TournamentEntry[]
+  ringGameEntry     RingGameEntry?
+  settlements       Settlement[]
+
+  @@map("visits")
+}
+
 // トーナメント定義（日付ごと）
 model Tournament {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  name      String
-  eventDate DateTime @map("event_date")
+  name String
+
+  // 開始時刻
+  startAt DateTime @map("start_at")
 
   entries          TournamentEntry[]
   tournamentPrizes TournamentPrize[]
@@ -56,26 +77,6 @@ model TournamentPrize {
   tournament Tournament @relation(fields: [tournamentId], references: [id])
 
   @@map("tournament_prizes")
-}
-
-// 来店（1日1プレイヤー1レコード）
-model Visit {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  playerId       String   @map("player_id")
-  visitDate      DateTime @map("visit_date")
-  entranceFee    Int?     @map("entrance_fee")
-  foodAmount     Int?     @map("food_amount")
-  discountAmount Int?     @map("discount_amount")
-
-  player            Player            @relation(fields: [playerId], references: [id])
-  tournamentEntries TournamentEntry[]
-  ringGameEntry     RingGameEntry?
-  settlements       Settlement[]
-
-  @@map("visits")
 }
 
 enum TournamentEntrySource {

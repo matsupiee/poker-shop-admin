@@ -20,12 +20,25 @@ CREATE TABLE "players" (
 );
 
 -- CreateTable
+CREATE TABLE "visits" (
+    "id" TEXT NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "player_id" TEXT NOT NULL,
+    "entrance_fee" INTEGER,
+    "food_amount" INTEGER,
+    "discount_amount" INTEGER,
+
+    CONSTRAINT "visits_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "tournaments" (
     "id" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "name" TEXT NOT NULL,
-    "event_date" TIMESTAMP(3) NOT NULL,
+    "start_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "tournaments_pkey" PRIMARY KEY ("id")
 );
@@ -40,20 +53,6 @@ CREATE TABLE "tournament_prizes" (
     "amount" INTEGER NOT NULL,
 
     CONSTRAINT "tournament_prizes_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "visits" (
-    "id" TEXT NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
-    "player_id" TEXT NOT NULL,
-    "visit_date" TIMESTAMP(3) NOT NULL,
-    "entrance_fee" INTEGER,
-    "food_amount" INTEGER,
-    "discount_amount" INTEGER,
-
-    CONSTRAINT "visits_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -140,10 +139,10 @@ CREATE UNIQUE INDEX "ring_game_entries_visit_id_key" ON "ring_game_entries"("vis
 CREATE UNIQUE INDEX "store_coins_player_id_key" ON "store_coins"("player_id");
 
 -- AddForeignKey
-ALTER TABLE "tournament_prizes" ADD CONSTRAINT "tournament_prizes_tournamentId_fkey" FOREIGN KEY ("tournamentId") REFERENCES "tournaments"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "visits" ADD CONSTRAINT "visits_player_id_fkey" FOREIGN KEY ("player_id") REFERENCES "players"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "visits" ADD CONSTRAINT "visits_player_id_fkey" FOREIGN KEY ("player_id") REFERENCES "players"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "tournament_prizes" ADD CONSTRAINT "tournament_prizes_tournamentId_fkey" FOREIGN KEY ("tournamentId") REFERENCES "tournaments"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "tournament_entries" ADD CONSTRAINT "tournament_entries_visit_id_fkey" FOREIGN KEY ("visit_id") REFERENCES "visits"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
