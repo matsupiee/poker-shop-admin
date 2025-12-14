@@ -78,7 +78,7 @@ model TournamentEntry {
 enum TournamentChipEventType {
   ENTRY
   REENTRY
-  ADD_ON @map("ADD-ON")
+  ADD_ON
 }
 
 model TournamentChipEvent {
