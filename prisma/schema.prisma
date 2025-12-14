@@ -17,6 +17,7 @@ datasource db {
 model Player {
   id        String   @id @default(cuid()) // DB管理用のID
   createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   memberId      Int     @unique @map("member_id") // お店で割り振る会員連番
   webCoinGameId String? @unique @map("web_coin_game_id") // WebCoinのゲームID
@@ -32,11 +33,13 @@ model Player {
 model Tournament {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   name      String
   eventDate DateTime @map("event_date")
 
-  entries TournamentEntry[]
+  entries          TournamentEntry[]
+  tournamentPrizes TournamentPrize[]
 
   @@map("tournaments")
 }
@@ -44,16 +47,22 @@ model Tournament {
 model TournamentPrize {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   tournamentId String
-  rank         Int
-  amount       Int
+  rank         Int // 順位
+  amount       Int // 賞金
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id])
+
+  @@map("tournament_prizes")
 }
 
 // 来店（1日1プレイヤー1レコード）
 model Visit {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   playerId       String   @map("player_id")
   visitDate      DateTime @map("visit_date")
@@ -73,6 +82,7 @@ model Visit {
 model TournamentEntry {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   visitId      String @map("visit_id")
   tournamentId String @map("tournament_id")
@@ -97,6 +107,7 @@ enum TournamentChipEventType {
 model TournamentChipEvent {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   tournamentEntryId String                  @map("tournament_entry_id")
   eventType         TournamentChipEventType @map("event_type")
@@ -111,6 +122,7 @@ model TournamentChipEvent {
 model RingGameEntry {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   visitId String @unique @map("visit_id")
 
@@ -130,6 +142,7 @@ enum RingGameChipEventType {
 model RingGameChipEvent {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   ringGameEntryId String                @map("ring_game_entry_id")
   eventType       RingGameChipEventType @map("event_type")
@@ -144,6 +157,7 @@ model RingGameChipEvent {
 model Settlement {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   visitId     String @map("visit_id")
   totalAmount Int    @map("total_amount")
@@ -157,6 +171,7 @@ model Settlement {
 model StoreCoin {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   playerId String @unique @map("player_id")
   balance  Int
