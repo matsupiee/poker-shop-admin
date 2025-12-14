@@ -3,7 +3,7 @@
 import * as React from "react"
 import { format } from "date-fns"
 import { ja } from "date-fns/locale"
-import { Calendar as CalendarIcon, Search, Filter, Trophy, Coins, Clock, ArrowUpDown } from "lucide-react"
+import { Calendar as CalendarIcon, Search, Filter, Trophy, Coins, Clock } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -30,85 +30,33 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-
-// Mock Data Types reflecting the Prisma schema relationships
-type TournamentEntryInfo = {
-    id: number
-    tournamentName: string
-    tournamentId: number
-    status: "playing" | "eliminated" | "finished"
-    rank?: number
-    entryCount: number // Total entries (1 = single entry, 2 = 1 re-entry)
-}
-
-type RingGameInfo = {
-    joined: boolean
-    currentStatus: "playing" | "left"
-    totalBuyIn: number
-    totalCashOut?: number
-}
-
-type DailyVisit = {
-    id: number
-    visitDate: string // ISO date string
-    checkInTime: string // Time string HH:mm
-    player: {
-        id: number
-        memberId: string
-        name: string
-        image?: string
-    }
-    tournaments: TournamentEntryInfo[]
-    ringGame: RingGameInfo
-}
-
-// Mock Data
-const mockVisits: DailyVisit[] = [
-    {
-        id: 1,
-        visitDate: "2023-12-13",
-        checkInTime: "13:15",
-        player: { id: 1, memberId: "M001", name: "田中 太郎" },
-        tournaments: [
-            { id: 101, tournamentName: "デイリーハイパーターボ", tournamentId: 1, status: "eliminated", rank: 12, entryCount: 1 },
-            { id: 102, tournamentName: "ミッドナイトマッドネス", tournamentId: 4, status: "playing", entryCount: 2 }
-        ],
-        ringGame: { joined: false, currentStatus: "left", totalBuyIn: 0 }
-    },
-    {
-        id: 2,
-        visitDate: "2023-12-13",
-        checkInTime: "14:30",
-        player: { id: 2, memberId: "M002", name: "佐藤 花子" },
-        tournaments: [],
-        ringGame: { joined: true, currentStatus: "playing", totalBuyIn: 50000 }
-    },
-    {
-        id: 3,
-        visitDate: "2023-12-13",
-        checkInTime: "15:00",
-        player: { id: 4, memberId: "M004", name: "高橋 次郎" },
-        tournaments: [
-            { id: 103, tournamentName: "サタデーディープスタック", tournamentId: 2, status: "playing", entryCount: 1 }
-        ],
-        ringGame: { joined: true, currentStatus: "left", totalBuyIn: 30000, totalCashOut: 45000 }
-    },
-    {
-        id: 4,
-        visitDate: "2023-12-13",
-        checkInTime: "18:45",
-        player: { id: 5, memberId: "M005", name: "鈴木 一郎" },
-        tournaments: [],
-        ringGame: { joined: true, currentStatus: "left", totalBuyIn: 20000, totalCashOut: 0 }
-    }
-]
+import { getDailyVisits, type DailyVisit } from "@/app/actions/visits"
 
 export default function DailyVisitsPage() {
     const [date, setDate] = React.useState<Date | undefined>(new Date())
     const [searchTerm, setSearchTerm] = React.useState("")
+    const [visits, setVisits] = React.useState<DailyVisit[]>([])
+    const [isLoading, setIsLoading] = React.useState(true)
+
+    React.useEffect(() => {
+        if (!date) return
+
+        const fetchData = async () => {
+            setIsLoading(true)
+            try {
+                const data = await getDailyVisits(date)
+                setVisits(data)
+            } catch (error) {
+                console.error("Failed to fetch visits", error)
+            } finally {
+                setIsLoading(false)
+            }
+        }
+        fetchData()
+    }, [date])
 
     // フィルタリング処理 (名前検索)
-    const filteredVisits = mockVisits.filter(visit =>
+    const filteredVisits = visits.filter(visit =>
         visit.player.name.includes(searchTerm) ||
         visit.player.memberId.includes(searchTerm)
     )
@@ -192,7 +140,13 @@ export default function DailyVisitsPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filteredVisits.length === 0 ? (
+                                {isLoading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={6} className="h-24 text-center">
+                                            読み込み中...
+                                        </TableCell>
+                                    </TableRow>
+                                ) : filteredVisits.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={6} className="h-24 text-center">
                                             該当するデータが見つかりません。

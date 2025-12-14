@@ -29,6 +29,7 @@ import {
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { Search, MoreHorizontal, UserPlus, Filter, ArrowUpDown } from "lucide-react"
+import { CreatePlayerDialog } from "./create-player-dialog"
 
 export type Player = {
     id: number
@@ -61,9 +62,7 @@ export function PlayerList({ initialPlayers }: PlayerListProps) {
                         登録されているプレイヤーの管理、検索、詳細確認が行えます。
                     </p>
                 </div>
-                <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-                    <UserPlus className="mr-2 h-4 w-4" /> 新規登録
-                </Button>
+                <CreatePlayerDialog />
             </div>
 
             <Card>
