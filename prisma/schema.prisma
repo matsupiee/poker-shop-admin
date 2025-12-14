@@ -78,7 +78,14 @@ model Visit {
   @@map("visits")
 }
 
+enum TournamentEntrySource {
+  BUY_IN // 参加時点で支払い発生
+  FREE // 無料参加
+  SATELLITE // サテライト
+}
+
 // トナメ参加
+// re-entryする際は、新規にレコードを作成することで対応する
 model TournamentEntry {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now()) @map("created_at")
@@ -86,22 +93,23 @@ model TournamentEntry {
 
   visitId      String @map("visit_id")
   tournamentId String @map("tournament_id")
-  finalRank    Int?   @map("final_rank")
-  bountyCount  Int?   @map("bounty_count")
+
+  entrySource TournamentEntrySource @map("entry_source")
+
+  finalRank   Int? @map("final_rank") // 特に入賞してない場合は何も書かなくていい
+  bountyCount Int? @map("bounty_count") // そのエントリー中に飛ばした人数
 
   visit      Visit                 @relation(fields: [visitId], references: [id])
   tournament Tournament            @relation(fields: [tournamentId], references: [id])
   chipEvents TournamentChipEvent[]
 
-  @@unique([visitId, tournamentId])
   @@map("tournament_entries")
 }
 
-// ENTRY / REENTRY / ADD-ON
+// ENTRY / ADD_CHIP
 enum TournamentChipEventType {
-  ENTRY
-  REENTRY
-  ADD_ON
+  ENTRY // 初期参加
+  ADD_CHIP // エントリー中に追加でチップを獲得
 }
 
 model TournamentChipEvent {
@@ -111,7 +119,8 @@ model TournamentChipEvent {
 
   tournamentEntryId String                  @map("tournament_entry_id")
   eventType         TournamentChipEventType @map("event_type")
-  chipAmount        Int                     @map("chip_amount")
+  chipAmount        Int                     @map("chip_amount") // 獲得したチップ
+  paymentAmount     Int                     @map("payment_amount") // 実際に払う必要があるお金
 
   tournamentEntry TournamentEntry @relation(fields: [tournamentEntryId], references: [id])
 

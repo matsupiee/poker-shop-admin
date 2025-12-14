@@ -1,5 +1,8 @@
 -- CreateEnum
-CREATE TYPE "TournamentChipEventType" AS ENUM ('ENTRY', 'REENTRY', 'ADD_ON');
+CREATE TYPE "TournamentEntrySource" AS ENUM ('BUY_IN', 'FREE', 'SATELLITE');
+
+-- CreateEnum
+CREATE TYPE "TournamentChipEventType" AS ENUM ('ENTRY', 'ADD_CHIP');
 
 -- CreateEnum
 CREATE TYPE "RingGameChipEventType" AS ENUM ('BUY_IN', 'CASH_OUT');
@@ -60,6 +63,7 @@ CREATE TABLE "tournament_entries" (
     "updated_at" TIMESTAMP(3) NOT NULL,
     "visit_id" TEXT NOT NULL,
     "tournament_id" TEXT NOT NULL,
+    "entry_source" "TournamentEntrySource" NOT NULL,
     "final_rank" INTEGER,
     "bounty_count" INTEGER,
 
@@ -74,6 +78,7 @@ CREATE TABLE "tournament_chip_events" (
     "tournament_entry_id" TEXT NOT NULL,
     "event_type" "TournamentChipEventType" NOT NULL,
     "chip_amount" INTEGER NOT NULL,
+    "payment_amount" INTEGER NOT NULL,
 
     CONSTRAINT "tournament_chip_events_pkey" PRIMARY KEY ("id")
 );
@@ -127,9 +132,6 @@ CREATE UNIQUE INDEX "players_member_id_key" ON "players"("member_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "players_web_coin_game_id_key" ON "players"("web_coin_game_id");
-
--- CreateIndex
-CREATE UNIQUE INDEX "tournament_entries_visit_id_tournament_id_key" ON "tournament_entries"("visit_id", "tournament_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ring_game_entries_visit_id_key" ON "ring_game_entries"("visit_id");

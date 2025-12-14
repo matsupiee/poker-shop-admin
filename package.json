@@ -9,8 +9,7 @@
     "lint": "eslint",
     "prisma:generate": "npx prisma generate",
     "prisma:migrate": "npx prisma migrate dev",
-    "prisma:dev": "npx prisma dev --db-port 5432",
-    "prisma:studio": "npx prisma studio"
+    "prisma:reset": "npx prisma migrate reset"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.1.0",
