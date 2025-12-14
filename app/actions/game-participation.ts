@@ -13,12 +13,13 @@ export type GameParticipationState = {
     message?: string
 }
 
-export async function addTournamentEntry(visitId: string, tournamentId: string): Promise<GameParticipationState> {
+export async function addTournamentEntry(visitId: string, tournamentId: string, chipAmount: number): Promise<GameParticipationState> {
     if (!visitId) return { errors: { visitId: ["Visit ID is required"] } }
     if (!tournamentId) return { errors: { tournamentId: ["Tournament ID is required"] } }
+    if (chipAmount < 0) return { errors: { _form: ["チップ量は0以上である必要があります"] } }
 
     try {
-        // Check if entry already exists to avoid unique constraint error
+        // Check if entry already exists
         const existingEntry = await prisma.tournamentEntry.findUnique({
             where: {
                 visitId_tournamentId: {
@@ -35,21 +36,19 @@ export async function addTournamentEntry(visitId: string, tournamentId: string):
             }
         }
 
-        // Create entry
+        // Create entry with initial chip event
         await prisma.tournamentEntry.create({
             data: {
                 visitId,
-                tournamentId
+                tournamentId,
+                chipEvents: {
+                    create: {
+                        eventType: "ENTRY",
+                        chipAmount: chipAmount
+                    }
+                }
             }
         })
-
-        // Also create an initial ENTRY chip event? 
-        // Typically participation implies buy-in.
-        // For now, let's just create the link. The Chip Event creation might be a separate "Buy-in" step
-        // or we automatically add one.
-        // Given the requirement "Participate", just linking is the minimum viable.
-        // If we want to be fancy we could transactionally create the chip event too, 
-        // but let's stick to the request.
 
         revalidatePath("/daily-visits")
         revalidatePath("/tournaments")
@@ -65,8 +64,9 @@ export async function addTournamentEntry(visitId: string, tournamentId: string):
     }
 }
 
-export async function addRingGameEntry(visitId: string): Promise<GameParticipationState> {
+export async function addRingGameEntry(visitId: string, chipAmount: number): Promise<GameParticipationState> {
     if (!visitId) return { errors: { visitId: ["Visit ID is required"] } }
+    if (chipAmount < 0) return { errors: { _form: ["チップ量は0以上である必要があります"] } }
 
     try {
         const existingEntry = await prisma.ringGameEntry.findUnique({
@@ -76,6 +76,12 @@ export async function addRingGameEntry(visitId: string): Promise<GameParticipati
         })
 
         if (existingEntry) {
+            // Check if there are any chip events, if so, maybe we are just buying in again?
+            // But the current logic assumes one RingGameEntry per visit.
+            // If the user wants to "Re-join" or "Add-on" that would be a different flow likely.
+            // However, for Ring Games, typically you stay in the "Entry" but just add chips.
+            // But here we are "Participating" (Creating the Entry).
+
             return {
                 success: false,
                 errors: { _form: ["すでにリングゲームに参加しています"] }
@@ -84,7 +90,13 @@ export async function addRingGameEntry(visitId: string): Promise<GameParticipati
 
         await prisma.ringGameEntry.create({
             data: {
-                visitId
+                visitId,
+                chipEvents: {
+                    create: {
+                        eventType: "BUY_IN",
+                        chipAmount: chipAmount
+                    }
+                }
             }
         })
 

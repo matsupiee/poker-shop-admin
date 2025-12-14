@@ -18,6 +18,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Coins, Trophy } from "lucide-react"
 import { addRingGameEntry, addTournamentEntry } from "@/app/actions/game-participation"
@@ -40,12 +41,20 @@ export function AssignGameDialog({ visitId, playerName, tournaments, onSuccess }
     const [open, setOpen] = React.useState(false)
     const [mode, setMode] = React.useState<"tournament" | "ring">("tournament")
     const [selectedTournamentId, setSelectedTournamentId] = React.useState<string>("")
+    const [chipAmount, setChipAmount] = React.useState<string>("")
     const [isSubmitting, setIsSubmitting] = React.useState(false)
     const [error, setError] = React.useState<string | null>(null)
 
     const handleSubmit = async () => {
         setError(null)
         setIsSubmitting(true)
+
+        const amount = parseInt(chipAmount)
+        if (isNaN(amount) || amount < 0) {
+            setError("チップ量は0以上の数値を入力してください")
+            setIsSubmitting(false)
+            return
+        }
 
         try {
             if (mode === "tournament") {
@@ -54,19 +63,21 @@ export function AssignGameDialog({ visitId, playerName, tournaments, onSuccess }
                     setIsSubmitting(false)
                     return
                 }
-                const result = await addTournamentEntry(visitId, selectedTournamentId)
+                const result = await addTournamentEntry(visitId, selectedTournamentId, amount)
                 if (!result.success) {
                     setError(result.errors?._form?.[0] || "エラーが発生しました")
                 } else {
                     setOpen(false)
+                    setChipAmount("")
                     if (onSuccess) onSuccess()
                 }
             } else {
-                const result = await addRingGameEntry(visitId)
+                const result = await addRingGameEntry(visitId, amount)
                 if (!result.success) {
                     setError(result.errors?._form?.[0] || "エラーが発生しました")
                 } else {
                     setOpen(false)
+                    setChipAmount("")
                     if (onSuccess) onSuccess()
                 }
             }
@@ -88,7 +99,7 @@ export function AssignGameDialog({ visitId, playerName, tournaments, onSuccess }
                 <DialogHeader>
                     <DialogTitle>ゲーム参加登録 ({playerName})</DialogTitle>
                     <DialogDescription>
-                        参加するゲームを選択してください。
+                        参加するゲームとチップ量を選択してください。
                     </DialogDescription>
                 </DialogHeader>
 
@@ -141,10 +152,21 @@ export function AssignGameDialog({ visitId, playerName, tournaments, onSuccess }
                     ) : (
                         <div className="p-4 border rounded-md bg-muted/20 text-center">
                             <p className="text-sm text-muted-foreground">
-                                リングゲームへの参加（Buy-in待ち状態）を登録します。
+                                リングゲームに参加します。
                             </p>
                         </div>
                     )}
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="chipAmount">開始チップ量</Label>
+                        <Input
+                            id="chipAmount"
+                            type="number"
+                            placeholder="例: 10000"
+                            value={chipAmount}
+                            onChange={(e) => setChipAmount(e.target.value)}
+                        />
+                    </div>
 
                     {error && (
                         <p className="text-sm text-red-500 font-medium">{error}</p>
@@ -152,7 +174,7 @@ export function AssignGameDialog({ visitId, playerName, tournaments, onSuccess }
                 </div>
 
                 <DialogFooter>
-                    <Button onClick={handleSubmit} disabled={isSubmitting || (mode === "tournament" && !selectedTournamentId)}>
+                    <Button onClick={handleSubmit} disabled={isSubmitting || (mode === "tournament" && !selectedTournamentId) || !chipAmount}>
                         {isSubmitting ? "処理中..." : "参加する"}
                     </Button>
                 </DialogFooter>
