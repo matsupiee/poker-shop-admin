@@ -56,3 +56,35 @@ export async function createTournament(prevState: CreateTournamentState, formDat
         }
     }
 }
+
+
+export async function getTournaments(date: Date) {
+    const startOfDay = new Date(date)
+    startOfDay.setHours(0, 0, 0, 0)
+
+    const endOfDay = new Date(date)
+    endOfDay.setHours(23, 59, 59, 999)
+
+    try {
+        const tournaments = await prisma.tournament.findMany({
+            where: {
+                eventDate: {
+                    gte: startOfDay,
+                    lte: endOfDay
+                }
+            },
+            include: {
+                _count: {
+                    select: { entries: true }
+                }
+            },
+            orderBy: {
+                eventDate: 'asc'
+            }
+        })
+        return tournaments
+    } catch (error) {
+        console.error("Failed to fetch tournaments:", error)
+        return []
+    }
+}
