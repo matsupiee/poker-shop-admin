@@ -152,7 +152,13 @@ export default function DailyTournamentsPage() {
                                                 <span className="text-xs text-muted-foreground">プライズ</span>
                                                 <div className="flex items-end gap-1">
                                                     <Trophy className="w-5 h-5 mb-0.5 text-yellow-600" />
-                                                    <span className="text-sm font-medium pt-1">未確定</span>
+                                                    <span className="text-sm font-medium pt-1">
+                                                        {tournament.tournamentPrizes && tournament.tournamentPrizes.length > 0 ? (
+                                                            `1st: ${tournament.tournamentPrizes[0].amount.toLocaleString()}`
+                                                        ) : (
+                                                            "未確定"
+                                                        )}
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>

@@ -31,29 +31,36 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getDailyVisits, type DailyVisit } from "@/app/actions/visits"
+import { getTournaments } from "@/app/actions/tournaments"
+import { AssignGameDialog } from "@/components/daily-visits/assign-game-dialog"
 
 export default function DailyVisitsPage() {
     const [date, setDate] = React.useState<Date | undefined>(new Date())
     const [searchTerm, setSearchTerm] = React.useState("")
     const [visits, setVisits] = React.useState<DailyVisit[]>([])
+    const [tournaments, setTournaments] = React.useState<any[]>([])
     const [isLoading, setIsLoading] = React.useState(true)
 
-    React.useEffect(() => {
+    const fetchData = React.useCallback(async () => {
         if (!date) return
-
-        const fetchData = async () => {
-            setIsLoading(true)
-            try {
-                const data = await getDailyVisits(date)
-                setVisits(data)
-            } catch (error) {
-                console.error("Failed to fetch visits", error)
-            } finally {
-                setIsLoading(false)
-            }
+        setIsLoading(true)
+        try {
+            const [visitsData, tournamentsData] = await Promise.all([
+                getDailyVisits(date),
+                getTournaments(date)
+            ])
+            setVisits(visitsData)
+            setTournaments(tournamentsData)
+        } catch (error) {
+            console.error("Failed to fetch data", error)
+        } finally {
+            setIsLoading(false)
         }
-        fetchData()
     }, [date])
+
+    React.useEffect(() => {
+        fetchData()
+    }, [fetchData])
 
     // フィルタリング処理 (名前検索)
     const filteredVisits = visits.filter(visit =>
@@ -233,9 +240,17 @@ export default function DailyVisitsPage() {
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-right">
-                                                <Button variant="ghost" size="sm">
-                                                    詳細
-                                                </Button>
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <AssignGameDialog
+                                                        visitId={visit.id}
+                                                        playerName={visit.player.name}
+                                                        tournaments={tournaments}
+                                                        onSuccess={fetchData}
+                                                    />
+                                                    <Button variant="ghost" size="sm">
+                                                        詳細
+                                                    </Button>
+                                                </div>
                                             </TableCell>
                                         </TableRow>
                                     ))

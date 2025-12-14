@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Plus } from "lucide-react"
+import { Plus, Trash2 } from "lucide-react"
 
 const initialState = {
     errors: {},
@@ -31,15 +31,45 @@ export function CreateTournamentDialog({ onTournamentCreated, children }: Create
 
     const [open, setOpen] = useState(false)
     const [state, action, isPending] = useActionState(createTournament, initialState)
+    const [prizes, setPrizes] = useState<Array<{ rank: number, amount: number }>>([
+        { rank: 1, amount: 0 }
+    ])
 
     useEffect(() => {
         if (state.success) {
             setOpen(false)
+            setPrizes([{ rank: 1, amount: 0 }]) // Reset prizes
             if (onTournamentCreated) {
                 onTournamentCreated()
             }
         }
     }, [state.success, onTournamentCreated])
+
+    const addPrize = () => {
+        setPrizes([...prizes, { rank: prizes.length + 1, amount: 0 }])
+    }
+
+    const removePrize = (index: number) => {
+        const newPrizes = prizes.filter((_, i) => i !== index)
+        // Re-calculate ranks
+        const reordered = newPrizes.map((p, i) => ({ ...p, rank: i + 1 }))
+        setPrizes(reordered)
+    }
+
+    const updatePrize = (index: number, amount: number) => {
+        const newPrizes = [...prizes]
+        newPrizes[index].amount = amount
+        setPrizes(newPrizes)
+    }
+
+    const formatRank = (rank: number) => {
+        switch (rank) {
+            case 1: return "1st"
+            case 2: return "2nd"
+            case 3: return "3rd"
+            default: return `${rank}th`
+        }
+    }
 
     // Default to today's date for convenience
     const today = new Date().toISOString().split('T')[0]
@@ -92,6 +122,55 @@ export function CreateTournamentDialog({ onTournamentCreated, children }: Create
                                     <p className="text-red-500 text-xs mt-1">{state.errors.name[0]}</p>
                                 )}
                             </div>
+                        </div>
+
+                        {/* Prize Section */}
+                        <div className="space-y-4 border-t pt-4">
+                            <div className="flex items-center justify-between">
+                                <Label>プライズ設定</Label>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={addPrize}
+                                >
+                                    <Plus className="h-4 w-4 mr-1" /> 追加
+                                </Button>
+                            </div>
+                            <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
+                                {prizes.length === 0 && (
+                                    <div className="text-center text-sm text-muted-foreground py-2">
+                                        プライズ設定なし
+                                    </div>
+                                )}
+                                {prizes.map((prize, index) => (
+                                    <div key={index} className="flex items-center gap-2">
+                                        <div className="w-16 flex-none flex items-center justify-center bg-muted h-10 rounded text-sm font-medium">
+                                            {formatRank(index + 1)}
+                                        </div>
+                                        <div className="flex-1 relative">
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">¥</span>
+                                            <Input
+                                                type="number"
+                                                value={prize.amount === 0 ? '' : prize.amount}
+                                                onChange={(e) => updatePrize(index, Number(e.target.value))}
+                                                className="pl-7"
+                                                placeholder="0"
+                                            />
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => removePrize(index)}
+                                            className="text-muted-foreground hover:text-destructive shrink-0"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                            <input type="hidden" name="prizes" value={JSON.stringify(prizes)} />
                         </div>
 
                         {state.errors?._form && (

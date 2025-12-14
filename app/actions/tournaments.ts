@@ -16,6 +16,7 @@ export type CreateTournamentState = {
 export async function createTournament(prevState: CreateTournamentState, formData: FormData): Promise<CreateTournamentState> {
     const name = formData.get("name") as string
     const eventDateStr = formData.get("eventDate") as string // Expecting YYYY-MM-DD
+    const prizesStr = formData.get("prizes") as string
 
     const errors: CreateTournamentState["errors"] = {}
 
@@ -31,17 +32,28 @@ export async function createTournament(prevState: CreateTournamentState, formDat
         return { errors }
     }
 
+    let prizes: { rank: number; amount: number }[] = []
+    if (prizesStr) {
+        try {
+            prizes = JSON.parse(prizesStr)
+        } catch (e) {
+            console.error("Failed to parse prizes", e)
+        }
+    }
+
     try {
         const eventDate = new Date(eventDateStr)
-        // Adjust for timezone if necessary, but usually standard date string 'YYYY-MM-DD' parses to UTC 00:00 or local depending on parsing.
-        // `new Date("2023-01-01")` is UTC.
-        // We probably want it to be stored as the date part mattering.
-        // For simplicity, we store as is. 
 
         await prisma.tournament.create({
             data: {
                 name,
-                eventDate
+                eventDate,
+                tournamentPrizes: {
+                    create: prizes.map(p => ({
+                        rank: Number(p.rank),
+                        amount: Number(p.amount)
+                    }))
+                }
             }
         })
 
@@ -76,6 +88,11 @@ export async function getTournaments(date: Date) {
             include: {
                 _count: {
                     select: { entries: true }
+                },
+                tournamentPrizes: {
+                    orderBy: {
+                        rank: 'asc'
+                    }
                 }
             },
             orderBy: {
