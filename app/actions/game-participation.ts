@@ -112,3 +112,47 @@ export async function addRingGameEntry(visitId: string, chipAmount: number): Pro
         }
     }
 }
+
+export async function addRingGameChip(
+    visitId: string,
+    type: "BUY_IN" | "CASH_OUT",
+    amount: number
+): Promise<GameParticipationState> {
+    if (!visitId) return { errors: { visitId: ["Visit ID is required"] } }
+    if (amount <= 0) return { errors: { _form: ["チップ量は0より大きい必要があります"] } }
+
+    try {
+        const entry = await prisma.ringGameEntry.findUnique({
+            where: { visitId }
+        })
+
+        if (!entry) {
+            return {
+                success: false,
+                errors: { _form: ["リングゲームに参加していません"] }
+            }
+        }
+
+        await prisma.ringGameChipEvent.create({
+            data: {
+                ringGameEntryId: entry.id,
+                eventType: type,
+                chipAmount: amount
+            }
+        })
+
+        revalidatePath("/daily-visits")
+        return {
+            success: true,
+            message: type === "BUY_IN" ? "チップを追加しました" : "キャッシュアウトしました"
+        }
+
+    } catch (error) {
+        console.error("Failed to add ring game chip event:", error)
+        return {
+            errors: {
+                _form: ["処理に失敗しました"]
+            }
+        }
+    }
+}
