@@ -125,6 +125,22 @@ export function CreateTournamentDialog({ onTournamentCreated, children }: Create
                             </div>
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="entryClosesTime" className="text-right">
+                                締切時刻
+                            </Label>
+                            <div className="col-span-3">
+                                <Input
+                                    id="entryClosesTime"
+                                    name="entryClosesTime"
+                                    type="time"
+                                    defaultValue="21:10"
+                                />
+                                {state.errors?.entryClosesTime && (
+                                    <p className="text-red-500 text-xs mt-1">{state.errors.entryClosesTime[0]}</p>
+                                )}
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="name" className="text-right">
                                 大会名
                             </Label>

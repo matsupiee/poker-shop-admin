@@ -9,6 +9,7 @@ export type CreateTournamentState = {
         name?: string[]
         eventDate?: string[]
         startTime?: string[]
+        entryClosesTime?: string[]
         _form?: string[]
     }
     success?: boolean
@@ -18,6 +19,7 @@ export async function createTournament(prevState: CreateTournamentState, formDat
     const name = formData.get("name") as string
     const eventDateStr = formData.get("eventDate") as string // Expecting YYYY-MM-DD
     const startTimeStr = formData.get("startTime") as string // Expecting HH:MM
+    const entryClosesTimeStr = formData.get("entryClosesTime") as string // Expecting HH:MM
     const prizesStr = formData.get("prizes") as string
 
     const errors: CreateTournamentState["errors"] = {}
@@ -32,6 +34,10 @@ export async function createTournament(prevState: CreateTournamentState, formDat
 
     if (!startTimeStr) {
         errors.startTime = ["開始時刻を入力してください"]
+    }
+
+    if (!entryClosesTimeStr) {
+        errors.entryClosesTime = ["締切時刻を入力してください"]
     }
 
     if (Object.keys(errors).length > 0) {
@@ -57,11 +63,28 @@ export async function createTournament(prevState: CreateTournamentState, formDat
 
     try {
         const startAt = new Date(`${eventDateStr}T${startTimeStr}`)
+        // Handle case where entry closes after midnight
+        // If close time is smaller than start time, assume it's next day?
+        // OR simpler: just combine with eventDateStr. If user means next day, they might need better UI or we assume same day for now.
+        // Let's assume same day for simplicity unless it's clearly earlier than start time?
+        // Actually, let's just combine with eventDateStr. If it's overnight tournament, `eventDate` is just the "logical" date.
+        // But `entryClosesAt` needs to be accurate.
+        // Let's keep it simple: just combine date and time. If it requires date change, users might need to input full date or we add +1 day logic if close < start.
+
+        // Simple logic: if entryClosesTime < startTime, add 1 day to entryClosesAt
+        let entryClosesAt = new Date(`${eventDateStr}T${entryClosesTimeStr}`)
+
+        if (entryClosesAt < startAt) {
+            const nextDay = new Date(entryClosesAt)
+            nextDay.setDate(nextDay.getDate() + 1)
+            entryClosesAt = nextDay
+        }
 
         await prisma.tournament.create({
             data: {
                 name,
                 startAt,
+                entryClosesAt,
                 tournamentPrizes: {
                     create: prizes.map(p => ({
                         rank: Number(p.rank),
