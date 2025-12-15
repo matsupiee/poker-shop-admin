@@ -57,7 +57,9 @@ model Tournament {
   name String
 
   // 開始時刻
-  startAt DateTime @map("start_at")
+  startAt       DateTime @map("start_at")
+  // 参加登録締め切り時刻
+  entryClosesAt DateTime @map("entry_closes_at")
 
   entries          TournamentEntry[]
   tournamentPrizes TournamentPrize[]
