@@ -161,7 +161,7 @@ export function SettlementDialog({ visitId, playerName, isSettled, onSuccess }: 
                     <Button variant="ghost" onClick={() => setOpen(false)}>キャンセル</Button>
                     <Button
                         onClick={handleSettle}
-                        disabled={loading || submitting}
+                        disabled={loading || submitting || isSettled}
                         className={cn(netAmount > 0 ? "bg-green-600 hover:bg-green-700" : "")}
                     >
                         {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
