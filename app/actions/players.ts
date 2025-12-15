@@ -38,11 +38,6 @@ export async function createPlayer(prevState: CreatePlayerState, formData: FormD
                 name,
                 memberId: parseInt(memberId),
                 webCoinGameId: gameId && gameId.trim() !== "" ? gameId : null,
-                storeCoin: {
-                    create: {
-                        balance: 0
-                    }
-                }
             }
         })
 

@@ -33,6 +33,7 @@ export function SettlementDialog({ visitId, playerName, isSettled, onSuccess }: 
     const [loading, setLoading] = React.useState(false)
     const [breakdown, setBreakdown] = React.useState<BreakdownItem[]>([])
     const [netAmount, setNetAmount] = React.useState(0)
+    const [depositToSavings, setDepositToSavings] = React.useState(false) // Default false or maybe true? User preference.
     const [submitting, setSubmitting] = React.useState(false)
 
     const [error, setError] = React.useState<string | null>(null)
@@ -46,6 +47,7 @@ export function SettlementDialog({ visitId, playerName, isSettled, onSuccess }: 
                 .then((data) => {
                     setBreakdown(data.items)
                     setNetAmount(data.netAmount)
+                    setDepositToSavings(data.isDeposited)
                 })
                 .catch((err) => {
                     console.error(err)
@@ -61,7 +63,7 @@ export function SettlementDialog({ visitId, playerName, isSettled, onSuccess }: 
         setSubmitting(true)
         setError(null)
         try {
-            const result = await settleVisit(visitId, breakdown, netAmount)
+            const result = await settleVisit(visitId, breakdown, netAmount, depositToSavings)
             if (result.success) {
                 setOpen(false)
                 onSuccess?.()
@@ -148,11 +150,41 @@ export function SettlementDialog({ visitId, playerName, isSettled, onSuccess }: 
                                 {netAmount < 0 ? (
                                     <span>プレイヤーが <span className="font-bold text-red-500">{Math.abs(netAmount).toLocaleString()}</span> 円支払います</span>
                                 ) : netAmount > 0 ? (
-                                    <span>お店が <span className="font-bold text-green-600">{netAmount.toLocaleString()}</span> 円支払います</span>
+                                    <span>
+                                        {depositToSavings ? (
+                                            <>
+                                                <span className="font-bold text-green-600">{netAmount.toLocaleString()}</span>
+                                                <span> 円を貯コインします</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span>お店が </span>
+                                                <span className="font-bold text-green-600">{netAmount.toLocaleString()}</span>
+                                                <span> 円支払います</span>
+                                            </>
+                                        )}
+                                    </span>
                                 ) : (
                                     <span>精算額はありません</span>
                                 )}
                             </div>
+                        </div>
+                    )}
+                    {netAmount > 0 && (
+                        <div className="flex items-center space-x-2 py-2">
+                            <input
+                                type="checkbox"
+                                id="deposit"
+                                checked={depositToSavings}
+                                onChange={(e) => setDepositToSavings(e.target.checked)}
+                                className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-600"
+                            />
+                            <label
+                                htmlFor="deposit"
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                                貯コインする
+                            </label>
                         </div>
                     )}
                 </div>

@@ -47,6 +47,7 @@ model Visit {
   tournamentEntries TournamentEntry[]
   ringGameEntry     RingGameEntry?
   settlements       Settlement[]
+  storeCoinDeposit  StoreCoinDeposit?
 
   @@map("visits")
 }
@@ -197,10 +198,12 @@ model StoreCoinDeposit {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  playerId      String @map("player_id")
-  depositAmount Int    @map("deposit_amount")
+  playerId      String  @map("player_id")
+  depositAmount Int     @map("deposit_amount")
+  visitId       String? @unique @map("visit_id")
 
   player                   Player                    @relation(fields: [playerId], references: [id])
+  visit                    Visit?                    @relation(fields: [visitId], references: [id])
   storeCoinWithdrawAmounts StoreCoinWithdrawAmount[]
 
   @@map("store_coin_deposits")

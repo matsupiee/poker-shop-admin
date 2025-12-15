@@ -277,7 +277,8 @@ export async function getVisitSettlementDetails(visitId: string) {
                 include: {
                     chipEvents: true
                 }
-            }
+            },
+            storeCoinDeposit: true
         }
     })
 
@@ -287,6 +288,8 @@ export async function getVisitSettlementDetails(visitId: string) {
 
     // 1. Entrance & Food
     const items = []
+    // ... (rest of logic same)
+
     if (visit.entranceFee) {
         items.push({ type: "entrance", label: "入場料", amount: -visit.entranceFee })
     }
@@ -351,35 +354,91 @@ export async function getVisitSettlementDetails(visitId: string) {
 
     return {
         items,
-        netAmount
+        netAmount,
+        isDeposited: !!visit.storeCoinDeposit
     }
 }
 
-export async function settleVisit(visitId: string, breakdown: any, netAmount: number) {
+export async function settleVisit(visitId: string, breakdown: any, netAmount: number, depositToSavings: boolean = false) {
     try {
-        // Check if already settled
-        const existing = await prisma.settlement.findFirst({
-            where: { visitId }
-        })
+        await prisma.$transaction(async (tx) => {
+            // 1. Settlement Logic
+            const existingSettlement = await tx.settlement.findFirst({
+                where: { visitId }
+            })
 
-        if (existing) {
-            // Update existing
-            await prisma.settlement.update({
-                where: { id: existing.id },
-                data: {
-                    netAmount,
-                    breakdown
-                }
+            if (existingSettlement) {
+                await tx.settlement.update({
+                    where: { id: existingSettlement.id },
+                    data: {
+                        netAmount,
+                        breakdown
+                    }
+                })
+            } else {
+                await tx.settlement.create({
+                    data: {
+                        visitId,
+                        netAmount,
+                        breakdown
+                    }
+                })
+            }
+
+            // 2. Deposit Logic
+            const visit = await tx.visit.findUnique({
+                where: { id: visitId },
+                include: { player: true }
             })
-        } else {
-            await prisma.settlement.create({
-                data: {
-                    visitId,
-                    netAmount,
-                    breakdown
-                }
+
+            if (!visit) {
+                throw new Error("来店データが見つかりません")
+            }
+
+            const existingDeposit = await tx.storeCoinDeposit.findUnique({
+                where: { visitId } // using unique visitId
             })
-        }
+
+            if (depositToSavings && netAmount > 0) {
+                if (existingDeposit) {
+                    // Update existing deposit
+                    const diff = netAmount - existingDeposit.depositAmount
+                    await tx.storeCoinDeposit.update({
+                        where: { id: existingDeposit.id },
+                        data: { depositAmount: netAmount }
+                    })
+                    await tx.player.update({
+                        where: { id: visit.player.id },
+                        data: { storeCoinBalance: { increment: diff } }
+                    })
+                } else {
+                    // Create new deposit
+                    await tx.storeCoinDeposit.create({
+                        data: {
+                            playerId: visit.player.id,
+                            depositAmount: netAmount,
+                            visitId: visitId
+                        }
+                    })
+                    await tx.player.update({
+                        where: { id: visit.player.id },
+                        data: { storeCoinBalance: { increment: netAmount } }
+                    })
+                }
+            } else {
+                // Not depositing or invalid amount for deposit
+                if (existingDeposit) {
+                    // Remove existing deposit and revert balance
+                    await tx.storeCoinDeposit.delete({
+                        where: { id: existingDeposit.id }
+                    })
+                    await tx.player.update({
+                        where: { id: visit.player.id },
+                        data: { storeCoinBalance: { decrement: existingDeposit.depositAmount } }
+                    })
+                }
+            }
+        })
 
         revalidatePath("/daily-visits")
         return { success: true }

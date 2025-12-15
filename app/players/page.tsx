@@ -5,7 +5,6 @@ import { format } from "date-fns"
 export default async function PlayersPage() {
     const playersData = await prisma.player.findMany({
         include: {
-            storeCoin: true,
             _count: {
                 select: { visitations: true }
             },
@@ -24,7 +23,7 @@ export default async function PlayersPage() {
         memberId: p.memberId.toString(),
         name: p.name,
         gameId: p.webCoinGameId ?? undefined,
-        balance: p.storeCoin?.balance ?? 0,
+        balance: p.storeCoinBalance,
         visitCount: p._count.visitations,
         lastVisit: p.visitations[0] ? format(p.visitations[0].createdAt, 'yyyy-MM-dd') : "-",
         status: "active"
