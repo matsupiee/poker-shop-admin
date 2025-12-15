@@ -19,12 +19,14 @@ model Player {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  memberId      Int     @unique @map("member_id") // お店で割り振る会員連番
-  webCoinGameId String? @unique @map("web_coin_game_id") // WebCoinのゲームID
-  name          String
+  memberId         Int     @unique @map("member_id") // お店で割り振る会員連番
+  webCoinGameId    String? @unique @map("web_coin_game_id") // WebCoinのゲームID
+  name             String
+  storeCoinBalance Int     @default(0) @map("store_coin_balance")
 
-  visitations Visit[]
-  storeCoin   StoreCoin?
+  visitations        Visit[]
+  storeCoinDeposits  StoreCoinDeposit[]
+  storeCoinWithdraws StoreCoinWithdraw[]
 
   @@map("players")
 }
@@ -190,16 +192,47 @@ model Settlement {
   @@map("settlements")
 }
 
-// 店内コイン残高
-model StoreCoin {
+model StoreCoinDeposit {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  playerId String @unique @map("player_id")
-  balance  Int
+  playerId      String @map("player_id")
+  depositAmount Int    @map("deposit_amount")
 
-  player Player @relation(fields: [playerId], references: [id])
+  player                   Player                    @relation(fields: [playerId], references: [id])
+  storeCoinWithdrawAmounts StoreCoinWithdrawAmount[]
 
-  @@map("store_coins")
+  @@map("store_coin_deposits")
+}
+
+model StoreCoinWithdrawAmount {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  storeCoinDepositId  String @map("store_coin_deposit_id")
+  storeCoinWithdrawId String @map("store_coin_withdraw_id")
+
+  amount Int
+
+  storeCoinDeposit  StoreCoinDeposit  @relation(fields: [storeCoinDepositId], references: [id])
+  storeCoinWithdraw StoreCoinWithdraw @relation(fields: [storeCoinWithdrawId], references: [id])
+
+  @@map("store_coin_withdraw_amount")
+}
+
+model StoreCoinWithdraw {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  playerId String @map("player_id")
+
+  withdrawAmount Int @map("withdraw_amount") // 引き出し額
+
+  player                   Player                    @relation(fields: [playerId], references: [id])
+  storeCoinWithdrawAmounts StoreCoinWithdrawAmount[]
+
+  @@map("proceeds_withdraw")
 }
