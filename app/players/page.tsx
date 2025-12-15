@@ -23,6 +23,7 @@ export default async function PlayersPage() {
         id: p.id,
         memberId: p.memberId.toString(),
         name: p.name,
+        gameId: p.webCoinGameId ?? undefined,
         balance: p.storeCoin?.balance ?? 0,
         visitCount: p._count.visitations,
         lastVisit: p.visitations[0] ? format(p.visitations[0].createdAt, 'yyyy-MM-dd') : "-",

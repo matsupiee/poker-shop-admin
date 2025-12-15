@@ -48,7 +48,7 @@ export async function addTournamentEntry(
                     create: {
                         eventType: "ENTRY",
                         chipAmount: chipAmount,
-                        paymentAmount: paymentAmount
+                        chargeAmount: paymentAmount
                     }
                 }
             }

@@ -256,16 +256,16 @@ export default function DailyVisitsPage() {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    <SettlementDialog
-                                                        visitId={visit.id}
-                                                        playerName={visit.player.name}
-                                                        isSettled={!!visit.settlement}
-                                                        onSuccess={fetchData}
-                                                    />
                                                     <AssignGameDialog
                                                         visitId={visit.id}
                                                         playerName={visit.player.name}
                                                         tournaments={tournaments}
+                                                        onSuccess={fetchData}
+                                                    />
+                                                    <SettlementDialog
+                                                        visitId={visit.id}
+                                                        playerName={visit.player.name}
+                                                        isSettled={!!visit.settlement}
                                                         onSuccess={fetchData}
                                                     />
                                                     <Button variant="ghost" size="sm">

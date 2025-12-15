@@ -36,9 +36,10 @@ interface AssignGameDialogProps {
     playerName: string
     tournaments: AvailableTournament[]
     onSuccess?: () => void
+    disabled?: boolean
 }
 
-export function AssignGameDialog({ visitId, playerName, tournaments, onSuccess }: AssignGameDialogProps) {
+export function AssignGameDialog({ visitId, playerName, tournaments, onSuccess, disabled }: AssignGameDialogProps) {
     const [open, setOpen] = React.useState(false)
     const [mode, setMode] = React.useState<"tournament" | "ring">("tournament")
     const [selectedTournamentId, setSelectedTournamentId] = React.useState<string>("")
@@ -107,7 +108,7 @@ export function AssignGameDialog({ visitId, playerName, tournaments, onSuccess }
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8">
+                <Button variant="outline" size="sm" className="h-8" disabled={disabled}>
                     ゲーム参加
                 </Button>
             </DialogTrigger>

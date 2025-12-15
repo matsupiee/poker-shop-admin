@@ -30,12 +30,14 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Search, MoreHorizontal, UserPlus, Filter, ArrowUpDown } from "lucide-react"
 import { CreatePlayerDialog } from "./create-player-dialog"
+import { EditPlayerDialog } from "./edit-player-dialog"
 import { RegisterVisitDialog } from "@/components/visits/register-visit-dialog"
 
 export type Player = {
     id: string
     memberId: string
     name: string
+    gameId?: string
     balance: number
     visitCount: number
     lastVisit: string
@@ -50,6 +52,8 @@ export function PlayerList({ initialPlayers }: PlayerListProps) {
     const [searchTerm, setSearchTerm] = useState("")
     const [selectedPlayerForVisit, setSelectedPlayerForVisit] = useState<Player | null>(null)
     const [isVisitDialogOpen, setIsVisitDialogOpen] = useState(false)
+    const [selectedPlayerForEdit, setSelectedPlayerForEdit] = useState<Player | null>(null)
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
 
     const filteredPlayers = initialPlayers.filter(player =>
         player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -169,7 +173,12 @@ export function PlayerList({ initialPlayers }: PlayerListProps) {
                                                         </DropdownMenuItem>
                                                         <DropdownMenuSeparator />
                                                         <DropdownMenuItem>詳細を表示</DropdownMenuItem>
-                                                        <DropdownMenuItem>編集する</DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => {
+                                                            setSelectedPlayerForEdit(player)
+                                                            setIsEditDialogOpen(true)
+                                                        }}>
+                                                            編集する
+                                                        </DropdownMenuItem>
                                                         <DropdownMenuItem className="text-destructive">削除する</DropdownMenuItem>
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
@@ -187,6 +196,13 @@ export function PlayerList({ initialPlayers }: PlayerListProps) {
                 player={selectedPlayerForVisit}
                 open={isVisitDialogOpen}
                 onOpenChange={setIsVisitDialogOpen}
+            />
+
+            <EditPlayerDialog
+                key={selectedPlayerForEdit?.id}
+                player={selectedPlayerForEdit}
+                open={isEditDialogOpen}
+                onOpenChange={setIsEditDialogOpen}
             />
         </div >
     )
