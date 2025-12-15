@@ -35,6 +35,7 @@ import { getTournaments } from "@/app/actions/tournaments"
 import { AssignGameDialog } from "@/components/daily-visits/assign-game-dialog"
 import { TournamentRankUpdate } from "@/components/daily-visits/tournament-rank-update"
 import { RingGameControl } from "@/components/daily-visits/ring-game-control"
+import { SettlementDialog } from "@/components/daily-visits/settlement-dialog"
 
 export default function DailyVisitsPage() {
     const [date, setDate] = React.useState<Date | undefined>(new Date())
@@ -255,6 +256,12 @@ export default function DailyVisitsPage() {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end gap-2">
+                                                    <SettlementDialog
+                                                        visitId={visit.id}
+                                                        playerName={visit.player.name}
+                                                        isSettled={!!visit.settlement}
+                                                        onSuccess={fetchData}
+                                                    />
                                                     <AssignGameDialog
                                                         visitId={visit.id}
                                                         playerName={visit.player.name}

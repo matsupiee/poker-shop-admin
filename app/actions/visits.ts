@@ -33,6 +33,11 @@ export type DailyVisit = {
     }
     tournaments: TournamentEntryInfo[]
     ringGame: RingGameInfo
+    settlement?: {
+        id: string
+        netAmount: number
+        createdAt: Date
+    }
 }
 
 export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
@@ -67,7 +72,8 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
                 include: {
                     chipEvents: true
                 }
-            }
+            },
+            settlements: true
         },
         orderBy: {
             createdAt: 'asc'
@@ -126,6 +132,12 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
             }
         }
 
+        const settlementInfo = visit.settlements[0] ? {
+            id: visit.settlements[0].id,
+            netAmount: visit.settlements[0].netAmount,
+            createdAt: visit.settlements[0].createdAt
+        } : undefined
+
         return {
             id: visit.id.toString(),
             visitDate: visit.createdAt.toISOString().split('T')[0],
@@ -137,7 +149,8 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
                 // image: visit.player.image // Add if available in schema later
             },
             tournaments,
-            ringGame
+            ringGame,
+            settlement: settlementInfo
         }
     })
 }
@@ -243,6 +256,136 @@ export async function updateTournamentRank(entryId: string, rank: number) {
     } catch (error) {
         console.error("Failed to update rank", error)
         return { success: false, error: "Failed to update rank" }
+    }
+}
+
+export async function getVisitSettlementDetails(visitId: string) {
+    const visit = await prisma.visit.findUnique({
+        where: { id: visitId },
+        include: {
+            tournamentEntries: {
+                include: {
+                    tournament: {
+                        include: {
+                            tournamentPrizes: true
+                        }
+                    },
+                    chipEvents: true
+                }
+            },
+            ringGameEntry: {
+                include: {
+                    chipEvents: true
+                }
+            }
+        }
+    })
+
+    if (!visit) {
+        throw new Error("来店データが見つかりません")
+    }
+
+    // 1. Entrance & Food
+    const items = []
+    if (visit.entranceFee) {
+        items.push({ type: "entrance", label: "入場料", amount: -visit.entranceFee })
+    }
+    if (visit.foodFee) {
+        items.push({ type: "food", label: "飲食代", amount: -visit.foodFee })
+    }
+
+    // 2. Tournaments
+    for (const entry of visit.tournamentEntries) {
+        // Costs
+        // Assuming chargeAmount is the cost.
+        const entryCost = entry.chipEvents.reduce((sum, e) => sum + e.chargeAmount, 0)
+        if (entryCost > 0) {
+            items.push({
+                type: "tournament_entry",
+                label: `大会: ${entry.tournament.name}`,
+                amount: -entryCost
+            })
+        }
+
+        // Prizes
+        if (entry.finalRank) {
+            const prize = entry.tournament.tournamentPrizes.find(p => p.rank === entry.finalRank)
+            if (prize) {
+                items.push({
+                    type: "tournament_prize",
+                    label: `入賞: ${entry.tournament.name} (${entry.finalRank}位)`,
+                    amount: prize.amount
+                })
+            }
+        }
+    }
+
+    // 3. Ring Game
+    if (visit.ringGameEntry) {
+        // Buy In (Cost)
+        const buyIns = visit.ringGameEntry.chipEvents.filter(e => e.eventType === "BUY_IN")
+        const totalBuyInCost = buyIns.reduce((sum, e) => sum + (e.chargeAmount ?? e.chipAmount), 0)
+
+        if (totalBuyInCost > 0) {
+            items.push({
+                type: "ring_game_buyin",
+                label: "リングゲーム購入",
+                amount: -totalBuyInCost
+            })
+        }
+
+        // Cash Out (Credit)
+        const cashOuts = visit.ringGameEntry.chipEvents.filter(e => e.eventType === "CASH_OUT")
+        const totalCashOutVal = cashOuts.reduce((sum, e) => sum + e.chipAmount, 0) // Assuming 1 chip = 1 currency unit
+
+        if (totalCashOutVal > 0) {
+            items.push({
+                type: "ring_game_cashout",
+                label: "リングゲーム換金",
+                amount: totalCashOutVal
+            })
+        }
+    }
+
+    const netAmount = items.reduce((sum, item) => sum + item.amount, 0)
+
+    return {
+        items,
+        netAmount
+    }
+}
+
+export async function settleVisit(visitId: string, breakdown: any, netAmount: number) {
+    try {
+        // Check if already settled
+        const existing = await prisma.settlement.findFirst({
+            where: { visitId }
+        })
+
+        if (existing) {
+            // Update existing
+            await prisma.settlement.update({
+                where: { id: existing.id },
+                data: {
+                    netAmount,
+                    breakdown
+                }
+            })
+        } else {
+            await prisma.settlement.create({
+                data: {
+                    visitId,
+                    netAmount,
+                    breakdown
+                }
+            })
+        }
+
+        revalidatePath("/daily-visits")
+        return { success: true }
+    } catch (e) {
+        console.error("Settlement failed", e)
+        return { success: false, error: "決済処理に失敗しました" }
     }
 }
 
