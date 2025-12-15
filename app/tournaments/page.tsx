@@ -96,7 +96,7 @@ export default function DailyTournamentsPage() {
                 ) : (
                     <>
                         {tournaments.map((tournament) => {
-                            const eventDate = new Date(tournament.eventDate)
+                            const eventDate = new Date(tournament.startAt)
                             const startTime = format(eventDate, "HH:mm")
                             const now = new Date()
                             // Simple status logic

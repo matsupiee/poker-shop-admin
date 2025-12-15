@@ -10,7 +10,7 @@ export default async function PlayersPage() {
                 select: { visitations: true }
             },
             visitations: {
-                orderBy: { visitDate: 'desc' },
+                orderBy: { createdAt: 'desc' },
                 take: 1
             }
         },
@@ -25,7 +25,7 @@ export default async function PlayersPage() {
         name: p.name,
         balance: p.storeCoin?.balance ?? 0,
         visitCount: p._count.visitations,
-        lastVisit: p.visitations[0] ? format(p.visitations[0].visitDate, 'yyyy-MM-dd') : "-",
+        lastVisit: p.visitations[0] ? format(p.visitations[0].createdAt, 'yyyy-MM-dd') : "-",
         status: "active"
     }))
 

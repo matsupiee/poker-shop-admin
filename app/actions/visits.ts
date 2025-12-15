@@ -122,7 +122,7 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
 
         return {
             id: visit.id.toString(),
-            visitDate: visit.visitDate.toISOString().split('T')[0],
+            visitDate: visit.createdAt.toISOString().split('T')[0],
             checkInTime: format(visit.createdAt, "HH:mm"),
             player: {
                 id: visit.player.id.toString(),
@@ -189,7 +189,7 @@ export async function registerVisit(prevState: RegisterVisitState, formData: For
         const existing = await prisma.visit.findFirst({
             where: {
                 playerId: playerId,
-                visitDate: {
+                createdAt: {
                     gte: startOfDay,
                     lte: endOfDay
                 }
@@ -207,7 +207,7 @@ export async function registerVisit(prevState: RegisterVisitState, formData: For
         await prisma.visit.create({
             data: {
                 playerId: playerId,
-                visitDate: visitDate,
+                createdAt: visitDate, // Use visitDate input as createdAt
                 entranceFee: entranceFee,
             }
         })

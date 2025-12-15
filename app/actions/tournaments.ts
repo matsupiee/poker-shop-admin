@@ -50,12 +50,12 @@ export async function createTournament(prevState: CreateTournamentState, formDat
     }
 
     try {
-        const eventDate = new Date(eventDateStr)
+        const startAt = new Date(eventDateStr)
 
         await prisma.tournament.create({
             data: {
                 name,
-                eventDate,
+                startAt,
                 tournamentPrizes: {
                     create: prizes.map(p => ({
                         rank: Number(p.rank),
@@ -88,7 +88,7 @@ export async function getTournaments(date: Date) {
     try {
         const tournaments = await prisma.tournament.findMany({
             where: {
-                eventDate: {
+                startAt: {
                     gte: startOfDay,
                     lte: endOfDay
                 }
@@ -104,7 +104,7 @@ export async function getTournaments(date: Date) {
                 }
             },
             orderBy: {
-                eventDate: 'asc'
+                startAt: 'asc'
             }
         })
         return tournaments
