@@ -31,14 +31,14 @@ export function CreateTournamentDialog({ onTournamentCreated, children }: Create
 
     const [open, setOpen] = useState(false)
     const [state, action, isPending] = useActionState(createTournament, initialState)
-    const [prizes, setPrizes] = useState<Array<{ rank: number, amount: number }>>([
-        { rank: 1, amount: 0 }
-    ])
+    const [prizes, setPrizes] = useState<Array<{ rank: number, amount: number }>>(
+        Array.from({ length: 10 }, (_, i) => ({ rank: i + 1, amount: 0 }))
+    )
 
     useEffect(() => {
         if (state.success) {
             setOpen(false)
-            setPrizes([{ rank: 1, amount: 0 }]) // Reset prizes
+            setPrizes(Array.from({ length: 10 }, (_, i) => ({ rank: i + 1, amount: 0 }))) // Reset prizes
             if (onTournamentCreated) {
                 onTournamentCreated()
             }
@@ -105,6 +105,22 @@ export function CreateTournamentDialog({ onTournamentCreated, children }: Create
                                 />
                                 {state.errors?.eventDate && (
                                     <p className="text-red-500 text-xs mt-1">{state.errors.eventDate[0]}</p>
+                                )}
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="startTime" className="text-right">
+                                開始時刻
+                            </Label>
+                            <div className="col-span-3">
+                                <Input
+                                    id="startTime"
+                                    name="startTime"
+                                    type="time"
+                                    defaultValue="19:00"
+                                />
+                                {state.errors?.startTime && (
+                                    <p className="text-red-500 text-xs mt-1">{state.errors.startTime[0]}</p>
                                 )}
                             </div>
                         </div>

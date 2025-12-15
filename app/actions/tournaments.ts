@@ -8,6 +8,7 @@ export type CreateTournamentState = {
     errors?: {
         name?: string[]
         eventDate?: string[]
+        startTime?: string[]
         _form?: string[]
     }
     success?: boolean
@@ -16,6 +17,7 @@ export type CreateTournamentState = {
 export async function createTournament(prevState: CreateTournamentState, formData: FormData): Promise<CreateTournamentState> {
     const name = formData.get("name") as string
     const eventDateStr = formData.get("eventDate") as string // Expecting YYYY-MM-DD
+    const startTimeStr = formData.get("startTime") as string // Expecting HH:MM
     const prizesStr = formData.get("prizes") as string
 
     const errors: CreateTournamentState["errors"] = {}
@@ -26,6 +28,10 @@ export async function createTournament(prevState: CreateTournamentState, formDat
 
     if (!eventDateStr) {
         errors.eventDate = ["開催日を入力してください"]
+    }
+
+    if (!startTimeStr) {
+        errors.startTime = ["開始時刻を入力してください"]
     }
 
     if (Object.keys(errors).length > 0) {
@@ -42,7 +48,7 @@ export async function createTournament(prevState: CreateTournamentState, formDat
                         rank: Number(p.rank),
                         amount: Number(p.amount)
                     }))
-                    .filter(p => !isNaN(p.rank) && !isNaN(p.amount) && p.amount >= 0)
+                    .filter(p => !isNaN(p.rank) && !isNaN(p.amount) && p.amount > 0)
             }
         } catch (e) {
             console.error("Failed to parse prizes", e)
@@ -50,7 +56,7 @@ export async function createTournament(prevState: CreateTournamentState, formDat
     }
 
     try {
-        const startAt = new Date(eventDateStr)
+        const startAt = new Date(`${eventDateStr}T${startTimeStr}`)
 
         await prisma.tournament.create({
             data: {
