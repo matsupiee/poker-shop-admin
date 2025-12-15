@@ -261,6 +261,7 @@ export default function DailyVisitsPage() {
                                                         playerName={visit.player.name}
                                                         tournaments={tournaments}
                                                         onSuccess={fetchData}
+                                                        disabled={!!visit.settlement}
                                                     />
                                                     <SettlementDialog
                                                         visitId={visit.id}
