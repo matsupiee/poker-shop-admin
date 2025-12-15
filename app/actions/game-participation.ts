@@ -27,6 +27,18 @@ export async function addTournamentEntry(
 
     try {
         // Create entry with initial chip event
+        const tournament = await prisma.tournament.findUnique({
+            where: { id: tournamentId }
+        })
+
+        if (!tournament) {
+            return { errors: { tournamentId: ["指定されたトーナメントが見つかりません"] } }
+        }
+
+        if (new Date() > tournament.entryClosesAt) {
+            return { errors: { _form: ["エントリー締め切り時刻を過ぎています"] } }
+        }
+
         await prisma.tournamentEntry.create({
             data: {
                 visitId,

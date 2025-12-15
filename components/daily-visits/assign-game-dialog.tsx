@@ -28,6 +28,7 @@ type AvailableTournament = {
     id: string
     name: string
     eventDate: Date | string
+    entryClosesAt: Date | string
 }
 
 interface AssignGameDialogProps {
@@ -156,11 +157,14 @@ export function AssignGameDialog({ visitId, playerName, tournaments, onSuccess }
                                             <SelectValue placeholder="トーナメントを選択" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {tournaments.map((t) => (
-                                                <SelectItem key={t.id} value={t.id}>
-                                                    {t.name}
-                                                </SelectItem>
-                                            ))}
+                                            {tournaments.map((t) => {
+                                                const isClosed = new Date() > new Date(t.entryClosesAt)
+                                                return (
+                                                    <SelectItem key={t.id} value={t.id} disabled={isClosed}>
+                                                        {t.name} {isClosed ? "(締切)" : ""}
+                                                    </SelectItem>
+                                                )
+                                            })}
                                         </SelectContent>
                                     </Select>
                                 )}
