@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { CreateTournamentDialog } from "@/components/tournaments/create-tournament-dialog"
+import { EditTournamentDialog } from "@/components/tournaments/edit-tournament-dialog"
 import { getTournaments } from "@/app/actions/tournaments"
 import { Loader2 } from "lucide-react"
 
@@ -129,9 +130,12 @@ export default function DailyTournamentsPage() {
                                                         status === "running" ? "進行中" :
                                                             status === "finished" ? "終了" : "中止"}
                                             </Badge>
-                                            <div className="text-sm font-medium text-muted-foreground flex items-center">
-                                                <Clock className="w-3 h-3 mr-1" />
-                                                {startTime}
+                                            <div className="flex items-center gap-2">
+                                                <div className="text-sm font-medium text-muted-foreground flex items-center">
+                                                    <Clock className="w-3 h-3 mr-1" />
+                                                    {startTime}
+                                                </div>
+                                                <EditTournamentDialog tournament={tournament} onTournamentUpdated={fetchTournaments} />
                                             </div>
                                         </div>
                                         <CardTitle className="leading-tight">{tournament.name}</CardTitle>
@@ -149,12 +153,12 @@ export default function DailyTournamentsPage() {
                                                 </div>
                                             </div>
                                             <div className="flex flex-col">
-                                                <span className="text-xs text-muted-foreground">プライズ</span>
+                                                <span className="text-xs text-muted-foreground">プライズ総額</span>
                                                 <div className="flex items-end gap-1">
                                                     <Trophy className="w-5 h-5 mb-0.5 text-yellow-600" />
                                                     <span className="text-sm font-medium pt-1">
                                                         {tournament.tournamentPrizes && tournament.tournamentPrizes.length > 0 ? (
-                                                            `1st: ${tournament.tournamentPrizes[0].amount.toLocaleString()}`
+                                                            `${tournament.tournamentPrizes.reduce((sum: number, p: any) => sum + p.amount, 0).toLocaleString()}`
                                                         ) : (
                                                             "未確定"
                                                         )}
