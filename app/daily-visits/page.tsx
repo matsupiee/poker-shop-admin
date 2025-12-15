@@ -33,6 +33,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getDailyVisits, type DailyVisit } from "@/app/actions/visits"
 import { getTournaments } from "@/app/actions/tournaments"
 import { AssignGameDialog } from "@/components/daily-visits/assign-game-dialog"
+import { TournamentRankUpdate } from "@/components/daily-visits/tournament-rank-update"
 import { RingGameControl } from "@/components/daily-visits/ring-game-control"
 
 export default function DailyVisitsPage() {
@@ -186,16 +187,19 @@ export default function DailyVisitsPage() {
                                                     {visit.tournaments.length > 0 ? (
                                                         visit.tournaments.map(t => (
                                                             <div key={t.id} className="flex items-center text-sm gap-2">
+                                                                <span className="text-xs text-muted-foreground font-mono">
+                                                                    [{t.timestamp}]
+                                                                </span>
                                                                 <Trophy className="w-3.5 h-3.5 text-yellow-600 flex-shrink-0" />
                                                                 <span className="truncate max-w-[150px]" title={t.tournamentName}>
                                                                     {t.tournamentName}
                                                                 </span>
-                                                                <Badge
-                                                                    variant={t.status === "playing" ? "default" : "secondary"}
-                                                                    className="text-[10px] px-1 py-0 h-5"
-                                                                >
-                                                                    {t.status === "playing" ? "プレイ中" : `${t.rank}位`}
-                                                                </Badge>
+                                                                <TournamentRankUpdate
+                                                                    entryId={t.id}
+                                                                    currentRank={t.rank}
+                                                                    status={t.status}
+                                                                    onSuccess={fetchData}
+                                                                />
                                                                 {t.entryCount > 1 && (
                                                                     <span className="text-xs text-muted-foreground">
                                                                         ({t.entryCount}E)

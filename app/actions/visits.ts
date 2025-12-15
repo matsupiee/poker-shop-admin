@@ -10,6 +10,7 @@ export type TournamentEntryInfo = {
     tournamentId: string
     status: "playing" | "eliminated" | "finished"
     rank?: number
+    timestamp: string
     entryCount: number
 }
 
@@ -57,6 +58,9 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
                 include: {
                     tournament: true,
                     chipEvents: true
+                },
+                orderBy: {
+                    createdAt: 'asc'
                 }
             },
             ringGameEntry: {
@@ -87,9 +91,11 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
                 tournamentId: entry.tournament.id.toString(),
                 status,
                 rank: entry.finalRank ?? undefined,
-                entryCount: 1
+                entryCount: 1,
+                timestamp: format(entry.createdAt, "HH:mm")
             }
         })
+
 
         // Map ring game
         let ringGame: RingGameInfo = {
@@ -214,6 +220,7 @@ export async function registerVisit(prevState: RegisterVisitState, formData: For
 
         revalidatePath("/players")
         revalidatePath("/daily-visits")
+
         return { success: true }
     } catch (e: any) {
         console.error(e)
@@ -224,3 +231,18 @@ export async function registerVisit(prevState: RegisterVisitState, formData: For
         }
     }
 }
+
+export async function updateTournamentRank(entryId: string, rank: number) {
+    try {
+        await prisma.tournamentEntry.update({
+            where: { id: entryId },
+            data: { finalRank: rank }
+        })
+        revalidatePath("/daily-visits")
+        return { success: true }
+    } catch (error) {
+        console.error("Failed to update rank", error)
+        return { success: false, error: "Failed to update rank" }
+    }
+}
+
