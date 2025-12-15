@@ -78,6 +78,7 @@ export function RegisterVisitDialog({ player, open, onOpenChange }: RegisterVisi
                                     type="number"
                                     placeholder="0"
                                     min="0"
+                                    defaultValue={1000}
                                 />
                                 {state.errors?.entranceFee && (
                                     <p className="text-red-500 text-xs mt-1">{state.errors.entranceFee[0]}</p>
