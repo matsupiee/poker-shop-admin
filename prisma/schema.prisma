@@ -35,10 +35,11 @@ model Visit {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  playerId       String @map("player_id")
-  entranceFee    Int?   @map("entrance_fee")
-  foodAmount     Int?   @map("food_amount")
-  discountAmount Int?   @map("discount_amount")
+  playerId String @map("player_id")
+
+  // 支払い関連の情報
+  entranceFee Int? @map("entrance_fee")
+  foodFee     Int? @map("food_fee")
 
   player            Player            @relation(fields: [playerId], references: [id])
   tournamentEntries TournamentEntry[]
@@ -122,8 +123,11 @@ model TournamentChipEvent {
 
   tournamentEntryId String                  @map("tournament_entry_id")
   eventType         TournamentChipEventType @map("event_type")
-  chipAmount        Int                     @map("chip_amount") // 獲得したチップ
-  paymentAmount     Int                     @map("payment_amount") // 実際に払う必要があるお金
+
+  // チップ量
+  chipAmount   Int @map("chip_amount")
+  // 支払請求額
+  chargeAmount Int @map("charge_amount")
 
   tournamentEntry TournamentEntry @relation(fields: [tournamentEntryId], references: [id])
 
@@ -158,7 +162,11 @@ model RingGameChipEvent {
 
   ringGameEntryId String                @map("ring_game_entry_id")
   eventType       RingGameChipEventType @map("event_type")
-  chipAmount      Int                   @map("chip_amount")
+
+  // チップ量
+  chipAmount   Int  @map("chip_amount")
+  // 支払請求額(BUY_INの場合だけ記録)
+  chargeAmount Int? @map("charge_amount")
 
   ringGameEntry RingGameEntry @relation(fields: [ringGameEntryId], references: [id])
 
@@ -171,8 +179,11 @@ model Settlement {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  visitId     String @map("visit_id")
-  totalAmount Int    @map("total_amount")
+  visitId String @map("visit_id")
+
+  // 最終的な収支
+  netAmount Int  @map("net_amount")
+  breakdown Json // 計算レシート
 
   visit Visit @relation(fields: [visitId], references: [id])
 
