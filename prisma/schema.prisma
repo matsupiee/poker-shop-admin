@@ -13,6 +13,85 @@ datasource db {
   provider = "postgresql"
 }
 
+model Staff {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  name          String
+  email         String  @unique
+  emailVerified Boolean
+  image         String?
+
+  staffSessions StaffSession[]
+  staffAccounts StaffAccount[]
+
+  @@map("staff_users")
+}
+
+// ログインセッションを管理
+// 1ログイン=1レコード
+model StaffSession {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  staffId String @map("staff_id")
+
+  token     String
+  expiresAt DateTime @map("expires_at")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+
+  staff Staff @relation(fields: [staffId], references: [id])
+
+  @@map("staff_user_sessions")
+}
+
+// 1StaffUserが複数の認証方法を使えるようにする
+model StaffAccount {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  staffId String @map("staff_id")
+
+  // The ID of the account as provided by the SSO or equal to userId for credential accounts
+  accountId             String   @map("account_id")
+  // The ID of the provider
+  providerId            String   @map("provider_id")
+  // The access token of the account. Returned by the provider
+  accessToken           String   @map("access_token")
+  refreshToken          String   @map("refresh_token")
+  accessTokenExpiresAt  DateTime @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime @map("refresh_token_expires_at")
+  // The scope of the account. Returned by the provider
+  scope                 String?
+  // The ID token returned from the provider
+  idToken               String?  @map("id_token")
+  // The password of the account. Mainly used for email and password authentication
+  password              String?  @map("password")
+
+  staff Staff @relation(fields: [staffId], references: [id])
+
+  @@map("staff_accounts")
+}
+
+// メール認証やパスワードリセット用のトークンを一時保存
+model StaffVerification {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // The identifier for the verification request(メールアドレスなど)
+  identifier String
+  // The value to be verified(トークン、検証コードなど)
+  value      String
+  expiresAt  DateTime @map("expires_at")
+
+  @@map("staff_verifications")
+}
+
 // プレイヤー
 model Player {
   id        String   @id @default(cuid()) // DB管理用のID

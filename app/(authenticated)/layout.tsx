@@ -1,5 +1,5 @@
 import { AppSidebar } from "@/components/app-sidebar";
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/better-auth/auth";
 
 export default async function AuthenticatedLayout({
     children,

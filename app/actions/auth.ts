@@ -1,6 +1,6 @@
 "use server"
 
-import { signIn, signOut } from "@/lib/auth"
+import { signIn, signOut } from "@/lib/better-auth/auth"
 import { AuthError } from "next-auth"
 
 export async function login(prevState: string | undefined, formData: FormData) {
