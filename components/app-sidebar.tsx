@@ -12,6 +12,7 @@ import {
     LogOut,
     Settings
 } from "lucide-react";
+import { logout } from "@/app/actions/auth";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -115,6 +116,7 @@ export function AppSidebar() {
                         "w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10",
                         isCollapsed && "justify-center px-0"
                     )}
+                    onClick={() => logout()}
                 >
                     <LogOut className="h-4 w-4 mr-2" />
                     {!isCollapsed && "Logout"}
