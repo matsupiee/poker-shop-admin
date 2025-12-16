@@ -21,6 +21,7 @@ const menuItems = [
     { href: "/daily-visits", label: "Daily Visits", icon: CalendarDays },
     { href: "/players", label: "Players", icon: Users },
     { href: "/tournaments", label: "Tournaments", icon: Trophy },
+    { href: "/staff", label: "Staff", icon: Settings },
 ];
 
 export function AppSidebar({ userEmail }: { userEmail: string }) {
