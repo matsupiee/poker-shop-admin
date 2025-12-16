@@ -23,7 +23,7 @@ const menuItems = [
     { href: "/tournaments", label: "Tournaments", icon: Trophy },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({ userEmail }: { userEmail: string }) {
     const pathname = usePathname();
     const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -98,8 +98,7 @@ export function AppSidebar() {
                             <Users className="w-4 h-4 text-muted-foreground" />
                         </div>
                         <div className="flex flex-col overflow-hidden">
-                            <span className="text-sm font-medium truncate">Admin User</span>
-                            <span className="text-xs text-muted-foreground truncate">admin@pokershop.com</span>
+                            <span className="text-xs text-muted-foreground truncate" title={userEmail}>{userEmail}</span>
                         </div>
                     </div>
                 ) : (
