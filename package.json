@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "prisma:generate": "npx prisma generate",
-    "prisma:migrate": "npx prisma migrate dev & npx prisma generate",
+    "prisma:migrate": "npx prisma migrate dev",
     "prisma:reset": "npx prisma migrate reset"
   },
   "dependencies": {

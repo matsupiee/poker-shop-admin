@@ -14,14 +14,14 @@ export const signUp = async ({ email, password, name, image }: SignUpParams) => 
         password,
         name,
         image,
-        callbackURL: "/dashboard"
+        callbackURL: "/"
     }, {
         onRequest: (ctx) => {
             //show loading
         },
         onSuccess: (ctx) => {
             //redirect to the dashboard or sign in page
-            window.location.href = "/dashboard";
+            window.location.href = "/";
         },
         onError: (ctx) => {
             // display the error message

@@ -13,6 +13,11 @@ datasource db {
   provider = "postgresql"
 }
 
+enum StaffRole {
+  ADMIN
+  STAFF
+}
+
 model Staff {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now()) @map("created_at")
@@ -22,6 +27,8 @@ model Staff {
   email         String  @unique
   emailVerified Boolean
   image         String?
+
+  role StaffRole @default(STAFF)
 
   staffSessions StaffSession[]
   staffAccounts StaffAccount[]
