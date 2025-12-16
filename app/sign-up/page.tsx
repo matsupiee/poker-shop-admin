@@ -92,7 +92,7 @@ export default function SignUpPage() {
                         </Button>
                         <div className="text-sm text-center text-muted-foreground">
                             すでにアカウントをお持ちの方は{" "}
-                            <Link href="/login" className="text-primary hover:underline">
+                            <Link href="/sign-in" className="text-primary hover:underline">
                                 ログイン
                             </Link>
                         </div>

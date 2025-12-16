@@ -14,7 +14,7 @@ export default async function AuthenticatedLayout({
     });
 
     if (!session) {
-        redirect("/login");
+        redirect("/sign-in");
     }
 
     return (
