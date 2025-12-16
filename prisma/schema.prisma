@@ -26,7 +26,7 @@ model Staff {
   staffSessions StaffSession[]
   staffAccounts StaffAccount[]
 
-  @@map("staff_users")
+  @@map("staff")
 }
 
 // ログインセッションを管理
@@ -45,7 +45,7 @@ model StaffSession {
 
   staff Staff @relation(fields: [staffId], references: [id])
 
-  @@map("staff_user_sessions")
+  @@map("staff_sessions")
 }
 
 // 1StaffUserが複数の認証方法を使えるようにする
@@ -57,20 +57,22 @@ model StaffAccount {
   staffId String @map("staff_id")
 
   // The ID of the account as provided by the SSO or equal to userId for credential accounts
-  accountId             String   @map("account_id")
+  accountId  String @map("account_id")
   // The ID of the provider
-  providerId            String   @map("provider_id")
+  // メアド・パスワード→`credential` Googleアカウント→`google`
+  providerId String @map("provider_id")
+
   // The access token of the account. Returned by the provider
-  accessToken           String   @map("access_token")
-  refreshToken          String   @map("refresh_token")
-  accessTokenExpiresAt  DateTime @map("access_token_expires_at")
-  refreshTokenExpiresAt DateTime @map("refresh_token_expires_at")
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
   // The scope of the account. Returned by the provider
   scope                 String?
   // The ID token returned from the provider
-  idToken               String?  @map("id_token")
+  idToken               String?   @map("id_token")
   // The password of the account. Mainly used for email and password authentication
-  password              String?  @map("password")
+  password              String?   @map("password")
 
   staff Staff @relation(fields: [staffId], references: [id])
 

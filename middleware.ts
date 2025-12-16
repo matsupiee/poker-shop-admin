@@ -1,6 +1,10 @@
-export { auth as middleware } from "@/lib/better-auth/auth"
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+
+export async function middleware(request: NextRequest) {
+    return NextResponse.next();
+}
 
 export const config = {
-    // Matcher excluding static files and apis that don't need auth (unless strict)
     matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 }

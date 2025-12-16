@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "staff_users" (
+CREATE TABLE "staff" (
     "id" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -8,11 +8,11 @@ CREATE TABLE "staff_users" (
     "emailVerified" BOOLEAN NOT NULL,
     "image" TEXT,
 
-    CONSTRAINT "staff_users_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "staff_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "staff_user_sessions" (
+CREATE TABLE "staff_sessions" (
     "id" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE "staff_user_sessions" (
     "ip_address" TEXT,
     "user_agent" TEXT,
 
-    CONSTRAINT "staff_user_sessions_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "staff_sessions_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -57,10 +57,10 @@ CREATE TABLE "staff_verifications" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "staff_users_email_key" ON "staff_users"("email");
+CREATE UNIQUE INDEX "staff_email_key" ON "staff"("email");
 
 -- AddForeignKey
-ALTER TABLE "staff_user_sessions" ADD CONSTRAINT "staff_user_sessions_staff_id_fkey" FOREIGN KEY ("staff_id") REFERENCES "staff_users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "staff_sessions" ADD CONSTRAINT "staff_sessions_staff_id_fkey" FOREIGN KEY ("staff_id") REFERENCES "staff"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "staff_accounts" ADD CONSTRAINT "staff_accounts_staff_id_fkey" FOREIGN KEY ("staff_id") REFERENCES "staff_users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "staff_accounts" ADD CONSTRAINT "staff_accounts_staff_id_fkey" FOREIGN KEY ("staff_id") REFERENCES "staff"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

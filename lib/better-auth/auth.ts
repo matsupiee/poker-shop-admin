@@ -10,21 +10,21 @@ export const auth = betterAuth({
         enabled: true,
     },
     user: {
-        modelName: "StaffUser",
+        modelName: "Staff",
     },
     session: {
-        modelName: "StaffUserSession",
+        modelName: "StaffSession",
         fields: {
             userId: 'staffId'
         }
     },
     account: {
-        modelName: "StaffUserAccount",
+        modelName: "StaffAccount",
         fields: {
             userId: 'staffId'
         }
     },
     verification: {
-        modelName: "StaffUserVerification",
+        modelName: "StaffVerification",
     },
 });

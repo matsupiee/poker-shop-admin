@@ -1,15 +1,15 @@
 "use client"
 
 import { useState } from "react"
-import { signIn } from "@/lib/better-auth/sign-in"
+import { signUp } from "@/lib/better-auth/sign-up"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Lock } from "lucide-react"
+import { UserPlus } from "lucide-react"
 import Link from "next/link"
 
-export default function LoginPage() {
+export default function SignUpPage() {
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -19,13 +19,14 @@ export default function LoginPage() {
         setError(null)
 
         const formData = new FormData(e.currentTarget)
+        const name = formData.get("name") as string
         const email = formData.get("email") as string
         const password = formData.get("password") as string
 
         try {
-            await signIn({ email, password })
+            await signUp({ name, email, password })
         } catch (err: any) {
-            setError(err.message || "ログインに失敗しました")
+            setError(err.message || "An error occurred during sign up")
         } finally {
             setIsLoading(false)
         }
@@ -37,13 +38,27 @@ export default function LoginPage() {
                 <CardHeader className="space-y-1 text-center">
                     <div className="flex justify-center mb-4">
                         <div className="p-3 bg-primary/10 rounded-full">
-                            <Lock className="w-6 h-6 text-primary" />
+                            <UserPlus className="w-6 h-6 text-primary" />
                         </div>
                     </div>
-                    <CardTitle className="text-2xl font-bold">ログイン</CardTitle>
+                    <CardTitle className="text-2xl font-bold">新規登録</CardTitle>
+                    <CardDescription>
+                        新しいアカウントを作成します
+                    </CardDescription>
                 </CardHeader>
                 <form onSubmit={handleSubmit}>
                     <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="name">お名前</Label>
+                            <Input
+                                id="name"
+                                name="name"
+                                type="text"
+                                placeholder="Taro Yamada"
+                                required
+                                className="bg-background"
+                            />
+                        </div>
                         <div className="space-y-2">
                             <Label htmlFor="email">メールアドレス</Label>
                             <Input
@@ -71,14 +86,14 @@ export default function LoginPage() {
                             </div>
                         )}
                     </CardContent>
-                    <CardFooter className="flex flex-col space-y-4 mt-8">
+                    <CardFooter className="flex flex-col space-y-4 mt-4">
                         <Button className="w-full" type="submit" disabled={isLoading}>
-                            {isLoading ? "ログイン中..." : "ログイン"}
+                            {isLoading ? "登録中..." : "登録する"}
                         </Button>
                         <div className="text-sm text-center text-muted-foreground">
-                            アカウントをお持ちでない方は{" "}
-                            <Link href="/sign-up" className="text-primary hover:underline">
-                                新規登録
+                            すでにアカウントをお持ちの方は{" "}
+                            <Link href="/login" className="text-primary hover:underline">
+                                ログイン
                             </Link>
                         </div>
                     </CardFooter>

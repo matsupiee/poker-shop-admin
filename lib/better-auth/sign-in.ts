@@ -8,7 +8,7 @@ type SignInParams = {
 }
 
 export const signIn = async ({ email, password, callbackURL, rememberMe }: SignInParams) => {
-    const { data, error } = await authClient.signIn.email({
+    await authClient.signIn.email({
         /**
          * The user email
          */
@@ -20,13 +20,18 @@ export const signIn = async ({ email, password, callbackURL, rememberMe }: SignI
         /**
          * A URL to redirect to after the user verifies their email (optional)
          */
-        callbackURL: "/dashboard",
+        callbackURL: "/",
         /**
          * remember the user session after the browser is closed. 
          * @default true
          */
         rememberMe: false
     }, {
-        //callbacks
+        onSuccess: () => {
+            window.location.href = "/";
+        },
+        onError: (ctx) => {
+            alert(ctx.error.message);
+        }
     })
 }
