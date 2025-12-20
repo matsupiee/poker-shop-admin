@@ -285,6 +285,17 @@ model RingGameChipEvent {
   @@map("ring_game_chip_events")
 }
 
+model RingGameDesk {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  name                 String
+  ringGameDealerShifts RingGameDealerShift[]
+
+  @@map("ring_game_desks")
+}
+
 model RingGameDealerShift {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
@@ -296,14 +307,15 @@ model RingGameDealerShift {
   startedAt DateTime  @map("started_at")
   endedAt   DateTime? @map("ended_at")
 
-  tableName String @map("table_name")
+  ringGameDeskId String
 
   // 実績
   rakeChip   Int @default(0) @map("rake_chip")
   jpRakeChip Int @default(0) @map("jp_rake_chip")
   dealerChip Int @default(0) @map("dealer_chip")
 
-  staff Staff @relation(fields: [staffId], references: [id])
+  staff        Staff        @relation(fields: [staffId], references: [id])
+  ringGameDesk RingGameDesk @relation(fields: [ringGameDeskId], references: [id])
 
   @@map("ring_game_dealer_shifts")
 }
