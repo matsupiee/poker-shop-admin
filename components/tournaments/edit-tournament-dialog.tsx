@@ -85,7 +85,26 @@ export function EditTournamentDialog({ tournament, onTournamentUpdated, children
 
     const updatePrize = (index: number, amount: number) => {
         const newPrizes = [...prizes]
+
+        // Ensure the amount doesn't exceed the higher rank's amount
+        if (index > 0) {
+            const higherRankAmount = newPrizes[index - 1].amount
+            if (amount > higherRankAmount) {
+                return
+            }
+        }
+
         newPrizes[index].amount = amount
+
+        // If we lowered this rank, we must ensure lower ranks are not higher than this one.
+        for (let i = index + 1; i < newPrizes.length; i++) {
+            if (newPrizes[i].amount > amount) {
+                newPrizes[i].amount = amount
+            } else {
+                break
+            }
+        }
+
         setPrizes(newPrizes)
     }
 

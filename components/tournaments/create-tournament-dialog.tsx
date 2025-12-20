@@ -58,7 +58,42 @@ export function CreateTournamentDialog({ onTournamentCreated, children }: Create
 
     const updatePrize = (index: number, amount: number) => {
         const newPrizes = [...prizes]
+
+        // Ensure the amount doesn't exceed the higher rank's amount
+        if (index > 0) {
+            const higherRankAmount = newPrizes[index - 1].amount
+            if (amount > higherRankAmount) {
+                // Optionally we could just return here to block input, 
+                // but clamping is safer if the user pastes a value?
+                // However, blocking the update completely might be less confusing than "I typed 5 and it became 3"
+                // Let's stick to the behavior: if input > max, don't update (or clamp).
+                // Clamping works well for max limits.
+                // But wait, if I have 10000 above, and I type 12... it clamps to 10000? 
+                // User types 1 -> 1. 2 -> 12. ... 0 -> 10000. 
+                // If I type 12000... it becomes 10000.
+                // That seems acceptable.
+                // But wait, if I type 50000? It becomes 10000.
+                // Actually, simply checking if amount > higherRankAmount and NOT updating is better?
+                // If I type '1' (ok), '2' (ok), ... '12000' (block -> remains 1200).
+                // Let's try blocking if it exceeds.
+                // But if the current value is valid, blocking allows me to keep the valid value.
+                return
+            }
+        }
+
         newPrizes[index].amount = amount
+
+        // If we lowered this rank, we must ensure lower ranks are not higher than this one.
+        for (let i = index + 1; i < newPrizes.length; i++) {
+            if (newPrizes[i].amount > amount) {
+                newPrizes[i].amount = amount
+            } else {
+                // optimization: if this rank is already lower or equal, subsequent ranks (which are <= this rank) will also be <=
+                // assuming the array was valid before.
+                break
+            }
+        }
+
         setPrizes(newPrizes)
     }
 
@@ -71,8 +106,12 @@ export function CreateTournamentDialog({ onTournamentCreated, children }: Create
         }
     }
 
-    // Default to today's date for convenience
-    const today = new Date().toISOString().split('T')[0]
+    // Default to today's date (Local Time)
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const day = String(now.getDate()).padStart(2, '0')
+    const today = `${year}-${month}-${day}`
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -102,6 +141,7 @@ export function CreateTournamentDialog({ onTournamentCreated, children }: Create
                                     name="eventDate"
                                     type="date"
                                     defaultValue={today}
+                                    min={today}
                                 />
                                 {state.errors?.eventDate && (
                                     <p className="text-red-500 text-xs mt-1">{state.errors.eventDate[0]}</p>

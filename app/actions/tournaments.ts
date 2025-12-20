@@ -40,6 +40,13 @@ export async function createTournament(prevState: CreateTournamentState, formDat
         errors.entryClosesTime = ["締切時刻を入力してください"]
     }
 
+    if (eventDateStr && startTimeStr) {
+        const startAt = new Date(`${eventDateStr}T${startTimeStr}`)
+        if (startAt < new Date()) {
+            errors.startTime = ["開始時刻は未来の時間を指定してください"]
+        }
+    }
+
     if (Object.keys(errors).length > 0) {
         return { errors }
     }
@@ -55,6 +62,17 @@ export async function createTournament(prevState: CreateTournamentState, formDat
                         amount: Number(p.amount)
                     }))
                     .filter(p => !isNaN(p.rank) && !isNaN(p.amount) && p.amount > 0)
+                    .sort((a, b) => a.rank - b.rank)
+
+                for (let i = 1; i < prizes.length; i++) {
+                    if (prizes[i].amount > prizes[i - 1].amount) {
+                        return {
+                            errors: {
+                                _form: [`${prizes[i].rank}位の賞金が${prizes[i - 1].rank}位より大きくなっています。`]
+                            }
+                        }
+                    }
+                }
             }
         } catch (e) {
             console.error("Failed to parse prizes", e)
@@ -107,21 +125,27 @@ export async function createTournament(prevState: CreateTournamentState, formDat
 }
 
 
-export async function getTournaments(date: Date) {
-    const startOfDay = new Date(date)
-    startOfDay.setHours(0, 0, 0, 0)
+export async function getTournaments(date?: Date) {
+    let whereClause: any = {}
 
-    const endOfDay = new Date(date)
-    endOfDay.setHours(23, 59, 59, 999)
+    if (date) {
+        const startOfDay = new Date(date)
+        startOfDay.setHours(0, 0, 0, 0)
+
+        const endOfDay = new Date(date)
+        endOfDay.setHours(23, 59, 59, 999)
+
+        whereClause = {
+            startAt: {
+                gte: startOfDay,
+                lte: endOfDay
+            }
+        }
+    }
 
     try {
         const tournaments = await prisma.tournament.findMany({
-            where: {
-                startAt: {
-                    gte: startOfDay,
-                    lte: endOfDay
-                }
-            },
+            where: whereClause,
             include: {
                 _count: {
                     select: { entries: true }
@@ -183,6 +207,17 @@ export async function updateTournament(id: string, prevState: CreateTournamentSt
                         amount: Number(p.amount)
                     }))
                     .filter(p => !isNaN(p.rank) && !isNaN(p.amount) && p.amount > 0)
+                    .sort((a, b) => a.rank - b.rank)
+
+                for (let i = 1; i < prizes.length; i++) {
+                    if (prizes[i].amount > prizes[i - 1].amount) {
+                        return {
+                            errors: {
+                                _form: [`${prizes[i].rank}位の賞金が${prizes[i - 1].rank}位より大きくなっています。`]
+                            }
+                        }
+                    }
+                }
             }
         } catch (e) {
             console.error("Failed to parse prizes", e)

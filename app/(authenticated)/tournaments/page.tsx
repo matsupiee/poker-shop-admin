@@ -25,16 +25,16 @@ import { CreateTournamentDialog } from "@/components/tournaments/create-tourname
 import { EditTournamentDialog } from "@/components/tournaments/edit-tournament-dialog"
 import { getTournaments } from "@/app/actions/tournaments"
 import { Loader2 } from "lucide-react"
+import Link from "next/link"
 
 
 
 export default function DailyTournamentsPage() {
-    const [date, setDate] = React.useState<Date | undefined>(new Date())
+    const [date, setDate] = React.useState<Date | undefined>(undefined)
     const [tournaments, setTournaments] = React.useState<any[]>([])
     const [loading, setLoading] = React.useState(true)
 
     const fetchTournaments = React.useCallback(async () => {
-        if (!date) return
         setLoading(true)
         try {
             const data = await getTournaments(date)
@@ -51,7 +51,7 @@ export default function DailyTournamentsPage() {
     }, [fetchTournaments])
 
     // In a real app, fetch tournaments for 'date' here
-    const displayDate = date ? format(date, "yyyy年MM月dd日 (E)", { locale: ja }) : "日付を選択"
+    const displayDate = date ? format(date, "yyyy年MM月dd日 (E)", { locale: ja }) : "全ての期間"
 
     return (
         <div className="container mx-auto py-10 space-y-8">
@@ -59,7 +59,7 @@ export default function DailyTournamentsPage() {
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">トーナメント開催一覧</h1>
                     <p className="text-muted-foreground">
-                        {displayDate} の開催スケジュール
+                        {displayDate}の開催スケジュール
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -73,7 +73,7 @@ export default function DailyTournamentsPage() {
                                 )}
                             >
                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                {date ? format(date, "PPP", { locale: ja }) : <span>Pick a date</span>}
+                                {date ? format(date, "PPP", { locale: ja }) : <span>日付を選択</span>}
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="end">
@@ -168,10 +168,12 @@ export default function DailyTournamentsPage() {
                                         </div>
                                     </CardContent>
                                     <CardFooter className="pt-2 border-t bg-muted/20">
-                                        <Button variant="ghost" className="w-full justify-between group">
-                                            詳細・管理
-                                            <span className="group-hover:translate-x-1 transition-transform">→</span>
-                                        </Button>
+                                        <Link href={`/tournaments/${tournament.id}`} className="w-full">
+                                            <Button variant="ghost" className="w-full justify-between group">
+                                                詳細・管理
+                                                <span className="group-hover:translate-x-1 transition-transform">→</span>
+                                            </Button>
+                                        </Link>
                                     </CardFooter>
                                 </Card>
                             )
