@@ -10,7 +10,8 @@ import {
     LayoutDashboard,
     Menu,
     LogOut,
-    Settings
+    Settings,
+    ClipboardList
 } from "lucide-react";
 import { signOut } from "@/lib/better-auth/sign-out";
 import { useState } from "react";
@@ -21,6 +22,7 @@ const menuItems = [
     { href: "/daily-visits", label: "Daily Visits", icon: CalendarDays },
     { href: "/players", label: "Players", icon: Users },
     { href: "/tournaments", label: "Tournaments", icon: Trophy },
+    { href: "/ring-games/dealer-shifts", label: "Dealer Shifts", icon: ClipboardList },
     { href: "/staff", label: "Staff", icon: Settings },
 ];
 

@@ -21,6 +21,9 @@ export async function createTournament(prevState: CreateTournamentState, formDat
     const startTimeStr = formData.get("startTime") as string // Expecting HH:MM
     const entryClosesTimeStr = formData.get("entryClosesTime") as string // Expecting HH:MM
     const prizesStr = formData.get("prizes") as string
+    const hasBounty = formData.get("hasBounty") === "on"
+    const bountyTicketCountStr = formData.get("bountyTicketCount") as string
+    const bountyTotalAmountStr = formData.get("bountyTotalAmount") as string
 
     const errors: CreateTournamentState["errors"] = {}
 
@@ -44,6 +47,23 @@ export async function createTournament(prevState: CreateTournamentState, formDat
         const startAt = new Date(`${eventDateStr}T${startTimeStr}`)
         if (startAt < new Date()) {
             errors.startTime = ["開始時刻は未来の時間を指定してください"]
+        }
+    }
+
+    let bountyTicketCount = 0
+    let bountyTotalAmount = 0
+
+    if (hasBounty) {
+        if (!bountyTicketCountStr || isNaN(Number(bountyTicketCountStr)) || Number(bountyTicketCountStr) < 1) {
+            errors._form = [...(errors._form || []), "バウンティチケット枚数を正しく入力してください"]
+        } else {
+            bountyTicketCount = Number(bountyTicketCountStr)
+        }
+
+        if (!bountyTotalAmountStr || isNaN(Number(bountyTotalAmountStr)) || Number(bountyTotalAmountStr) < 0) {
+            errors._form = [...(errors._form || []), "バウンティ総額を正しく入力してください"]
+        } else {
+            bountyTotalAmount = Number(bountyTotalAmountStr)
         }
     }
 
@@ -81,15 +101,6 @@ export async function createTournament(prevState: CreateTournamentState, formDat
 
     try {
         const startAt = new Date(`${eventDateStr}T${startTimeStr}`)
-        // Handle case where entry closes after midnight
-        // If close time is smaller than start time, assume it's next day?
-        // OR simpler: just combine with eventDateStr. If user means next day, they might need better UI or we assume same day for now.
-        // Let's assume same day for simplicity unless it's clearly earlier than start time?
-        // Actually, let's just combine with eventDateStr. If it's overnight tournament, `eventDate` is just the "logical" date.
-        // But `entryClosesAt` needs to be accurate.
-        // Let's keep it simple: just combine date and time. If it requires date change, users might need to input full date or we add +1 day logic if close < start.
-
-        // Simple logic: if entryClosesTime < startTime, add 1 day to entryClosesAt
         let entryClosesAt = new Date(`${eventDateStr}T${entryClosesTimeStr}`)
 
         if (entryClosesAt < startAt) {
@@ -108,7 +119,13 @@ export async function createTournament(prevState: CreateTournamentState, formDat
                         rank: Number(p.rank),
                         amount: Number(p.amount)
                     }))
-                }
+                },
+                tournamentBounty: hasBounty ? {
+                    create: {
+                        ticketCount: bountyTicketCount,
+                        totalAmount: bountyTotalAmount
+                    }
+                } : undefined
             }
         })
 
@@ -154,7 +171,8 @@ export async function getTournaments(date?: Date) {
                     orderBy: {
                         rank: 'asc'
                     }
-                }
+                },
+                tournamentBounty: true
             },
             orderBy: {
                 startAt: 'asc'
@@ -173,6 +191,9 @@ export async function updateTournament(id: string, prevState: CreateTournamentSt
     const startTimeStr = formData.get("startTime") as string // Expecting HH:MM
     const entryClosesTimeStr = formData.get("entryClosesTime") as string // Expecting HH:MM
     const prizesStr = formData.get("prizes") as string
+    const hasBounty = formData.get("hasBounty") === "on"
+    const bountyTicketCountStr = formData.get("bountyTicketCount") as string
+    const bountyTotalAmountStr = formData.get("bountyTotalAmount") as string
 
     const errors: CreateTournamentState["errors"] = {}
 
@@ -190,6 +211,23 @@ export async function updateTournament(id: string, prevState: CreateTournamentSt
 
     if (!entryClosesTimeStr) {
         errors.entryClosesTime = ["締切時刻を入力してください"]
+    }
+
+    let bountyTicketCount = 0
+    let bountyTotalAmount = 0
+
+    if (hasBounty) {
+        if (!bountyTicketCountStr || isNaN(Number(bountyTicketCountStr)) || Number(bountyTicketCountStr) < 1) {
+            errors._form = [...(errors._form || []), "バウンティチケット枚数を正しく入力してください"]
+        } else {
+            bountyTicketCount = Number(bountyTicketCountStr)
+        }
+
+        if (!bountyTotalAmountStr || isNaN(Number(bountyTotalAmountStr)) || Number(bountyTotalAmountStr) < 0) {
+            errors._form = [...(errors._form || []), "バウンティ総額を正しく入力してください"]
+        } else {
+            bountyTotalAmount = Number(bountyTotalAmountStr)
+        }
     }
 
     if (Object.keys(errors).length > 0) {
@@ -277,6 +315,26 @@ export async function updateTournament(id: string, prevState: CreateTournamentSt
                         rank: p.rank,
                         amount: p.amount
                     }))
+                })
+            }
+
+            // Handle Bounty
+            if (hasBounty) {
+                await tx.tournamentBounty.upsert({
+                    where: { tournamentId: id },
+                    create: {
+                        tournamentId: id,
+                        ticketCount: bountyTicketCount,
+                        totalAmount: bountyTotalAmount
+                    },
+                    update: {
+                        ticketCount: bountyTicketCount,
+                        totalAmount: bountyTotalAmount
+                    }
+                })
+            } else {
+                await tx.tournamentBounty.deleteMany({
+                    where: { tournamentId: id }
                 })
             }
         })
