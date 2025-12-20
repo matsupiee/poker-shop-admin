@@ -29,6 +29,7 @@ import {
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { Search, MoreHorizontal, UserPlus, Filter, ArrowUpDown } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { CreatePlayerDialog } from "./create-player-dialog"
 import { EditPlayerDialog } from "./edit-player-dialog"
 import { RegisterVisitDialog } from "@/components/visits/register-visit-dialog"
@@ -49,6 +50,7 @@ interface PlayerListProps {
 }
 
 export function PlayerList({ initialPlayers }: PlayerListProps) {
+    const router = useRouter()
     const [searchTerm, setSearchTerm] = useState("")
     const [selectedPlayerForVisit, setSelectedPlayerForVisit] = useState<Player | null>(null)
     const [isVisitDialogOpen, setIsVisitDialogOpen] = useState(false)
@@ -172,7 +174,7 @@ export function PlayerList({ initialPlayers }: PlayerListProps) {
                                                             来店登録
                                                         </DropdownMenuItem>
                                                         <DropdownMenuSeparator />
-                                                        <DropdownMenuItem>詳細を表示</DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => router.push(`/players/${player.id}`)}>詳細を表示</DropdownMenuItem>
                                                         <DropdownMenuItem onClick={() => {
                                                             setSelectedPlayerForEdit(player)
                                                             setIsEditDialogOpen(true)

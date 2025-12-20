@@ -27,6 +27,14 @@ import {
     TableHeader,
     TableRow
 } from "@/components/ui/table"
+import {
+    DropdownMenu,
+    DropdownMenuCheckboxItem,
+    DropdownMenuContent,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -43,8 +51,9 @@ export default function DailyVisitsPage() {
     const [date, setDate] = React.useState<Date | undefined>(new Date())
     const [searchTerm, setSearchTerm] = React.useState("")
     const [visits, setVisits] = React.useState<DailyVisit[]>([])
-    const [tournaments, setTournaments] = React.useState<any[]>([])
+    const [tournaments, setTournaments] = React.useState<Awaited<ReturnType<typeof getTournaments>>>([])
     const [isLoading, setIsLoading] = React.useState(true)
+    const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])
 
     const fetchData = React.useCallback(async () => {
         if (!date) return
@@ -67,11 +76,35 @@ export default function DailyVisitsPage() {
         fetchData()
     }, [fetchData])
 
-    // フィルタリング処理 (名前検索)
-    const filteredVisits = visits.filter(visit =>
-        visit.player.name.includes(searchTerm) ||
-        visit.player.memberId.toString().includes(searchTerm)
-    )
+    const handleFilterChange = (filterId: string) => {
+        setSelectedFilters(prev =>
+            prev.includes(filterId)
+                ? prev.filter(id => id !== filterId)
+                : [...prev, filterId]
+        )
+    }
+
+    // フィルタリング処理 (名前検索 + 詳細フィルター)
+    const filteredVisits = visits.filter(visit => {
+        // 1. Search Term Filter
+        const matchesSearch = visit.player.name.includes(searchTerm) ||
+            visit.player.memberId.toString().includes(searchTerm)
+
+        if (!matchesSearch) return false
+
+        // 2. Detailed Filter (OR Logic)
+        if (selectedFilters.length === 0) return true
+
+        const matchesRingGame = selectedFilters.includes("ring_game") && visit.ringGame.joined
+
+        // Check if any of the user's tournaments match the selected filters
+        const matchesTournament = visit.tournaments.some(t => selectedFilters.includes(t.tournamentId))
+
+        // If "ring_game" is selected, it matches ring game players.
+        // If tournament IDs are selected, it matches players of those tournaments.
+        // If "ring_game" AND tournament APIs are selected, it matches EITHER.
+        return matchesRingGame || matchesTournament
+    })
 
     const displayDate = date ? format(date, "yyyy年MM月dd日 (E)", { locale: ja }) : "日付を選択"
 
@@ -133,9 +166,52 @@ export default function DailyVisitsPage() {
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
-                        <Button variant="outline" size="sm">
-                            <Filter className="mr-2 h-4 w-4" /> 詳細フィルター
-                        </Button>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="sm" className={selectedFilters.length > 0 ? "bg-accent" : ""}>
+                                    <Filter className="mr-2 h-4 w-4" />
+                                    詳細フィルター
+                                    {selectedFilters.length > 0 && (
+                                        <Badge variant="secondary" className="ml-2 h-5 px-1.5">
+                                            {selectedFilters.length}
+                                        </Badge>
+                                    )}
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-[280px]">
+                                <DropdownMenuLabel>表示フィルター</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuCheckboxItem
+                                    checked={selectedFilters.includes("ring_game")}
+                                    onCheckedChange={() => handleFilterChange("ring_game")}
+                                >
+                                    <div className="flex items-center">
+                                        <Coins className="mr-2 h-4 w-4 text-orange-500" />
+                                        リングゲーム参加
+                                    </div>
+                                </DropdownMenuCheckboxItem>
+                                {tournaments.length > 0 && (
+                                    <>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuLabel>トーナメント参加</DropdownMenuLabel>
+                                        {tournaments.map((tournament) => (
+                                            <DropdownMenuCheckboxItem
+                                                key={tournament.id}
+                                                checked={selectedFilters.includes(tournament.id)}
+                                                onCheckedChange={() => handleFilterChange(tournament.id)}
+                                            >
+                                                <div className="flex flex-col">
+                                                    <span>{tournament.name}</span>
+                                                    <span className="text-xs text-muted-foreground">
+                                                        ({format(new Date(tournament.startAt), "HH:mm")} ~)
+                                                    </span>
+                                                </div>
+                                            </DropdownMenuCheckboxItem>
+                                        ))}
+                                    </>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
 
                     {/* Table */}

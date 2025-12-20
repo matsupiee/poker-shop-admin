@@ -27,7 +27,7 @@ import { addRingGameEntry, addTournamentEntry } from "@/app/actions/game-partici
 type AvailableTournament = {
     id: string
     name: string
-    eventDate: Date | string
+    startAt: Date | string
     entryClosesAt: Date | string
 }
 
