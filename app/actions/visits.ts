@@ -14,11 +14,18 @@ export type TournamentEntryInfo = {
     entryCount: number
 }
 
+export type RingGameChipEventInfo = {
+    eventType: "BUY_IN" | "CASH_OUT"
+    chipAmount: number
+    timestamp: string
+}
+
 export type RingGameInfo = {
     joined: boolean
     currentStatus: "playing" | "left"
     totalBuyIn: number
     totalCashOut: number
+    timeline: RingGameChipEventInfo[]
 }
 
 export type DailyVisit = {
@@ -70,7 +77,11 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
             },
             ringGameEntry: {
                 include: {
-                    chipEvents: true
+                    chipEvents: {
+                        orderBy: {
+                            createdAt: 'asc'
+                        }
+                    }
                 }
             },
             settlements: true
@@ -108,7 +119,8 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
             joined: false,
             currentStatus: "left", // Default
             totalBuyIn: 0,
-            totalCashOut: 0
+            totalCashOut: 0,
+            timeline: []
         }
 
         if (visit.ringGameEntry) {
@@ -124,11 +136,18 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
             // This is imperfect but a starting point
             const status = cashOut > 0 ? "left" : "playing"
 
+            const timeline: RingGameChipEventInfo[] = visit.ringGameEntry.chipEvents.map(e => ({
+                eventType: e.eventType,
+                chipAmount: e.chipAmount,
+                timestamp: format(e.createdAt, "HH:mm")
+            }))
+
             ringGame = {
                 joined: true,
                 currentStatus: status,
                 totalBuyIn: buyIn,
-                totalCashOut: cashOut
+                totalCashOut: cashOut,
+                timeline
             }
         }
 

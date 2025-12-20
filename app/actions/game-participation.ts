@@ -160,3 +160,46 @@ export async function addRingGameChip(
         }
     }
 }
+
+export async function addTournamentAddOn(
+    tournamentEntryId: string,
+    chipAmount: number,
+    chargeAmount: number
+): Promise<GameParticipationState> {
+    if (!tournamentEntryId) return { errors: { _form: ["Entry ID is required"] } }
+    if (chipAmount < 0) return { errors: { _form: ["チップ量は0以上である必要があります"] } }
+    if (chargeAmount < 0) return { errors: { _form: ["支払い額は0以上である必要があります"] } }
+
+    try {
+        const entry = await prisma.tournamentEntry.findUnique({
+            where: { id: tournamentEntryId },
+            include: { tournament: true }
+        })
+
+        if (!entry) {
+            return { errors: { _form: ["参加データが見つかりません"] } }
+        }
+
+        await prisma.tournamentChipEvent.create({
+            data: {
+                tournamentEntryId,
+                eventType: "ADD_CHIP",
+                chipAmount,
+                chargeAmount
+            }
+        })
+
+        revalidatePath("/daily-visits")
+        revalidatePath("/tournaments")
+        revalidatePath(`/tournaments/${entry.tournamentId}`)
+        return { success: true, message: "アドオンを追加しました" }
+
+    } catch (error) {
+        console.error("Failed to add tournament add-on:", error)
+        return {
+            errors: {
+                _form: ["アドオンの追加に失敗しました"]
+            }
+        }
+    }
+}
