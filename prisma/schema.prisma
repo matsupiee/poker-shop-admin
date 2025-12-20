@@ -156,6 +156,7 @@ model Tournament {
 
   entries          TournamentEntry[]
   tournamentPrizes TournamentPrize[]
+  tournamentBounty TournamentBounty?
 
   @@map("tournaments")
 }
@@ -172,6 +173,24 @@ model TournamentPrize {
   tournament Tournament @relation(fields: [tournamentId], references: [id])
 
   @@map("tournament_prizes")
+}
+
+// バウンティがあるトーナメントはこのテーブルを使って設定する
+model TournamentBounty {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tournamentId String @unique @map("tournament_id")
+
+  // バウンティチケット配布人数
+  ticketCount Int @map("ticket_count")
+  // バウンティ賞金総額
+  totalAmount Int @map("total_amount")
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id])
+
+  @@map("tournament_bounties")
 }
 
 enum TournamentEntrySource {
