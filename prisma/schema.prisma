@@ -31,8 +31,9 @@ model Staff {
 
   role StaffRole @default(MEMBER)
 
-  staffSessions StaffSession[]
-  staffAccounts StaffAccount[]
+  staffSessions        StaffSession[]
+  staffAccounts        StaffAccount[]
+  ringGameDealerShifts RingGameDealerShift[]
 
   @@map("staff")
 }
@@ -282,6 +283,29 @@ model RingGameChipEvent {
   ringGameEntry RingGameEntry @relation(fields: [ringGameEntryId], references: [id])
 
   @@map("ring_game_chip_events")
+}
+
+model RingGameDealerShift {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  staffId String
+
+  // 稼働時間
+  startedAt DateTime  @map("started_at")
+  endedAt   DateTime? @map("ended_at")
+
+  tableName String @map("table_name")
+
+  // 実績
+  rakeChip   Int @default(0) @map("rake_chip")
+  jpRakeChip Int @default(0) @map("jp_rake_chip")
+  dealerChip Int @default(0) @map("dealer_chip")
+
+  staff Staff @relation(fields: [staffId], references: [id])
+
+  @@map("ring_game_dealer_shifts")
 }
 
 // 来店ごとの最終的な収支
