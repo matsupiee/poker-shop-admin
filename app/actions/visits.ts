@@ -12,6 +12,7 @@ export type TournamentEntryInfo = {
     rank?: number
     timestamp: string
     entryCount: number
+    isLatest: boolean
 }
 
 export type RingGameChipEventInfo = {
@@ -94,6 +95,15 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
     console.log({ visits })
 
     return visits.map(visit => {
+        // Group entries by tournament to find the latest one for each tournament
+        const entriesByTournament = visit.tournamentEntries.reduce((acc, entry) => {
+            if (!acc[entry.tournamentId]) {
+                acc[entry.tournamentId] = []
+            }
+            acc[entry.tournamentId].push(entry)
+            return acc
+        }, {} as Record<string, typeof visit.tournamentEntries>)
+
         // Map tournaments
         const tournaments: TournamentEntryInfo[] = visit.tournamentEntries.map(entry => {
             // Determine status
@@ -102,6 +112,12 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
                 status = "eliminated" // or finished. Let's use eliminated as generic for now.
             }
 
+            // Check if this is the latest entry for this tournament in this visit
+            // Since the array is sorted by createdAt ascending, the last one in the group is the latest.
+            const entries = entriesByTournament[entry.tournamentId]
+            const latestEntry = entries[entries.length - 1]
+            const isLatest = entry.id === latestEntry.id
+
             return {
                 id: entry.id.toString(),
                 tournamentName: entry.tournament.name,
@@ -109,7 +125,8 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
                 status,
                 rank: entry.finalRank ?? undefined,
                 entryCount: 1,
-                timestamp: format(entry.createdAt, "HH:mm")
+                timestamp: format(entry.createdAt, "HH:mm"),
+                isLatest
             }
         })
 
@@ -266,6 +283,34 @@ export async function registerVisit(prevState: RegisterVisitState, formData: For
 
 export async function updateTournamentRank(entryId: string, rank: number) {
     try {
+        const entry = await prisma.tournamentEntry.findUnique({
+            where: { id: entryId },
+            include: {
+                visit: true
+            }
+        })
+
+        if (!entry) {
+            return { success: false, error: "Entry not found" }
+        }
+
+        // Check if this is the latest entry for the player in this tournament
+        const latestEntry = await prisma.tournamentEntry.findFirst({
+            where: {
+                tournamentId: entry.tournamentId,
+                visit: {
+                    playerId: entry.visit.playerId
+                }
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        })
+
+        if (latestEntry && latestEntry.id !== entry.id) {
+            return { success: false, error: "最新のエントリー以外には順位を記録できません" }
+        }
+
         await prisma.tournamentEntry.update({
             where: { id: entryId },
             data: { finalRank: rank }

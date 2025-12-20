@@ -40,7 +40,7 @@ export function TournamentRankUpdate({ entryId, currentRank, status, onSuccess }
                 setIsOpen(false)
                 onSuccess?.()
             } else {
-                toast.error("順位の更新に失敗しました")
+                toast.error(result.error || "順位の更新に失敗しました")
             }
         } catch (error) {
             toast.error("エラーが発生しました")

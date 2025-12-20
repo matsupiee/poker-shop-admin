@@ -173,11 +173,39 @@ export async function addTournamentAddOn(
     try {
         const entry = await prisma.tournamentEntry.findUnique({
             where: { id: tournamentEntryId },
-            include: { tournament: true }
+            include: {
+                tournament: true,
+                visit: {
+                    include: {
+                        player: true
+                    }
+                }
+            }
         })
 
         if (!entry) {
             return { errors: { _form: ["参加データが見つかりません"] } }
+        }
+
+        // Check if this is the latest entry for the player in this tournament
+        const latestEntry = await prisma.tournamentEntry.findFirst({
+            where: {
+                tournamentId: entry.tournamentId,
+                visit: {
+                    playerId: entry.visit.playerId
+                }
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        })
+
+        if (latestEntry && latestEntry.id !== entry.id) {
+            return {
+                errors: {
+                    _form: ["最新のエントリー以外にはアドオンできません"]
+                }
+            }
         }
 
         await prisma.tournamentChipEvent.create({

@@ -197,17 +197,27 @@ export default function DailyVisitsPage() {
                                                                 <span className="truncate max-w-[150px]" title={t.tournamentName}>
                                                                     {t.tournamentName}
                                                                 </span>
-                                                                <TournamentRankUpdate
-                                                                    entryId={t.id}
-                                                                    currentRank={t.rank}
-                                                                    status={t.status}
-                                                                    onSuccess={fetchData}
-                                                                />
-                                                                <AddOnDialog
-                                                                    tournamentEntryId={t.id}
-                                                                    playerName={visit.player.name}
-                                                                    onSuccess={fetchData}
-                                                                />
+                                                                {t.isLatest ? (
+                                                                    <TournamentRankUpdate
+                                                                        entryId={t.id}
+                                                                        currentRank={t.rank}
+                                                                        status={t.status}
+                                                                        onSuccess={fetchData}
+                                                                    />
+                                                                ) : t.rank ? (
+                                                                    <Badge variant="secondary" className="text-[10px] px-1 py-0 h-5">
+                                                                        {t.rank}位
+                                                                    </Badge>
+                                                                ) : (
+                                                                    <span className="text-[10px] text-muted-foreground">リエントリー済み</span>
+                                                                )}
+                                                                {t.isLatest && (
+                                                                    <AddOnDialog
+                                                                        tournamentEntryId={t.id}
+                                                                        playerName={visit.player.name}
+                                                                        onSuccess={fetchData}
+                                                                    />
+                                                                )}
                                                                 {t.entryCount > 1 && (
                                                                     <span className="text-xs text-muted-foreground">
                                                                         ({t.entryCount}E)
