@@ -27,10 +27,12 @@ interface TableCardProps {
 export function TableCard({ desk, staffList }: TableCardProps) {
     const [isSeatDialogOpen, setIsSeatDialogOpen] = useState(false)
     const [selectedStaffId, setSelectedStaffId] = useState("")
+    const [error, setError] = useState<string | null>(null)
     const [isPending, startTransition] = useTransition()
 
     const handleSitDown = async () => {
         if (!selectedStaffId) return
+        setError(null)
 
         const formData = new FormData()
         formData.append("deskId", desk.id)
@@ -41,6 +43,9 @@ export function TableCard({ desk, staffList }: TableCardProps) {
             if (result.success) {
                 setIsSeatDialogOpen(false)
                 setSelectedStaffId("")
+                setError(null)
+            } else if (result.error) {
+                setError(result.error)
             }
         })
     }
@@ -93,7 +98,13 @@ export function TableCard({ desk, staffList }: TableCardProps) {
                                 <span className="text-sm">Empty Table</span>
                             </div>
 
-                            <Dialog open={isSeatDialogOpen} onOpenChange={setIsSeatDialogOpen}>
+                            <Dialog open={isSeatDialogOpen} onOpenChange={(open) => {
+                                setIsSeatDialogOpen(open)
+                                if (open) {
+                                    setError(null)
+                                    setSelectedStaffId("")
+                                }
+                            }}>
                                 <DialogTrigger asChild>
                                     <Button className="w-full" variant="outline">
                                         <UserPlus className="mr-2 h-4 w-4" />
@@ -107,8 +118,8 @@ export function TableCard({ desk, staffList }: TableCardProps) {
                                             {desk.name} に着席するスタッフを選択してください
                                         </DialogDescription>
                                     </DialogHeader>
-                                    <div className="py-4">
-                                        <Select value={selectedStaffId} onValueChange={setSelectedStaffId}>
+                                    <div className="py-4 space-y-4">
+                                        <Select value={selectedStaffId} onValueChange={(val) => { setSelectedStaffId(val); setError(null); }}>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="スタッフを選択" />
                                             </SelectTrigger>
@@ -120,6 +131,11 @@ export function TableCard({ desk, staffList }: TableCardProps) {
                                                 ))}
                                             </SelectContent>
                                         </Select>
+                                        {error && (
+                                            <div className="text-sm text-destructive bg-destructive/10 p-2 rounded-md">
+                                                {error}
+                                            </div>
+                                        )}
                                     </div>
                                     <DialogFooter>
                                         <Button

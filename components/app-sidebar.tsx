@@ -24,7 +24,7 @@ const menuItems = [
     { href: "/players", label: "Players", icon: Users },
     { href: "/tournaments", label: "Tournaments", icon: Trophy },
     { href: "/ring-games/tables", label: "Ring Game Tables", icon: Armchair },
-    { href: "/ring-games/dealer-shifts", label: "Dealer Shifts", icon: ClipboardList },
+    { href: "/ring-games/dealer-shifts", label: "Ring Game Dealer Shifts", icon: ClipboardList },
     { href: "/staff", label: "Staff", icon: Settings },
 ];
 

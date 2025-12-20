@@ -20,6 +20,22 @@ export async function sitDownAtTable(formData: FormData) {
     }
 
     try {
+        // Check if the staff is already sitting at another table
+        const staffActiveShift = await prisma.ringGameDealerShift.findFirst({
+            where: {
+                staffId: staffId,
+                endedAt: null,
+            },
+            include: {
+                ringGameDesk: true
+            }
+        })
+
+        if (staffActiveShift) {
+            // Already sitting regardless of which table
+            return { error: `このスタッフは既に ${staffActiveShift.ringGameDesk.name} に着席しています` }
+        }
+
         // Check if there is already an active shift at this table
         const activeShift = await prisma.ringGameDealerShift.findFirst({
             where: {
@@ -29,10 +45,7 @@ export async function sitDownAtTable(formData: FormData) {
         })
 
         if (activeShift) {
-            // Automatically end the previous shift? Or return error?
-            // Logic: If someone is sitting, we must stand them up first.
-            // For now, let's just end the previous shift automatically to make it smooth,
-            // as "Change Dealer" flow.
+            // Automatically end the previous shift at this table
             await prisma.ringGameDealerShift.update({
                 where: { id: activeShift.id },
                 data: { endedAt: new Date() },
