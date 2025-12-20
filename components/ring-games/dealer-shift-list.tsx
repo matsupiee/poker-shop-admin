@@ -1,6 +1,6 @@
 "use client"
 
-import { RingGameDealerShift, Staff } from "@/lib/generated/prisma/client"
+import { RingGameDealerShift, Staff, RingGameDesk } from "@/lib/generated/prisma/client"
 import { DealerShiftDialog } from "./dealer-shift-dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
@@ -9,16 +9,18 @@ import { deleteDealerShift } from "@/app/actions/dealer-shifts"
 import { format } from "date-fns"
 import { useTransition } from "react"
 
-type DealerShiftWithStaff = RingGameDealerShift & {
+type DealerShiftWithDetails = RingGameDealerShift & {
     staff: Staff
+    ringGameDesk: RingGameDesk
 }
 
 interface DealerShiftListProps {
-    shifts: DealerShiftWithStaff[]
+    shifts: DealerShiftWithDetails[]
     staffList: Pick<Staff, "id" | "name">[]
+    deskList: Pick<RingGameDesk, "id" | "name">[]
 }
 
-export function DealerShiftList({ shifts, staffList }: DealerShiftListProps) {
+export function DealerShiftList({ shifts, staffList, deskList }: DealerShiftListProps) {
     const [isPending, startTransition] = useTransition()
 
     const handleDelete = (id: string) => {
@@ -67,7 +69,7 @@ export function DealerShiftList({ shifts, staffList }: DealerShiftListProps) {
                                     {shift.endedAt ? format(new Date(shift.endedAt), 'HH:mm') : ''}
                                 </TableCell>
                                 <TableCell>{shift.staff.name}</TableCell>
-                                <TableCell>{shift.tableName}</TableCell>
+                                <TableCell>{shift.ringGameDesk.name}</TableCell>
                                 <TableCell className="text-right">{shift.rakeChip.toLocaleString()}</TableCell>
                                 <TableCell className="text-right">{shift.jpRakeChip.toLocaleString()}</TableCell>
                                 <TableCell className="text-right">{shift.dealerChip.toLocaleString()}</TableCell>
@@ -75,6 +77,7 @@ export function DealerShiftList({ shifts, staffList }: DealerShiftListProps) {
                                     <div className="flex items-center gap-2">
                                         <DealerShiftDialog
                                             staffList={staffList}
+                                            deskList={deskList}
                                             initialData={shift}
                                         >
                                             <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">

@@ -22,7 +22,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { RingGameDealerShift, Staff } from "@/lib/generated/prisma/client"
+import { RingGameDealerShift, Staff, RingGameDesk } from "@/lib/generated/prisma/client"
 import { format } from "date-fns"
 
 const initialState = {
@@ -32,12 +32,13 @@ const initialState = {
 
 interface DealerShiftDialogProps {
     staffList: Pick<Staff, "id" | "name">[]
+    deskList: Pick<RingGameDesk, "id" | "name">[]
     initialData?: RingGameDealerShift
     children?: React.ReactNode
     onSuccess?: () => void
 }
 
-export function DealerShiftDialog({ staffList, initialData, children, onSuccess }: DealerShiftDialogProps) {
+export function DealerShiftDialog({ staffList, deskList, initialData, children, onSuccess }: DealerShiftDialogProps) {
     const [open, setOpen] = useState(false)
 
     const handleSuccess = () => {
@@ -65,6 +66,7 @@ export function DealerShiftDialog({ staffList, initialData, children, onSuccess 
                 </DialogHeader>
                 <DealerShiftForm
                     staffList={staffList}
+                    deskList={deskList}
                     initialData={initialData}
                     onSuccess={handleSuccess}
                 />
@@ -75,10 +77,12 @@ export function DealerShiftDialog({ staffList, initialData, children, onSuccess 
 
 function DealerShiftForm({
     staffList,
+    deskList,
     initialData,
     onSuccess
 }: {
     staffList: Pick<Staff, "id" | "name">[],
+    deskList: Pick<RingGameDesk, "id" | "name">[],
     initialData?: RingGameDealerShift,
     onSuccess: () => void
 }) {
@@ -89,6 +93,7 @@ function DealerShiftForm({
     )
 
     const [staffId, setStaffId] = useState(initialData?.staffId || "")
+    const [deskId, setDeskId] = useState(initialData?.ringGameDeskId || "")
 
     // Initial values
     const today = format(new Date(), 'yyyy-MM-dd')
@@ -165,22 +170,28 @@ function DealerShiftForm({
                             defaultValue={initialEndTime}
                         />
                     </div>
-                    {/* Error display logic could be better, just showing startedAt/endedAt errors if any */}
                 </div>
 
                 <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="tableName" className="text-right">
-                        テーブル名
+                    <Label htmlFor="ringGameDeskId" className="text-right">
+                        テーブル
                     </Label>
                     <div className="col-span-3">
-                        <Input
-                            id="tableName"
-                            name="tableName"
-                            placeholder="例: Table 1"
-                            defaultValue={initialData?.tableName}
-                        />
-                        {state.errors?.tableName && (
-                            <p className="text-red-500 text-xs mt-1">{state.errors.tableName[0]}</p>
+                        <Select value={deskId} onValueChange={setDeskId} name="ringGameDeskId">
+                            <SelectTrigger>
+                                <SelectValue placeholder="テーブルを選択" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {deskList.map((desk) => (
+                                    <SelectItem key={desk.id} value={desk.id}>
+                                        {desk.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <input type="hidden" name="ringGameDeskId" value={deskId} />
+                        {state.errors?.ringGameDeskId && (
+                            <p className="text-red-500 text-xs mt-1">{state.errors.ringGameDeskId[0]}</p>
                         )}
                     </div>
                 </div>

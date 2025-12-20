@@ -4,12 +4,14 @@ import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { Staff } from "@/lib/generated/prisma/client"
 
+// ... imports
+
 export type DealerShiftState = {
     errors?: {
         staffId?: string[]
         startedAt?: string[]
         endedAt?: string[]
-        tableName?: string[]
+        ringGameDeskId?: string[]
         rakeChip?: string[]
         jpRakeChip?: string[]
         dealerChip?: string[]
@@ -23,7 +25,7 @@ export async function createDealerShift(prevState: DealerShiftState, formData: F
     const dateStr = formData.get("date") as string // YYYY-MM-DD
     const startTimeStr = formData.get("startTime") as string // HH:MM
     const endTimeStr = formData.get("endTime") as string // HH:MM
-    const tableName = formData.get("tableName") as string
+    const ringGameDeskId = formData.get("ringGameDeskId") as string
     const rakeChipStr = formData.get("rakeChip") as string
     const jpRakeChipStr = formData.get("jpRakeChip") as string
     const dealerChipStr = formData.get("dealerChip") as string
@@ -42,8 +44,8 @@ export async function createDealerShift(prevState: DealerShiftState, formData: F
         errors.startedAt = ["開始時間を入力してください"]
     }
 
-    if (!tableName) {
-        errors.tableName = ["テーブル名を入力してください"]
+    if (!ringGameDeskId) {
+        errors.ringGameDeskId = ["テーブルを選択してください"]
     }
 
     const rakeChip = rakeChipStr ? parseInt(rakeChipStr) : 0
@@ -81,7 +83,7 @@ export async function createDealerShift(prevState: DealerShiftState, formData: F
                 staffId,
                 startedAt,
                 endedAt,
-                tableName,
+                ringGameDeskId,
                 rakeChip,
                 jpRakeChip,
                 dealerChip,
@@ -89,6 +91,8 @@ export async function createDealerShift(prevState: DealerShiftState, formData: F
         })
 
         revalidatePath("/ring-games/dealer-shifts")
+        revalidatePath("/ring-games/tables")
+
         return { success: true }
     } catch (e) {
         console.error(e)
@@ -105,7 +109,7 @@ export async function updateDealerShift(id: string, prevState: DealerShiftState,
     const dateStr = formData.get("date") as string // YYYY-MM-DD
     const startTimeStr = formData.get("startTime") as string // HH:MM
     const endTimeStr = formData.get("endTime") as string // HH:MM
-    const tableName = formData.get("tableName") as string
+    const ringGameDeskId = formData.get("ringGameDeskId") as string
     const rakeChipStr = formData.get("rakeChip") as string
     const jpRakeChipStr = formData.get("jpRakeChip") as string
     const dealerChipStr = formData.get("dealerChip") as string
@@ -124,8 +128,8 @@ export async function updateDealerShift(id: string, prevState: DealerShiftState,
         errors.startedAt = ["開始時間を入力してください"]
     }
 
-    if (!tableName) {
-        errors.tableName = ["テーブル名を入力してください"]
+    if (!ringGameDeskId) {
+        errors.ringGameDeskId = ["テーブルを選択してください"]
     }
 
     const rakeChip = rakeChipStr ? parseInt(rakeChipStr) : 0
@@ -164,7 +168,7 @@ export async function updateDealerShift(id: string, prevState: DealerShiftState,
                 staffId,
                 startedAt,
                 endedAt,
-                tableName,
+                ringGameDeskId,
                 rakeChip,
                 jpRakeChip,
                 dealerChip,
@@ -172,6 +176,7 @@ export async function updateDealerShift(id: string, prevState: DealerShiftState,
         })
 
         revalidatePath("/ring-games/dealer-shifts")
+        revalidatePath("/ring-games/tables")
         return { success: true }
     } catch (e) {
         console.error(e)
