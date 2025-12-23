@@ -33,7 +33,7 @@ type PlayerDetailProps = {
     player: {
         id: string
         name: string
-        memberId: number
+        memberId: string
         storeCoinBalance: number
     }
     visits: Visit[]

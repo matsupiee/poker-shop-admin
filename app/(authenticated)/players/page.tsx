@@ -20,7 +20,7 @@ export default async function PlayersPage() {
 
     const formattedPlayers: Player[] = playersData.map(p => ({
         id: p.id,
-        memberId: p.memberId.toString(),
+        memberId: p.memberId,
         name: p.name,
         gameId: p.webCoinGameId ?? undefined,
         balance: p.storeCoinBalance,

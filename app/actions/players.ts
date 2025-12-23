@@ -36,7 +36,7 @@ export async function createPlayer(prevState: CreatePlayerState, formData: FormD
         await prisma.player.create({
             data: {
                 name,
-                memberId: parseInt(memberId),
+                memberId,
                 webCoinGameId: gameId && gameId.trim() !== "" ? gameId : null,
             }
         })
@@ -98,7 +98,7 @@ export async function updatePlayer(prevState: UpdatePlayerState, formData: FormD
             where: { id },
             data: {
                 name,
-                memberId: parseInt(memberId),
+                memberId,
                 webCoinGameId: gameId && gameId.trim() !== "" ? gameId : null,
             }
         })

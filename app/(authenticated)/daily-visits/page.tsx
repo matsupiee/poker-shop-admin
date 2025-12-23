@@ -88,7 +88,7 @@ export default function DailyVisitsPage() {
     const filteredVisits = visits.filter(visit => {
         // 1. Search Term Filter
         const matchesSearch = visit.player.name.includes(searchTerm) ||
-            visit.player.memberId.toString().includes(searchTerm)
+            visit.player.memberId.includes(searchTerm)
 
         if (!matchesSearch) return false
 

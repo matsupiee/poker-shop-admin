@@ -59,7 +59,6 @@ export function EditPlayerDialog({ player, open, onOpenChange }: EditPlayerDialo
                                     name="memberId"
                                     defaultValue={player.memberId}
                                     placeholder="例: 1001"
-                                    type="number"
                                 />
                                 {state.errors?.memberId && (
                                     <p className="text-red-500 text-xs mt-1">{state.errors.memberId[0]}</p>

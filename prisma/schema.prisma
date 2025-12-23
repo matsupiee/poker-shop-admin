@@ -109,7 +109,7 @@ model Player {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  memberId         Int     @unique @map("member_id") // お店で割り振る会員連番
+  memberId         String  @unique @map("member_id") // お店で割り振る会員連番
   webCoinGameId    String? @unique @map("web_coin_game_id") // WebCoinのゲームID
   name             String
   storeCoinBalance Int     @default(0) @map("store_coin_balance")

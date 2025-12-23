@@ -35,7 +35,7 @@ export type DailyVisit = {
     checkInTime: string
     player: {
         id: string
-        memberId: number
+        memberId: string
         name: string
         image?: string
     }
