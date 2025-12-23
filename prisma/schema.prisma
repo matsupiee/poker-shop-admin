@@ -246,6 +246,11 @@ model TournamentChipEvent {
   @@map("tournament_chip_events")
 }
 
+enum RingGameType {
+  WEB_COIN
+  IN_STORE_ONLY
+}
+
 // リングゲーム参加
 model RingGameEntry {
   id        String   @id @default(cuid())
@@ -253,6 +258,9 @@ model RingGameEntry {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   visitId String @unique @map("visit_id")
+
+  // webコインリングか店内リングか選択
+  ringGameType RingGameType @map("ring_game_type")
 
   visit      Visit               @relation(fields: [visitId], references: [id])
   chipEvents RingGameChipEvent[]
