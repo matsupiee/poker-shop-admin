@@ -71,7 +71,7 @@ export async function addTournamentEntry(
 export async function addRingGameEntry(
     visitId: string,
     chipAmount: number,
-    ringGameType: "WEB_COIN" | "IN_STORE_ONLY"
+    ringGameType: "WEB_COIN" | "IN_STORE"
 ): Promise<GameParticipationState> {
     if (!visitId) return { errors: { visitId: ["Visit ID is required"] } }
     if (chipAmount < 0) return { errors: { _form: ["チップ量は0以上である必要があります"] } }

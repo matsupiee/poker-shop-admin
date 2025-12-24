@@ -63,7 +63,8 @@ async function main() {
                     memberId: p.memberId,
                     name: p.name,
                     webCoinGameId: p.webCoinGameId,
-                    storeCoinBalance: 10000,
+                    webCoinBalance: 10000,
+                    inStoreCoinBalance: 20000,
                 },
             });
             console.log(`Created Player: ${p.name}`);

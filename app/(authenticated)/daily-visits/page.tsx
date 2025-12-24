@@ -323,7 +323,7 @@ export default function DailyVisitsPage() {
                                                                                     Web
                                                                                 </Badge>
                                                                             )}
-                                                                            {entry.ringGameType === "IN_STORE_ONLY" && (
+                                                                            {entry.ringGameType === "IN_STORE" && (
                                                                                 <Badge variant="outline" className="text-[10px] px-1 h-4 bg-orange-50 text-orange-700 border-orange-200">
                                                                                     店
                                                                                 </Badge>

@@ -11,7 +11,7 @@
     "prisma:migrate": "npx prisma migrate dev",
     "prisma:reset": "npx prisma migrate reset",
     "prisma:seed": "npx prisma db seed",
-    "prisma:local-push": "npx prisma db push && npx prisma db seed"
+    "prisma:local-push": "npm run prisma:reset && npx prisma db push && npm run prisma:generate && npm run prisma:seed"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.1.0",

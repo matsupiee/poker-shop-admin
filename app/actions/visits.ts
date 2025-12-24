@@ -28,7 +28,7 @@ export type RingGameInfo = {
     totalBuyIn: number
     totalCashOut: number
     timeline: RingGameChipEventInfo[]
-    ringGameType?: "WEB_COIN" | "IN_STORE_ONLY"
+    ringGameType?: "WEB_COIN" | "IN_STORE"
 }
 
 export type DailyVisit = {

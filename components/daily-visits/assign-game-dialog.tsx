@@ -43,7 +43,7 @@ export function AssignGameDialog({ visitId, playerName, tournaments, onSuccess, 
     const [open, setOpen] = React.useState(false)
     const [mode, setMode] = React.useState<"tournament" | "ring">("tournament")
 
-    const [ringGameType, setRingGameType] = React.useState<"WEB_COIN" | "IN_STORE_ONLY">("IN_STORE_ONLY")
+    const [ringGameType, setRingGameType] = React.useState<"WEB_COIN" | "IN_STORE">("IN_STORE")
     const [selectedTournamentId, setSelectedTournamentId] = React.useState<string>("")
     const [chipAmount, setChipAmount] = React.useState<string>("")
     const [entrySource, setEntrySource] = React.useState<"BUY_IN" | "FREE" | "SATELLITE">("BUY_IN")
@@ -207,7 +207,7 @@ export function AssignGameDialog({ visitId, playerName, tournaments, onSuccess, 
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="IN_STORE_ONLY">店内リング (In-Store)</SelectItem>
+                                        <SelectItem value="IN_STORE">店内リング (In-Store)</SelectItem>
                                         <SelectItem value="WEB_COIN">Webコイン (Web Coin)</SelectItem>
                                     </SelectContent>
                                 </Select>
