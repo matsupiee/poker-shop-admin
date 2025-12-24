@@ -42,6 +42,8 @@ interface AssignGameDialogProps {
 export function AssignGameDialog({ visitId, playerName, tournaments, onSuccess, disabled }: AssignGameDialogProps) {
     const [open, setOpen] = React.useState(false)
     const [mode, setMode] = React.useState<"tournament" | "ring">("tournament")
+
+    const [ringGameType, setRingGameType] = React.useState<"WEB_COIN" | "IN_STORE_ONLY">("IN_STORE_ONLY")
     const [selectedTournamentId, setSelectedTournamentId] = React.useState<string>("")
     const [chipAmount, setChipAmount] = React.useState<string>("")
     const [entrySource, setEntrySource] = React.useState<"BUY_IN" | "FREE" | "SATELLITE">("BUY_IN")
@@ -89,7 +91,7 @@ export function AssignGameDialog({ visitId, playerName, tournaments, onSuccess, 
                     if (onSuccess) onSuccess()
                 }
             } else {
-                const result = await addRingGameEntry(visitId, amount)
+                const result = await addRingGameEntry(visitId, amount, ringGameType)
                 if (!result.success) {
                     setError(result.errors?._form?.[0] || "エラーが発生しました")
                 } else {
@@ -197,10 +199,19 @@ export function AssignGameDialog({ visitId, playerName, tournaments, onSuccess, 
                             </div>
                         </div>
                     ) : (
-                        <div className="p-4 border rounded-md bg-muted/20 text-center">
-                            <p className="text-sm text-muted-foreground">
-                                リングゲームに参加します。
-                            </p>
+                        <div className="grid gap-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="ringGameType">リングゲーム種別</Label>
+                                <Select value={ringGameType} onValueChange={(val: any) => setRingGameType(val)}>
+                                    <SelectTrigger id="ringGameType">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="IN_STORE_ONLY">店内リング (In-Store)</SelectItem>
+                                        <SelectItem value="WEB_COIN">Webコイン (Web Coin)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
                     )}
 

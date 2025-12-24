@@ -135,7 +135,7 @@ model Visit {
 
   player            Player            @relation(fields: [playerId], references: [id])
   tournamentEntries TournamentEntry[]
-  ringGameEntry     RingGameEntry?
+  ringGameEntries   RingGameEntry[]
   settlements       Settlement[]
   storeCoinDeposit  StoreCoinDeposit?
 
@@ -257,7 +257,7 @@ model RingGameEntry {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  visitId String @unique @map("visit_id")
+  visitId String @map("visit_id")
 
   // webコインリングか店内リングか選択
   ringGameType RingGameType @map("ring_game_type")
@@ -265,6 +265,7 @@ model RingGameEntry {
   visit      Visit               @relation(fields: [visitId], references: [id])
   chipEvents RingGameChipEvent[]
 
+  @@unique([visitId, ringGameType])
   @@map("ring_game_entries")
 }
 

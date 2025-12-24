@@ -17,14 +17,14 @@ import { Coins, LogOut, Plus, Settings2 } from "lucide-react"
 import { addRingGameChip } from "@/app/actions/game-participation"
 
 interface RingGameControlProps {
-    visitId: string
+    ringGameEntryId: string
     playerName: string
     currentBuyIn: number
     currentCashOut: number
     onSuccess?: () => void
 }
 
-export function RingGameControl({ visitId, playerName, currentBuyIn, currentCashOut, onSuccess }: RingGameControlProps) {
+export function RingGameControl({ ringGameEntryId, playerName, currentBuyIn, currentCashOut, onSuccess }: RingGameControlProps) {
     const [open, setOpen] = React.useState(false)
     const [amount, setAmount] = React.useState("")
     const [isSubmitting, setIsSubmitting] = React.useState(false)
@@ -44,7 +44,7 @@ export function RingGameControl({ visitId, playerName, currentBuyIn, currentCash
 
         try {
             const type = activeTab === "buy-in" ? "BUY_IN" : "CASH_OUT"
-            const result = await addRingGameChip(visitId, type, value)
+            const result = await addRingGameChip(ringGameEntryId, type, value)
 
             if (!result.success) {
                 setError(result.errors?._form?.[0] || "エラーが発生しました")

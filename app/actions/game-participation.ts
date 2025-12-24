@@ -68,33 +68,35 @@ export async function addTournamentEntry(
     }
 }
 
-export async function addRingGameEntry(visitId: string, chipAmount: number): Promise<GameParticipationState> {
+export async function addRingGameEntry(
+    visitId: string,
+    chipAmount: number,
+    ringGameType: "WEB_COIN" | "IN_STORE_ONLY"
+): Promise<GameParticipationState> {
     if (!visitId) return { errors: { visitId: ["Visit ID is required"] } }
     if (chipAmount < 0) return { errors: { _form: ["チップ量は0以上である必要があります"] } }
 
     try {
         const existingEntry = await prisma.ringGameEntry.findUnique({
             where: {
-                visitId
+                visitId_ringGameType: {
+                    visitId,
+                    ringGameType
+                }
             }
         })
 
         if (existingEntry) {
-            // Check if there are any chip events, if so, maybe we are just buying in again?
-            // But the current logic assumes one RingGameEntry per visit.
-            // If the user wants to "Re-join" or "Add-on" that would be a different flow likely.
-            // However, for Ring Games, typically you stay in the "Entry" but just add chips.
-            // But here we are "Participating" (Creating the Entry).
-
             return {
                 success: false,
-                errors: { _form: ["すでにリングゲームに参加しています"] }
+                errors: { _form: ["すでにこの種類のリングゲームに参加しています"] }
             }
         }
 
         await prisma.ringGameEntry.create({
             data: {
                 visitId,
+                ringGameType,
                 chipEvents: {
                     create: {
                         eventType: "BUY_IN",
@@ -118,16 +120,16 @@ export async function addRingGameEntry(visitId: string, chipAmount: number): Pro
 }
 
 export async function addRingGameChip(
-    visitId: string,
+    ringGameEntryId: string,
     type: "BUY_IN" | "CASH_OUT",
     amount: number
 ): Promise<GameParticipationState> {
-    if (!visitId) return { errors: { visitId: ["Visit ID is required"] } }
+    if (!ringGameEntryId) return { errors: { _form: ["Ring Game Entry ID is required"] } }
     if (amount <= 0) return { errors: { _form: ["チップ量は0より大きい必要があります"] } }
 
     try {
         const entry = await prisma.ringGameEntry.findUnique({
-            where: { visitId }
+            where: { id: ringGameEntryId }
         })
 
         if (!entry) {

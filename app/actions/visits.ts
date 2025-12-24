@@ -22,11 +22,13 @@ export type RingGameChipEventInfo = {
 }
 
 export type RingGameInfo = {
+    id: string
     joined: boolean
     currentStatus: "playing" | "left"
     totalBuyIn: number
     totalCashOut: number
     timeline: RingGameChipEventInfo[]
+    ringGameType?: "WEB_COIN" | "IN_STORE_ONLY"
 }
 
 export type DailyVisit = {
@@ -40,7 +42,7 @@ export type DailyVisit = {
         image?: string
     }
     tournaments: TournamentEntryInfo[]
-    ringGame: RingGameInfo
+    ringGameEntries: RingGameInfo[]
     settlement?: {
         id: string
         netAmount: number
@@ -76,7 +78,7 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
                     createdAt: 'asc'
                 }
             },
-            ringGameEntry: {
+            ringGameEntries: {
                 include: {
                     chipEvents: {
                         orderBy: {
@@ -131,42 +133,34 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
         })
 
 
-        // Map ring game
-        let ringGame: RingGameInfo = {
-            joined: false,
-            currentStatus: "left", // Default
-            totalBuyIn: 0,
-            totalCashOut: 0,
-            timeline: []
-        }
-
-        if (visit.ringGameEntry) {
-            const buyIn = visit.ringGameEntry.chipEvents
+        // Map ring games
+        const ringGames: RingGameInfo[] = visit.ringGameEntries.map(entry => {
+            const buyIn = entry.chipEvents
                 .filter(e => e.eventType === "BUY_IN")
                 .reduce((sum, e) => sum + e.chipAmount, 0)
 
-            const cashOut = visit.ringGameEntry.chipEvents
+            const cashOut = entry.chipEvents
                 .filter(e => e.eventType === "CASH_OUT")
                 .reduce((sum, e) => sum + e.chipAmount, 0)
 
-            // Simple logic for status: if cashOut > 0 assume left, otherwise playing
-            // This is imperfect but a starting point
             const status = cashOut > 0 ? "left" : "playing"
 
-            const timeline: RingGameChipEventInfo[] = visit.ringGameEntry.chipEvents.map(e => ({
+            const timeline: RingGameChipEventInfo[] = entry.chipEvents.map(e => ({
                 eventType: e.eventType,
                 chipAmount: e.chipAmount,
                 timestamp: format(e.createdAt, "HH:mm")
             }))
 
-            ringGame = {
+            return {
+                id: entry.id,
                 joined: true,
                 currentStatus: status,
                 totalBuyIn: buyIn,
                 totalCashOut: cashOut,
-                timeline
+                timeline,
+                ringGameType: entry.ringGameType
             }
-        }
+        })
 
         const settlementInfo = visit.settlements[0] ? {
             id: visit.settlements[0].id,
@@ -185,7 +179,7 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
                 // image: visit.player.image // Add if available in schema later
             },
             tournaments,
-            ringGame,
+            ringGameEntries: ringGames,
             settlement: settlementInfo
         }
     })
@@ -337,7 +331,7 @@ export async function getVisitSettlementDetails(visitId: string) {
                     chipEvents: true
                 }
             },
-            ringGameEntry: {
+            ringGameEntries: {
                 include: {
                     chipEvents: true
                 }
@@ -387,28 +381,30 @@ export async function getVisitSettlementDetails(visitId: string) {
         }
     }
 
-    // 3. Ring Game
-    if (visit.ringGameEntry) {
+    // 3. Ring Games
+    for (const entry of visit.ringGameEntries) {
+        const gameLabel = entry.ringGameType === "WEB_COIN" ? "Webリング" : "店内リング"
+
         // Buy In (Cost)
-        const buyIns = visit.ringGameEntry.chipEvents.filter(e => e.eventType === "BUY_IN")
+        const buyIns = entry.chipEvents.filter(e => e.eventType === "BUY_IN")
         const totalBuyInCost = buyIns.reduce((sum, e) => sum + (e.chargeAmount ?? e.chipAmount), 0)
 
         if (totalBuyInCost > 0) {
             items.push({
                 type: "ring_game_buyin",
-                label: "リングゲーム購入",
+                label: `${gameLabel}購入`,
                 amount: -totalBuyInCost
             })
         }
 
         // Cash Out (Credit)
-        const cashOuts = visit.ringGameEntry.chipEvents.filter(e => e.eventType === "CASH_OUT")
+        const cashOuts = entry.chipEvents.filter(e => e.eventType === "CASH_OUT")
         const totalCashOutVal = cashOuts.reduce((sum, e) => sum + e.chipAmount, 0) // Assuming 1 chip = 1 currency unit
 
         if (totalCashOutVal > 0) {
             items.push({
                 type: "ring_game_cashout",
-                label: "リングゲーム換金",
+                label: `${gameLabel}換金`,
                 amount: totalCashOutVal
             })
         }

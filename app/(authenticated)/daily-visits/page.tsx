@@ -95,7 +95,7 @@ export default function DailyVisitsPage() {
         // 2. Detailed Filter (OR Logic)
         if (selectedFilters.length === 0) return true
 
-        const matchesRingGame = selectedFilters.includes("ring_game") && visit.ringGame.joined
+        const matchesRingGame = selectedFilters.includes("ring_game") && visit.ringGameEntries.length > 0
 
         // Check if any of the user's tournaments match the selected filters
         const matchesTournament = visit.tournaments.some(t => selectedFilters.includes(t.tournamentId))
@@ -307,43 +307,57 @@ export default function DailyVisitsPage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                {visit.ringGame.joined ? (
-                                                    <div className="flex items-start justify-between">
-                                                        <RingGameDetailsPopover timeline={visit.ringGame.timeline}>
-                                                            <div className="flex flex-col gap-1 text-sm">
-                                                                <div className="flex items-center gap-2">
-                                                                    <Coins className="w-3.5 h-3.5 text-orange-500" />
-                                                                    <span className="font-medium">
-                                                                        In: {visit.ringGame.totalBuyIn.toLocaleString()}
-                                                                    </span>
-                                                                </div>
-                                                                {visit.ringGame.currentStatus === "left" && visit.ringGame.totalCashOut !== undefined ? (
-                                                                    <div className={cn(
-                                                                        "flex items-center gap-2",
-                                                                        (visit.ringGame.totalCashOut - visit.ringGame.totalBuyIn) >= 0
-                                                                            ? "text-green-600"
-                                                                            : "text-red-500"
-                                                                    )}>
-                                                                        <span className="font-bold">
-                                                                            {(visit.ringGame.totalCashOut - visit.ringGame.totalBuyIn) > 0 ? "+" : ""}
-                                                                            {(visit.ringGame.totalCashOut - visit.ringGame.totalBuyIn).toLocaleString()}
-                                                                        </span>
-                                                                        <span className="text-xs text-muted-foreground">(Out: {visit.ringGame.totalCashOut.toLocaleString()})</span>
+                                                {visit.ringGameEntries.length > 0 ? (
+                                                    <div className="flex flex-col gap-2">
+                                                        {visit.ringGameEntries.map((entry) => (
+                                                            <div key={entry.id} className="flex items-start justify-between border-b pb-2 last:border-0 last:pb-0">
+                                                                <RingGameDetailsPopover timeline={entry.timeline}>
+                                                                    <div className="flex flex-col gap-1 text-sm">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <Coins className="w-3.5 h-3.5 text-orange-500" />
+                                                                            <span className="font-medium">
+                                                                                In: {entry.totalBuyIn.toLocaleString()}
+                                                                            </span>
+                                                                            {entry.ringGameType === "WEB_COIN" && (
+                                                                                <Badge variant="outline" className="text-[10px] px-1 h-4 bg-blue-50 text-blue-700 border-blue-200">
+                                                                                    Web
+                                                                                </Badge>
+                                                                            )}
+                                                                            {entry.ringGameType === "IN_STORE_ONLY" && (
+                                                                                <Badge variant="outline" className="text-[10px] px-1 h-4 bg-orange-50 text-orange-700 border-orange-200">
+                                                                                    店
+                                                                                </Badge>
+                                                                            )}
+                                                                        </div>
+                                                                        {entry.currentStatus === "left" && entry.totalCashOut !== undefined ? (
+                                                                            <div className={cn(
+                                                                                "flex items-center gap-2",
+                                                                                (entry.totalCashOut - entry.totalBuyIn) >= 0
+                                                                                    ? "text-green-600"
+                                                                                    : "text-red-500"
+                                                                            )}>
+                                                                                <span className="font-bold">
+                                                                                    {(entry.totalCashOut - entry.totalBuyIn) > 0 ? "+" : ""}
+                                                                                    {(entry.totalCashOut - entry.totalBuyIn).toLocaleString()}
+                                                                                </span>
+                                                                                <span className="text-xs text-muted-foreground">(Out: {entry.totalCashOut.toLocaleString()})</span>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <Badge variant="outline" className="w-fit text-xs border-green-200 bg-green-50 text-green-700">
+                                                                                プレイ中
+                                                                            </Badge>
+                                                                        )}
                                                                     </div>
-                                                                ) : (
-                                                                    <Badge variant="outline" className="w-fit text-xs border-green-200 bg-green-50 text-green-700">
-                                                                        プレイ中
-                                                                    </Badge>
-                                                                )}
+                                                                </RingGameDetailsPopover>
+                                                                <RingGameControl
+                                                                    ringGameEntryId={entry.id}
+                                                                    playerName={visit.player.name}
+                                                                    currentBuyIn={entry.totalBuyIn}
+                                                                    currentCashOut={entry.totalCashOut}
+                                                                    onSuccess={fetchData}
+                                                                />
                                                             </div>
-                                                        </RingGameDetailsPopover>
-                                                        <RingGameControl
-                                                            visitId={visit.id}
-                                                            playerName={visit.player.name}
-                                                            currentBuyIn={visit.ringGame.totalBuyIn}
-                                                            currentCashOut={visit.ringGame.totalCashOut}
-                                                            onSuccess={fetchData}
-                                                        />
+                                                        ))}
                                                     </div>
                                                 ) : (
                                                     <span className="text-muted-foreground text-sm">-</span>
