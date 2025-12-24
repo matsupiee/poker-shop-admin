@@ -318,6 +318,9 @@ model RingGameDealerShift {
 
   ringGameDeskId String
 
+  // webコインリングか店内リングか選択
+  ringGameType RingGameType @map("ring_game_type")
+
   // 実績
   rakeChip   Int @default(0) @map("rake_chip")
   jpRakeChip Int @default(0) @map("jp_rake_chip")
