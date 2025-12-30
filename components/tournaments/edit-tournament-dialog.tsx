@@ -4,14 +4,14 @@ import { useActionState, useEffect, useState } from "react"
 import { updateTournament } from "@/app/actions/tournaments"
 import { Button } from "@/components/ui/button"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog"
+    Drawer,
+    DrawerContent,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerTrigger,
+} from "@/components/ui/drawer"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Edit, Plus, Trash2 } from "lucide-react"
@@ -43,24 +43,24 @@ export function EditTournamentDialog({ tournament, onTournamentUpdated, children
     if (isStarted) return null
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
+        <Drawer open={open} onOpenChange={setOpen} direction="right">
+            <DrawerTrigger asChild>
                 {children ? children : (
                     <Button variant="ghost" size="icon">
                         <Edit className="h-4 w-4" />
                     </Button>
                 )}
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col p-0">
-                <DialogHeader className="p-6 pb-4 flex-none border-b">
-                    <DialogTitle>トーナメント編集</DialogTitle>
-                    <DialogDescription>
+            </DrawerTrigger>
+            <DrawerContent className="h-full sm:max-w-[760px] flex flex-col">
+                <DrawerHeader className="flex-none border-b">
+                    <DrawerTitle>トーナメント編集</DrawerTitle>
+                    <DrawerDescription>
                         トーナメント情報を編集します。
-                    </DialogDescription>
-                </DialogHeader>
+                    </DrawerDescription>
+                </DrawerHeader>
                 <EditTournamentForm tournament={tournament} onSuccess={handleSuccess} />
-            </DialogContent>
-        </Dialog>
+            </DrawerContent>
+        </Drawer>
     )
 }
 
@@ -344,11 +344,11 @@ function EditTournamentForm({ tournament, onSuccess }: { tournament: any, onSucc
                     )}
                 </div>
             </div>
-            <DialogFooter className="p-6 pt-4 flex-none border-t bg-background">
+            <DrawerFooter className="flex-none border-t bg-background">
                 <Button type="submit" disabled={isPending}>
                     {isPending ? "更新中..." : "更新"}
                 </Button>
-            </DialogFooter>
+            </DrawerFooter>
         </form>
     )
 }
