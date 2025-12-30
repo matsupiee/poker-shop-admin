@@ -20,9 +20,10 @@ type Props = {
     status: "playing" | "eliminated" | "finished"
     onSuccess?: () => void
     trigger?: React.ReactNode
+    hasBounty?: boolean
 }
 
-export function TournamentResultUpdate({ entryId, currentRank, currentBounty, status, onSuccess, trigger }: Props) {
+export function TournamentResultUpdate({ entryId, currentRank, currentBounty, status, onSuccess, trigger, hasBounty }: Props) {
     const [isOpen, setIsOpen] = React.useState(false)
     const [rank, setRank] = React.useState(currentRank?.toString() ?? "")
     const [bounty, setBounty] = React.useState(currentBounty?.toString() ?? "")
@@ -30,14 +31,14 @@ export function TournamentResultUpdate({ entryId, currentRank, currentBounty, st
 
     const handleUpdate = async () => {
         const rankNum = rank ? parseInt(rank) : undefined
-        const bountyNum = bounty ? parseInt(bounty) : undefined
+        const bountyNum = hasBounty && bounty ? parseInt(bounty) : undefined
 
         if (rankNum !== undefined && (isNaN(rankNum) || rankNum < 1)) {
             toast.error("有効な順位を入力してください")
             return
         }
 
-        if (bountyNum !== undefined && (isNaN(bountyNum) || bountyNum < 0)) {
+        if (hasBounty && bountyNum !== undefined && (isNaN(bountyNum) || bountyNum < 0)) {
             toast.error("有効なバウンティ数を入力してください")
             return
         }
@@ -86,20 +87,22 @@ export function TournamentResultUpdate({ entryId, currentRank, currentBounty, st
                                 min="1"
                             />
                         </div>
-                        <div className="grid gap-1.5">
-                            <label className="text-xs font-medium flex items-center gap-1">
-                                <Target className="w-3 h-3 text-red-500" />
-                                バウンティ
-                            </label>
-                            <Input
-                                type="number"
-                                value={bounty}
-                                onChange={(e) => setBounty(e.target.value)}
-                                placeholder="飛ばした人数"
-                                className="h-8 text-sm"
-                                min="0"
-                            />
-                        </div>
+                        {hasBounty && (
+                            <div className="grid gap-1.5">
+                                <label className="text-xs font-medium flex items-center gap-1">
+                                    <Target className="w-3 h-3 text-red-500" />
+                                    バウンティ
+                                </label>
+                                <Input
+                                    type="number"
+                                    value={bounty}
+                                    onChange={(e) => setBounty(e.target.value)}
+                                    placeholder="飛ばした人数"
+                                    className="h-8 text-sm"
+                                    min="0"
+                                />
+                            </div>
+                        )}
                         <Button
                             size="sm"
                             className="w-full h-8 mt-1"

@@ -225,7 +225,7 @@ export default function DailyVisitsPage() {
                                     <TableHead className="w-[80px]">会員ID</TableHead>
                                     <TableHead className="min-w-[140px]">プレイヤー</TableHead>
                                     <TableHead className="w-[100px]">来店時刻</TableHead>
-                                    <TableHead className="min-w-[400px]">ゲーム参加状況 (トナメ / リング)</TableHead>
+                                    <TableHead className="min-w-[400px] max-w-[600px]">ゲーム参加状況 (トナメ / リング)</TableHead>
                                     <TableHead className="text-right w-[120px]"></TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -263,7 +263,7 @@ export default function DailyVisitsPage() {
                                                     {visit.checkInTime}
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="p-0 border-l border-r">
+                                            <TableCell className="p-0 border-l border-r max-w-[600px]">
                                                 <div className="flex flex-col">
                                                     {/* Tournaments of the day */}
                                                     {tournaments.map((t, idx) => (
@@ -271,67 +271,70 @@ export default function DailyVisitsPage() {
                                                             <div className="w-24 flex-shrink-0 bg-muted/30 px-2 py-2 border-r flex items-center justify-center text-[10px] font-bold text-center leading-tight">
                                                                 {t.name}
                                                             </div>
-                                                            <div className="flex-1 flex gap-1 p-1 overflow-x-auto min-h-[64px] items-center">
+                                                            <div className="flex-1 overflow-hidden relative flex items-stretch">
                                                                 {(() => {
                                                                     const tournamentEvents = visit.tournaments.filter(e => e.tournamentId === t.id);
                                                                     const latestEntry = tournamentEvents.find(e => e.isLatestEntry);
 
                                                                     return (
                                                                         <>
-                                                                            {tournamentEvents.map(e => (
-                                                                                <TournamentResultUpdate
-                                                                                    key={e.eventId}
-                                                                                    entryId={e.entryId}
-                                                                                    currentRank={e.rank}
-                                                                                    currentBounty={e.bountyCount}
-                                                                                    status={e.status}
+                                                                            <div className="flex-1 flex gap-1 p-1 overflow-x-auto min-h-[64px] items-center scrollbar-hide">
+                                                                                {tournamentEvents.map(e => (
+                                                                                    <TournamentResultUpdate
+                                                                                        key={e.eventId}
+                                                                                        entryId={e.entryId}
+                                                                                        currentRank={e.rank}
+                                                                                        currentBounty={e.bountyCount}
+                                                                                        status={e.status}
+                                                                                        onSuccess={fetchData}
+                                                                                        hasBounty={e.hasBounty}
+                                                                                        trigger={
+                                                                                            <div className={cn(
+                                                                                                "border rounded px-2 py-1 text-[10px] min-w-[70px] bg-background shadow-sm hover:border-accent transition-colors cursor-pointer",
+                                                                                                e.isLatestEntry && "border-primary/50 bg-primary/5",
+                                                                                                e.eventType === "ADD_CHIP" && "bg-yellow-50/50"
+                                                                                            )}>
+                                                                                                <div className="flex justify-between items-start">
+                                                                                                    <span className="text-muted-foreground font-mono">{e.timestamp}</span>
+                                                                                                    <Badge variant="outline" className="text-[8px] h-3 px-1 leading-none">
+                                                                                                        {e.eventType === "ENTRY" ? "E" : "A"}
+                                                                                                    </Badge>
+                                                                                                </div>
+                                                                                                <div className="font-bold">
+                                                                                                    {e.eventType === "ENTRY" ? (e.rank ? `${e.rank}位` : (e.status === 'playing' ? 'Playing' : 'Elim')) : `+${e.chipAmount.toLocaleString()}`}
+                                                                                                </div>
+                                                                                                <div className="text-muted-foreground">¥{e.chargeAmount.toLocaleString()}</div>
+                                                                                            </div>
+                                                                                        }
+                                                                                    />
+                                                                                ))}
+                                                                                <TournamentDialog
+                                                                                    visitId={visit.id}
+                                                                                    playerName={visit.player.name}
+                                                                                    tournaments={tournaments}
                                                                                     onSuccess={fetchData}
+                                                                                    defaultTournamentId={t.id}
+                                                                                    existingEntryId={latestEntry?.entryId}
                                                                                     trigger={
-                                                                                        <div className={cn(
-                                                                                            "border rounded px-2 py-1 text-[10px] min-w-[70px] bg-background shadow-sm hover:border-accent transition-colors cursor-pointer",
-                                                                                            e.isLatestEntry && "border-primary/50 bg-primary/5",
-                                                                                            e.eventType === "ADD_CHIP" && "bg-yellow-50/50"
-                                                                                        )}>
-                                                                                            <div className="flex justify-between items-start">
-                                                                                                <span className="text-muted-foreground font-mono">{e.timestamp}</span>
-                                                                                                <Badge variant="outline" className="text-[8px] h-3 px-1 leading-none">
-                                                                                                    {e.eventType === "ENTRY" ? "E" : "A"}
-                                                                                                </Badge>
-                                                                                            </div>
-                                                                                            <div className="font-bold">
-                                                                                                {e.eventType === "ENTRY" ? (e.rank ? `${e.rank}位` : (e.status === 'playing' ? 'Playing' : 'Elim')) : `+${e.chipAmount.toLocaleString()}`}
-                                                                                            </div>
-                                                                                            <div className="text-muted-foreground">¥{e.chargeAmount.toLocaleString()}</div>
-                                                                                        </div>
+                                                                                        <Button variant="ghost" size="icon" className="flex-shrink-0 h-10 w-10 border-2 border-dashed rounded-md text-muted-foreground hover:text-foreground">
+                                                                                            <Plus className="h-4 w-4" />
+                                                                                        </Button>
                                                                                     }
                                                                                 />
-                                                                            ))}
-                                                                            <TournamentDialog
-                                                                                visitId={visit.id}
-                                                                                playerName={visit.player.name}
-                                                                                tournaments={tournaments}
-                                                                                onSuccess={fetchData}
-                                                                                defaultTournamentId={t.id}
-                                                                                existingEntryId={latestEntry?.entryId}
-                                                                                trigger={
-                                                                                    <Button variant="ghost" size="icon" className="h-10 w-10 border-2 border-dashed rounded-md text-muted-foreground hover:text-foreground">
-                                                                                        <Plus className="h-4 w-4" />
-                                                                                    </Button>
-                                                                                }
-                                                                            />
+                                                                            </div>
 
                                                                             {latestEntry && (
-                                                                                <div className="ml-auto flex items-center gap-2 pr-1">
+                                                                                <div className="flex-shrink-0 flex items-center gap-2 px-2 border-l bg-background/50 backdrop-blur-sm">
                                                                                     {(latestEntry.rank || (latestEntry.bountyCount !== undefined && latestEntry.bountyCount > 0)) && (
-                                                                                        <div className="flex flex-col items-end gap-1 mr-1">
+                                                                                        <div className="flex flex-col items-end gap-1">
                                                                                             {latestEntry.rank && (
-                                                                                                <Badge variant="secondary" className="h-5 text-[10px] bg-yellow-100 text-yellow-800 border-yellow-200">
+                                                                                                <Badge variant="secondary" className="h-5 text-[10px] bg-yellow-100/80 text-yellow-800 border-yellow-200 whitespace-nowrap">
                                                                                                     <Trophy className="w-2.5 h-2.5 mr-1" />
                                                                                                     {latestEntry.rank}位
                                                                                                 </Badge>
                                                                                             )}
-                                                                                            {latestEntry.bountyCount !== undefined && latestEntry.bountyCount > 0 && (
-                                                                                                <Badge variant="secondary" className="h-5 text-[10px] bg-rose-100 text-rose-800 border-rose-200">
+                                                                                            {latestEntry.hasBounty && latestEntry.bountyCount !== undefined && latestEntry.bountyCount > 0 && (
+                                                                                                <Badge variant="secondary" className="h-5 text-[10px] bg-rose-100/80 text-rose-800 border-rose-200 whitespace-nowrap">
                                                                                                     <Target className="w-2.5 h-2.5 mr-1" />
                                                                                                     {latestEntry.bountyCount}
                                                                                                 </Badge>
@@ -344,6 +347,7 @@ export default function DailyVisitsPage() {
                                                                                         currentBounty={latestEntry.bountyCount}
                                                                                         status={latestEntry.status}
                                                                                         onSuccess={fetchData}
+                                                                                        hasBounty={latestEntry.hasBounty}
                                                                                         trigger={
                                                                                             <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-accent text-muted-foreground hover:text-foreground">
                                                                                                 <Settings2 className="h-4 w-4" />
@@ -364,7 +368,7 @@ export default function DailyVisitsPage() {
                                                         <div className="w-24 flex-shrink-0 bg-muted px-2 py-2 border-r flex items-center justify-center text-[10px] font-bold text-foreground text-center leading-tight">
                                                             WEBコイン
                                                         </div>
-                                                        <div className="flex-1 flex gap-1 p-1 overflow-x-auto min-h-[64px] items-center">
+                                                        <div className="flex-1 flex gap-1 p-1 overflow-x-auto min-h-[64px] scrollbar-hide items-center">
                                                             {visit.ringGameEntries.filter(e => e.ringGameType === "WEB_COIN").map(entry => (
                                                                 entry.timeline.filter(ev => ev.eventType === "BUY_IN").map((ev, i) => (
                                                                     <div key={i} className="border rounded px-2 py-1 text-[10px] min-w-[70px] bg-background shadow-sm">

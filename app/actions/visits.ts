@@ -15,6 +15,7 @@ export type TournamentEventInfo = {
     status: "playing" | "eliminated" | "finished"
     rank?: number
     bountyCount?: number
+    hasBounty: boolean
     timestamp: string
     isLatestEntry: boolean
 }
@@ -76,7 +77,11 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
             player: true,
             tournamentEntries: {
                 include: {
-                    tournament: true,
+                    tournament: {
+                        include: {
+                            tournamentBounty: true
+                        }
+                    },
                     chipEvents: true
                 },
                 orderBy: {
@@ -135,6 +140,7 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
                 status,
                 rank: entry.finalRank ?? undefined,
                 bountyCount: entry.bountyCount ?? undefined,
+                hasBounty: !!entry.tournament.tournamentBounty,
                 timestamp: format(event.createdAt, "HH:mm"),
                 isLatestEntry
             }))
