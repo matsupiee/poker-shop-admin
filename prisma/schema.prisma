@@ -303,6 +303,19 @@ model RingGameChipEvent {
   @@map("ring_game_chip_events")
 }
 
+model RingGameBuyInOption {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ringGameType RingGameType @map("ring_game_type")
+
+  chipAmount   Int @map("chip_amount") // 例: 20000
+  chargeAmount Int @map("charge_amount") // 例: 2000円
+
+  @@map("ring_game_buy_in_options")
+}
+
 model RingGameDesk {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now()) @map("created_at")
