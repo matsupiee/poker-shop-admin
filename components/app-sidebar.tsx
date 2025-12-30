@@ -12,7 +12,8 @@ import {
     LogOut,
     Settings,
     ClipboardList,
-    Armchair
+    Armchair,
+    Coins
 } from "lucide-react";
 import { signOut } from "@/lib/better-auth/sign-out";
 import { useState } from "react";
@@ -25,6 +26,7 @@ const menuItems = [
     { href: "/tournaments", label: "Tournaments", icon: Trophy },
     { href: "/ring-games/tables", label: "Ring Game Tables", icon: Armchair },
     { href: "/ring-games/dealer-shifts", label: "Ring Game Dealer Shifts", icon: ClipboardList },
+    { href: "/ring-games/buy-in-options", label: "Ring Game Buy-Ins", icon: Coins },
     { href: "/staff", label: "Staff", icon: Settings },
 ];
 
