@@ -71,7 +71,8 @@ export async function addTournamentEntry(
 export async function addRingGameEntry(
     visitId: string,
     chipAmount: number,
-    ringGameType: "WEB_COIN" | "IN_STORE"
+    ringGameType: "WEB_COIN" | "IN_STORE",
+    chargeAmount?: number
 ): Promise<GameParticipationState> {
     if (!visitId) return { errors: { visitId: ["Visit ID is required"] } }
     if (chipAmount < 0) return { errors: { _form: ["チップ量は0以上である必要があります"] } }
@@ -100,7 +101,8 @@ export async function addRingGameEntry(
                 chipEvents: {
                     create: {
                         eventType: "BUY_IN",
-                        chipAmount: chipAmount
+                        chipAmount: chipAmount,
+                        chargeAmount: chargeAmount
                     }
                 }
             }
@@ -122,7 +124,8 @@ export async function addRingGameEntry(
 export async function addRingGameChip(
     ringGameEntryId: string,
     type: "BUY_IN" | "CASH_OUT",
-    amount: number
+    amount: number,
+    chargeAmount?: number
 ): Promise<GameParticipationState> {
     if (!ringGameEntryId) return { errors: { _form: ["Ring Game Entry ID is required"] } }
     if (amount <= 0) return { errors: { _form: ["チップ量は0より大きい必要があります"] } }
@@ -143,7 +146,8 @@ export async function addRingGameChip(
             data: {
                 ringGameEntryId: entry.id,
                 eventType: type,
-                chipAmount: amount
+                chipAmount: amount,
+                chargeAmount: chargeAmount
             }
         })
 

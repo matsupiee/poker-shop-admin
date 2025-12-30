@@ -205,14 +205,6 @@ function CreateTournamentForm({ onSuccess }: { onSuccess: () => void }) {
                     <div className="space-y-4 border-t pt-4">
                         <div className="flex items-center gap-8">
                             <Label>プライズ設定</Label>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={addPrize}
-                            >
-                                <Plus className="h-4 w-4 mr-1" /> 追加
-                            </Button>
                         </div>
                         <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
                             {prizes.length === 0 && (
@@ -249,6 +241,15 @@ function CreateTournamentForm({ onSuccess }: { onSuccess: () => void }) {
 
                                 </div>
                             ))}
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="w-full border-dashed mt-2"
+                                onClick={addPrize}
+                            >
+                                <Plus className="h-4 w-4 mr-1" /> 追加
+                            </Button>
                         </div>
                         <input type="hidden" name="prizes" value={JSON.stringify(prizes)} />
                     </div>

@@ -3,7 +3,7 @@
 import * as React from "react"
 import { format } from "date-fns"
 import { ja } from "date-fns/locale"
-import { Calendar as CalendarIcon, Search, Filter, Trophy, Coins, Clock, Plus } from "lucide-react"
+import { Calendar as CalendarIcon, Search, Filter, Trophy, Coins, Clock, Plus, Settings2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -41,9 +41,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getDailyVisits, type DailyVisit } from "@/app/actions/visits"
 import { getTournaments } from "@/app/actions/tournaments"
 import { TournamentParticipationDialog } from "@/components/daily-visits/tournament-participation-dialog"
-import { RingGameParticipationDialog } from "@/components/daily-visits/ring-game-participation-dialog"
+import { RingGameDialog } from "@/components/daily-visits/ring-game-dialog"
 import { TournamentRankUpdate } from "@/components/daily-visits/tournament-rank-update"
-import { RingGameControl } from "@/components/daily-visits/ring-game-control"
 import { SettlementDialog } from "@/components/daily-visits/settlement-dialog"
 import { RingGameDetailsPopover } from "@/components/daily-visits/ring-game-details-popover"
 import { AddOnDialog } from "@/components/tournaments/add-on-dialog"
@@ -228,7 +227,7 @@ export default function DailyVisitsPage() {
                                     <TableHead className="min-w-[140px]">プレイヤー</TableHead>
                                     <TableHead className="w-[100px]">来店時刻</TableHead>
                                     <TableHead className="min-w-[400px]">ゲーム参加状況 (トナメ / リング)</TableHead>
-                                    <TableHead className="text-right w-[120px]">ステータス</TableHead>
+                                    <TableHead className="text-right w-[120px]"></TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -343,30 +342,28 @@ export default function DailyVisitsPage() {
                                                                     </div>
                                                                 ))
                                                             ))}
-                                                            <RingGameParticipationDialog
-                                                                visitId={visit.id}
-                                                                playerName={visit.player.name}
-                                                                ringGameBuyInOptions={ringGameBuyInOptions}
-                                                                onSuccess={fetchData}
-                                                                defaultRingGameType="WEB_COIN"
-                                                                trigger={
-                                                                    <Button variant="ghost" size="icon" className="h-10 w-10 border-2 border-dashed rounded-md text-muted-foreground hover:text-foreground">
-                                                                        <Plus className="h-4 w-4" />
-                                                                    </Button>
-                                                                }
-                                                            />
-                                                            {/* Ring game control (Cash out) */}
-                                                            {visit.ringGameEntries.find(e => e.ringGameType === "WEB_COIN") && (
-                                                                <div className="ml-2">
-                                                                    <RingGameControl
-                                                                        ringGameEntryId={visit.ringGameEntries.find(e => e.ringGameType === "WEB_COIN")!.id}
+                                                            {(() => {
+                                                                const entry = visit.ringGameEntries.find(e => e.ringGameType === "WEB_COIN");
+                                                                return (
+                                                                    <RingGameDialog
+                                                                        visitId={visit.id}
                                                                         playerName={visit.player.name}
-                                                                        currentBuyIn={visit.ringGameEntries.find(e => e.ringGameType === "WEB_COIN")!.totalBuyIn}
-                                                                        currentCashOut={visit.ringGameEntries.find(e => e.ringGameType === "WEB_COIN")!.totalCashOut}
+                                                                        ringGameBuyInOptions={ringGameBuyInOptions}
                                                                         onSuccess={fetchData}
+                                                                        ringGameType="WEB_COIN"
+                                                                        existingEntry={entry ? {
+                                                                            id: entry.id,
+                                                                            totalBuyIn: entry.totalBuyIn,
+                                                                            totalCashOut: entry.totalCashOut,
+                                                                        } : undefined}
+                                                                        trigger={
+                                                                            <Button variant="ghost" size="icon" className="h-10 w-10 border-2 border-dashed rounded-md text-muted-foreground hover:text-foreground">
+                                                                                <Plus className="h-4 w-4" />
+                                                                            </Button>
+                                                                        }
                                                                     />
-                                                                </div>
-                                                            )}
+                                                                );
+                                                            })()}
                                                         </div>
                                                     </div>
 
@@ -385,46 +382,39 @@ export default function DailyVisitsPage() {
                                                                     </div>
                                                                 ))
                                                             ))}
-                                                            <RingGameParticipationDialog
-                                                                visitId={visit.id}
-                                                                playerName={visit.player.name}
-                                                                ringGameBuyInOptions={ringGameBuyInOptions}
-                                                                onSuccess={fetchData}
-                                                                defaultRingGameType="IN_STORE"
-                                                                trigger={
-                                                                    <Button variant="ghost" size="icon" className="h-10 w-10 border-2 border-dashed rounded-md text-muted-foreground hover:text-foreground">
-                                                                        <Plus className="h-4 w-4" />
-                                                                    </Button>
-                                                                }
-                                                            />
-                                                            {/* Ring game control (Cash out) */}
-                                                            {visit.ringGameEntries.find(e => e.ringGameType === "IN_STORE") && (
-                                                                <div className="ml-2">
-                                                                    <RingGameControl
-                                                                        ringGameEntryId={visit.ringGameEntries.find(e => e.ringGameType === "IN_STORE")!.id}
+                                                            {(() => {
+                                                                const entry = visit.ringGameEntries.find(e => e.ringGameType === "IN_STORE");
+                                                                return (
+                                                                    <RingGameDialog
+                                                                        visitId={visit.id}
                                                                         playerName={visit.player.name}
-                                                                        currentBuyIn={visit.ringGameEntries.find(e => e.ringGameType === "IN_STORE")!.totalBuyIn}
-                                                                        currentCashOut={visit.ringGameEntries.find(e => e.ringGameType === "IN_STORE")!.totalCashOut}
+                                                                        ringGameBuyInOptions={ringGameBuyInOptions}
                                                                         onSuccess={fetchData}
+                                                                        ringGameType="IN_STORE"
+                                                                        existingEntry={entry ? {
+                                                                            id: entry.id,
+                                                                            totalBuyIn: entry.totalBuyIn,
+                                                                            totalCashOut: entry.totalCashOut,
+                                                                        } : undefined}
+                                                                        trigger={
+                                                                            <Button variant="ghost" size="icon" className="h-10 w-10 border-2 border-dashed rounded-md text-muted-foreground hover:text-foreground">
+                                                                                <Plus className="h-4 w-4" />
+                                                                            </Button>
+                                                                        }
                                                                     />
-                                                                </div>
-                                                            )}
+                                                                );
+                                                            })()}
                                                         </div>
                                                     </div>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="text-right">
-                                                <div className="flex items-center justify-end gap-2">
-                                                    <SettlementDialog
-                                                        visitId={visit.id}
-                                                        playerName={visit.player.name}
-                                                        isSettled={!!visit.settlement}
-                                                        onSuccess={fetchData}
-                                                    />
-                                                    <Button variant="ghost" size="sm">
-                                                        詳細
-                                                    </Button>
-                                                </div>
+                                            <TableCell className="text-center">
+                                                <SettlementDialog
+                                                    visitId={visit.id}
+                                                    playerName={visit.player.name}
+                                                    isSettled={!!visit.settlement}
+                                                    onSuccess={fetchData}
+                                                />
                                             </TableCell>
                                         </TableRow>
                                     ))

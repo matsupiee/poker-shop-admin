@@ -238,14 +238,6 @@ function EditTournamentForm({ tournament, onSuccess }: { tournament: any, onSucc
                     <div className="space-y-4 border-t pt-4">
                         <div className="flex items-center justify-between">
                             <Label>プライズ設定</Label>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={addPrize}
-                            >
-                                <Plus className="h-4 w-4 mr-1" /> 追加
-                            </Button>
                         </div>
                         <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
                             {prizes.length === 0 && (
@@ -279,6 +271,15 @@ function EditTournamentForm({ tournament, onSuccess }: { tournament: any, onSucc
                                     </Button>
                                 </div>
                             ))}
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="w-full border-dashed mt-2"
+                                onClick={addPrize}
+                            >
+                                <Plus className="h-4 w-4 mr-1" /> 追加
+                            </Button>
                         </div>
                         <input type="hidden" name="prizes" value={JSON.stringify(prizes)} />
                     </div>

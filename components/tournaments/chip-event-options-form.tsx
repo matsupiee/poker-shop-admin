@@ -40,14 +40,6 @@ export function ChipEventOptionsForm({ options, onChange }: ChipEventOptionsForm
         <div className="space-y-4 border-t pt-4">
             <div className="flex items-center gap-8">
                 <Label>バイイン・アドオン設定</Label>
-                <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={addOption}
-                >
-                    <Plus className="h-4 w-4 mr-1" /> 追加
-                </Button>
             </div>
             <div className="space-y-4 pr-2">
                 {options.length === 0 && (
@@ -113,6 +105,15 @@ export function ChipEventOptionsForm({ options, onChange }: ChipEventOptionsForm
                         </Button>
                     </div>
                 ))}
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full border-dashed"
+                    onClick={addOption}
+                >
+                    <Plus className="h-4 w-4 mr-1" /> 追加
+                </Button>
             </div>
             <input
                 type="hidden"
