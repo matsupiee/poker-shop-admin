@@ -204,12 +204,6 @@ model TournamentBounty {
   @@map("tournament_bounties")
 }
 
-enum TournamentEntrySource {
-  BUY_IN // 参加時点で支払い発生
-  FREE // 無料参加
-  SATELLITE // サテライト
-}
-
 // トナメ参加
 // re-entryする際は、新規にレコードを作成することで対応する
 model TournamentEntry {
@@ -219,8 +213,6 @@ model TournamentEntry {
 
   visitId      String @map("visit_id")
   tournamentId String @map("tournament_id")
-
-  entrySource TournamentEntrySource @map("entry_source")
 
   finalRank   Int? @map("final_rank") // 特に入賞してない場合は何も書かなくていい
   bountyCount Int? @map("bounty_count") // そのエントリー中に飛ばした人数

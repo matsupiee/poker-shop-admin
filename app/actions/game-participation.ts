@@ -17,7 +17,6 @@ export async function addTournamentEntry(
     visitId: string,
     tournamentId: string,
     chipAmount: number,
-    entrySource: "BUY_IN" | "FREE" | "SATELLITE",
     paymentAmount: number
 ): Promise<GameParticipationState> {
     if (!visitId) return { errors: { visitId: ["Visit ID is required"] } }
@@ -43,7 +42,6 @@ export async function addTournamentEntry(
             data: {
                 visitId,
                 tournamentId,
-                entrySource,
                 chipEvents: {
                     create: {
                         eventType: "ENTRY",

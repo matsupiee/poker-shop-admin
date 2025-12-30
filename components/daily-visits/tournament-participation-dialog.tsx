@@ -63,7 +63,6 @@ export function TournamentParticipationDialog({
     const [selectedTournamentId, setSelectedTournamentId] = React.useState<string>(defaultTournamentId)
     const [selectedTournamentOptionId, setSelectedTournamentOptionId] = React.useState<string>("")
     const [chipAmount, setChipAmount] = React.useState<string>("")
-    const [entrySource, setEntrySource] = React.useState<"BUY_IN" | "FREE" | "SATELLITE">("BUY_IN")
     const [paymentAmount, setPaymentAmount] = React.useState<string>("")
     const [isSubmitting, setIsSubmitting] = React.useState(false)
     const [error, setError] = React.useState<string | null>(null)
@@ -120,7 +119,6 @@ export function TournamentParticipationDialog({
                 visitId,
                 selectedTournamentId,
                 amount,
-                entrySource,
                 payment
             )
             if (!result.success) {
@@ -195,20 +193,6 @@ export function TournamentParticipationDialog({
                                         {opt.name} ({opt.chipAmount.toLocaleString()}点 / ¥{opt.chargeAmount.toLocaleString()})
                                     </SelectItem>
                                 ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <div className="grid gap-2">
-                        <Label htmlFor="entrySource">参加区分</Label>
-                        <Select value={entrySource} onValueChange={(val) => setEntrySource(val as "BUY_IN" | "FREE" | "SATELLITE")}>
-                            <SelectTrigger id="entrySource">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="BUY_IN">通常参加 (BUY_IN)</SelectItem>
-                                <SelectItem value="FREE">無料参加 (FREE)</SelectItem>
-                                <SelectItem value="SATELLITE">サテライト通過 (SATELLITE)</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
