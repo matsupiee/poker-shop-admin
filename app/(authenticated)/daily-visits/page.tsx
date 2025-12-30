@@ -3,7 +3,7 @@
 import * as React from "react"
 import { format } from "date-fns"
 import { ja } from "date-fns/locale"
-import { Calendar as CalendarIcon, Search, Filter, Trophy, Coins, Clock, Plus, Settings2 } from "lucide-react"
+import { Calendar as CalendarIcon, Search, Filter, Trophy, Coins, Clock, Plus, Settings2, Target } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -40,13 +40,12 @@ import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getDailyVisits, type DailyVisit } from "@/app/actions/visits"
 import { getTournaments } from "@/app/actions/tournaments"
-import { TournamentParticipationDialog } from "@/components/daily-visits/tournament-participation-dialog"
+import { getRingGameBuyInOptions } from "@/app/actions/ring-game-buy-in-options"
+import { TournamentDialog } from "@/components/daily-visits/tournament-dialog"
 import { RingGameDialog } from "@/components/daily-visits/ring-game-dialog"
-import { TournamentRankUpdate } from "@/components/daily-visits/tournament-rank-update"
+import { TournamentResultUpdate } from "@/components/daily-visits/tournament-result-update"
 import { SettlementDialog } from "@/components/daily-visits/settlement-dialog"
 import { RingGameDetailsPopover } from "@/components/daily-visits/ring-game-details-popover"
-import { AddOnDialog } from "@/components/tournaments/add-on-dialog"
-import { getRingGameBuyInOptions } from "@/app/actions/ring-game-buy-in-options"
 
 export default function DailyVisitsPage() {
     const [date, setDate] = React.useState<Date | undefined>(new Date())
@@ -273,56 +272,89 @@ export default function DailyVisitsPage() {
                                                                 {t.name}
                                                             </div>
                                                             <div className="flex-1 flex gap-1 p-1 overflow-x-auto min-h-[64px] items-center">
-                                                                {visit.tournaments.filter(e => e.tournamentId === t.id).map(e => (
-                                                                    <TournamentRankUpdate
-                                                                        key={e.eventId}
-                                                                        entryId={e.entryId}
-                                                                        currentRank={e.rank}
-                                                                        status={e.status}
-                                                                        onSuccess={fetchData}
-                                                                        trigger={
-                                                                            <div className={cn(
-                                                                                "border rounded px-2 py-1 text-[10px] min-w-[70px] bg-background shadow-sm hover:border-accent transition-colors cursor-pointer",
-                                                                                e.isLatestEntry && "border-primary/50 bg-primary/5",
-                                                                                e.eventType === "ADD_CHIP" && "bg-yellow-50/50"
-                                                                            )}>
-                                                                                <div className="flex justify-between items-start">
-                                                                                    <span className="text-muted-foreground font-mono">{e.timestamp}</span>
-                                                                                    <Badge variant="outline" className="text-[8px] h-3 px-1 leading-none">
-                                                                                        {e.eventType === "ENTRY" ? "E" : "A"}
-                                                                                    </Badge>
+                                                                {(() => {
+                                                                    const tournamentEvents = visit.tournaments.filter(e => e.tournamentId === t.id);
+                                                                    const latestEntry = tournamentEvents.find(e => e.isLatestEntry);
+
+                                                                    return (
+                                                                        <>
+                                                                            {tournamentEvents.map(e => (
+                                                                                <TournamentResultUpdate
+                                                                                    key={e.eventId}
+                                                                                    entryId={e.entryId}
+                                                                                    currentRank={e.rank}
+                                                                                    currentBounty={e.bountyCount}
+                                                                                    status={e.status}
+                                                                                    onSuccess={fetchData}
+                                                                                    trigger={
+                                                                                        <div className={cn(
+                                                                                            "border rounded px-2 py-1 text-[10px] min-w-[70px] bg-background shadow-sm hover:border-accent transition-colors cursor-pointer",
+                                                                                            e.isLatestEntry && "border-primary/50 bg-primary/5",
+                                                                                            e.eventType === "ADD_CHIP" && "bg-yellow-50/50"
+                                                                                        )}>
+                                                                                            <div className="flex justify-between items-start">
+                                                                                                <span className="text-muted-foreground font-mono">{e.timestamp}</span>
+                                                                                                <Badge variant="outline" className="text-[8px] h-3 px-1 leading-none">
+                                                                                                    {e.eventType === "ENTRY" ? "E" : "A"}
+                                                                                                </Badge>
+                                                                                            </div>
+                                                                                            <div className="font-bold">
+                                                                                                {e.eventType === "ENTRY" ? (e.rank ? `${e.rank}位` : (e.status === 'playing' ? 'Playing' : 'Elim')) : `+${e.chipAmount.toLocaleString()}`}
+                                                                                            </div>
+                                                                                            <div className="text-muted-foreground">¥{e.chargeAmount.toLocaleString()}</div>
+                                                                                        </div>
+                                                                                    }
+                                                                                />
+                                                                            ))}
+                                                                            <TournamentDialog
+                                                                                visitId={visit.id}
+                                                                                playerName={visit.player.name}
+                                                                                tournaments={tournaments}
+                                                                                onSuccess={fetchData}
+                                                                                defaultTournamentId={t.id}
+                                                                                existingEntryId={latestEntry?.entryId}
+                                                                                trigger={
+                                                                                    <Button variant="ghost" size="icon" className="h-10 w-10 border-2 border-dashed rounded-md text-muted-foreground hover:text-foreground">
+                                                                                        <Plus className="h-4 w-4" />
+                                                                                    </Button>
+                                                                                }
+                                                                            />
+
+                                                                            {latestEntry && (
+                                                                                <div className="ml-auto flex items-center gap-2 pr-1">
+                                                                                    {(latestEntry.rank || (latestEntry.bountyCount !== undefined && latestEntry.bountyCount > 0)) && (
+                                                                                        <div className="flex flex-col items-end gap-1 mr-1">
+                                                                                            {latestEntry.rank && (
+                                                                                                <Badge variant="secondary" className="h-5 text-[10px] bg-yellow-100 text-yellow-800 border-yellow-200">
+                                                                                                    <Trophy className="w-2.5 h-2.5 mr-1" />
+                                                                                                    {latestEntry.rank}位
+                                                                                                </Badge>
+                                                                                            )}
+                                                                                            {latestEntry.bountyCount !== undefined && latestEntry.bountyCount > 0 && (
+                                                                                                <Badge variant="secondary" className="h-5 text-[10px] bg-rose-100 text-rose-800 border-rose-200">
+                                                                                                    <Target className="w-2.5 h-2.5 mr-1" />
+                                                                                                    {latestEntry.bountyCount}
+                                                                                                </Badge>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    )}
+                                                                                    <TournamentResultUpdate
+                                                                                        entryId={latestEntry.entryId}
+                                                                                        currentRank={latestEntry.rank}
+                                                                                        currentBounty={latestEntry.bountyCount}
+                                                                                        status={latestEntry.status}
+                                                                                        onSuccess={fetchData}
+                                                                                        trigger={
+                                                                                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-accent text-muted-foreground hover:text-foreground">
+                                                                                                <Settings2 className="h-4 w-4" />
+                                                                                            </Button>
+                                                                                        }
+                                                                                    />
                                                                                 </div>
-                                                                                <div className="font-bold">
-                                                                                    {e.eventType === "ENTRY" ? (e.rank ? `${e.rank}位` : (e.status === 'playing' ? 'Playing' : 'Elim')) : `+${e.chipAmount.toLocaleString()}`}
-                                                                                </div>
-                                                                                <div className="text-muted-foreground">¥{e.chargeAmount.toLocaleString()}</div>
-                                                                            </div>
-                                                                        }
-                                                                    />
-                                                                ))}
-                                                                <TournamentParticipationDialog
-                                                                    visitId={visit.id}
-                                                                    playerName={visit.player.name}
-                                                                    tournaments={tournaments}
-                                                                    onSuccess={fetchData}
-                                                                    defaultTournamentId={t.id}
-                                                                    trigger={
-                                                                        <Button variant="ghost" size="icon" className="h-10 w-10 border-2 border-dashed rounded-md text-muted-foreground hover:text-foreground">
-                                                                            <Plus className="h-4 w-4" />
-                                                                        </Button>
-                                                                    }
-                                                                />
-                                                                {/* Add-on button for the latest entry */}
-                                                                {visit.tournaments.find(e => e.tournamentId === t.id && e.isLatestEntry) && (
-                                                                    <div className="ml-2">
-                                                                        <AddOnDialog
-                                                                            tournamentEntryId={visit.tournaments.find(e => e.tournamentId === t.id && e.isLatestEntry)!.entryId}
-                                                                            playerName={visit.player.name}
-                                                                            chipEventOptions={tournaments.find(tourney => tourney.id === t.id)?.tournamentChipEventOptions ?? []}
-                                                                            onSuccess={fetchData}
-                                                                        />
-                                                                    </div>
-                                                                )}
+                                                                            )}
+                                                                        </>
+                                                                    );
+                                                                })()}
                                                             </div>
                                                         </div>
                                                     ))}

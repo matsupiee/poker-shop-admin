@@ -14,6 +14,7 @@ export type TournamentEventInfo = {
     chargeAmount: number
     status: "playing" | "eliminated" | "finished"
     rank?: number
+    bountyCount?: number
     timestamp: string
     isLatestEntry: boolean
 }
@@ -133,6 +134,7 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
                 chargeAmount: event.chargeAmount,
                 status,
                 rank: entry.finalRank ?? undefined,
+                bountyCount: entry.bountyCount ?? undefined,
                 timestamp: format(event.createdAt, "HH:mm"),
                 isLatestEntry
             }))
@@ -282,7 +284,7 @@ export async function registerVisit(prevState: RegisterVisitState, formData: For
     }
 }
 
-export async function updateTournamentRank(entryId: string, rank: number) {
+export async function updateTournamentResult(entryId: string, rank?: number, bountyCount?: number) {
     try {
         const entry = await prisma.tournamentEntry.findUnique({
             where: { id: entryId },
@@ -309,18 +311,21 @@ export async function updateTournamentRank(entryId: string, rank: number) {
         })
 
         if (latestEntry && latestEntry.id !== entry.id) {
-            return { success: false, error: "最新のエントリー以外には順位を記録できません" }
+            return { success: false, error: "最新のエントリー以外には結果を記録できません" }
         }
 
         await prisma.tournamentEntry.update({
             where: { id: entryId },
-            data: { finalRank: rank }
+            data: {
+                finalRank: rank,
+                bountyCount: bountyCount
+            }
         })
         revalidatePath("/daily-visits")
         return { success: true }
     } catch (error) {
-        console.error("Failed to update rank", error)
-        return { success: false, error: "Failed to update rank" }
+        console.error("Failed to update tournament result", error)
+        return { success: false, error: "結果の更新に失敗しました" }
     }
 }
 
