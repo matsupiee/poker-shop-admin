@@ -1,9 +1,9 @@
 {
-  "name": "my-app",
+  "name": "poker-shop-admin",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --port 3001",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -11,7 +11,7 @@
     "prisma:migrate": "npx prisma migrate dev",
     "prisma:reset": "npx prisma migrate reset",
     "prisma:seed": "npx prisma db seed",
-    "prisma:local-push": "npm run prisma:reset && npx prisma db push && npm run prisma:generate && npm run prisma:seed"
+    "prisma:local-push": "pnpm prisma:reset && npx prisma db push && pnpm prisma:generate && pnpm prisma:seed"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.1.0",
