@@ -24,11 +24,20 @@ import { Coins, Trophy } from "lucide-react"
 import { addRingGameEntry, addTournamentEntry } from "@/app/actions/game-participation"
 
 // Types for the partial tournament data we need
+type TournamentChipEventOption = {
+    id: string
+    eventType: "ENTRY" | "ADD_CHIP"
+    name: string
+    chipAmount: number
+    chargeAmount: number
+}
+
 type AvailableTournament = {
     id: string
     name: string
     startAt: Date | string
     entryClosesAt: Date | string
+    tournamentChipEventOptions: TournamentChipEventOption[]
 }
 
 type RingGameBuyInOption = {
@@ -53,6 +62,7 @@ export function AssignGameDialog({ visitId, playerName, tournaments, ringGameBuy
 
     const [ringGameType, setRingGameType] = React.useState<"WEB_COIN" | "IN_STORE">("IN_STORE")
     const [selectedTournamentId, setSelectedTournamentId] = React.useState<string>("")
+    const [selectedTournamentOptionId, setSelectedTournamentOptionId] = React.useState<string>("")
     const [chipAmount, setChipAmount] = React.useState<string>("")
     const [selectedBuyInOptionId, setSelectedBuyInOptionId] = React.useState<string>("")
     const [entrySource, setEntrySource] = React.useState<"BUY_IN" | "FREE" | "SATELLITE">("BUY_IN")
@@ -65,13 +75,33 @@ export function AssignGameDialog({ visitId, playerName, tournaments, ringGameBuy
         return ringGameBuyInOptions.filter(opt => opt.ringGameType === ringGameType)
     }, [ringGameBuyInOptions, ringGameType])
 
+    // Filter tournament options based on selected tournament
+    const availableTournamentOptions = React.useMemo(() => {
+        const tournament = tournaments.find(t => t.id === selectedTournamentId)
+        if (!tournament) return []
+        return tournament.tournamentChipEventOptions.filter(opt => opt.eventType === "ENTRY")
+    }, [tournaments, selectedTournamentId])
+
     // Reset buy-in selection when type changes
     React.useEffect(() => {
         if (mode === "ring") {
             setSelectedBuyInOptionId("")
             setChipAmount("")
+        } else {
+            setSelectedTournamentOptionId("")
+            setChipAmount("")
+            setPaymentAmount("")
         }
-    }, [ringGameType, mode])
+    }, [ringGameType, mode, selectedTournamentId])
+
+    const handleTournamentOptionChange = (value: string) => {
+        setSelectedTournamentOptionId(value)
+        const option = availableTournamentOptions.find(opt => opt.id === value)
+        if (option) {
+            setChipAmount(option.chipAmount.toString())
+            setPaymentAmount(option.chargeAmount.toString())
+        }
+    }
 
     const handleBuyInOptionChange = (value: string) => {
         setSelectedBuyInOptionId(value)
@@ -204,6 +234,22 @@ export function AssignGameDialog({ visitId, playerName, tournaments, ringGameBuy
                             </div>
 
                             <div className="grid gap-2">
+                                <Label htmlFor="tournamentOption">エントリーオプション</Label>
+                                <Select value={selectedTournamentOptionId} onValueChange={handleTournamentOptionChange} disabled={!selectedTournamentId}>
+                                    <SelectTrigger id="tournamentOption">
+                                        <SelectValue placeholder={selectedTournamentId ? "オプションを選択" : "先にトーナメントを選択してください"} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {availableTournamentOptions.map((opt) => (
+                                            <SelectItem key={opt.id} value={opt.id}>
+                                                {opt.name} ({opt.chipAmount.toLocaleString()}点 / ¥{opt.chargeAmount.toLocaleString()})
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="grid gap-2">
                                 <Label htmlFor="entrySource">参加区分</Label>
                                 <Select value={entrySource} onValueChange={(val) => setEntrySource(val as "BUY_IN" | "FREE" | "SATELLITE")}>
                                     <SelectTrigger id="entrySource">
@@ -222,9 +268,10 @@ export function AssignGameDialog({ visitId, playerName, tournaments, ringGameBuy
                                 <Input
                                     id="paymentAmount"
                                     type="number"
-                                    placeholder="例: 5000"
+                                    placeholder="オプションを選択すると自動入力されます"
                                     value={paymentAmount}
-                                    onChange={(e) => setPaymentAmount(e.target.value)}
+                                    readOnly
+                                    className="bg-muted"
                                 />
                             </div>
                         </div>
@@ -266,15 +313,10 @@ export function AssignGameDialog({ visitId, playerName, tournaments, ringGameBuy
                         <Input
                             id="chipAmount"
                             type="number"
-                            placeholder="例: 10000"
+                            placeholder="オプションを選択すると自動入力されます"
                             value={chipAmount}
-                            readOnly={mode === "ring"}
-                            className={mode === "ring" ? "bg-muted" : ""}
-                            onChange={(e) => {
-                                if (mode !== "ring") {
-                                    setChipAmount(e.target.value)
-                                }
-                            }}
+                            readOnly
+                            className="bg-muted"
                         />
                     </div>
 
