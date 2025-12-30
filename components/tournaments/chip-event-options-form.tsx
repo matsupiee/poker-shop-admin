@@ -38,7 +38,7 @@ export function ChipEventOptionsForm({ options, onChange }: ChipEventOptionsForm
 
     return (
         <div className="space-y-4 border-t pt-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center gap-8">
                 <Label>バイイン・アドオン設定</Label>
                 <Button
                     type="button"
@@ -49,14 +49,14 @@ export function ChipEventOptionsForm({ options, onChange }: ChipEventOptionsForm
                     <Plus className="h-4 w-4 mr-1" /> 追加
                 </Button>
             </div>
-            <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
+            <div className="space-y-4 pr-2">
                 {options.length === 0 && (
                     <div className="text-center text-sm text-muted-foreground py-2">
                         バイイン・アドオン設定なし
                     </div>
                 )}
                 {options.map((option, index) => (
-                    <div key={index} className="grid grid-cols-[180px_1fr_80px_80px_24px] gap-2 items-start text-sm border p-2 rounded-md">
+                    <div key={index} className="grid grid-cols-[120px_160px_160px_160px_24px] gap-2 items-start text-sm border p-2 rounded-md">
                         <div className="grid gap-1">
                             <Label className="text-xs text-muted-foreground">種別</Label>
                             <Select
@@ -68,7 +68,7 @@ export function ChipEventOptionsForm({ options, onChange }: ChipEventOptionsForm
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="ENTRY">エントリー</SelectItem>
-                                    <SelectItem value="ADD_CHIP">追加</SelectItem>
+                                    <SelectItem value="ADD_CHIP">アドオン</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -114,7 +114,11 @@ export function ChipEventOptionsForm({ options, onChange }: ChipEventOptionsForm
                     </div>
                 ))}
             </div>
-            <input type="hidden" name="chipEventOptions" value={JSON.stringify(options)} />
+            <input
+                type="hidden"
+                name="chipEventOptions"
+                value={JSON.stringify(options.filter(o => o.chipAmount > 0 || o.chargeAmount > 0))}
+            />
         </div>
     )
 }

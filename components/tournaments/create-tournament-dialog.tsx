@@ -4,14 +4,14 @@ import { useActionState, useEffect, useState } from "react"
 import { createTournament } from "@/app/actions/tournaments"
 import { Button } from "@/components/ui/button"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog"
+    Drawer,
+    DrawerContent,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerTrigger,
+} from "@/components/ui/drawer"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Plus, Trash2 } from "lucide-react"
@@ -21,6 +21,16 @@ const initialState = {
     errors: {},
     success: false
 }
+
+const DEFAULT_CHIP_EVENT_OPTIONS: ChipEventOption[] = [
+    { eventType: "ENTRY", name: "エントリー", chipAmount: 0, chargeAmount: 0 },
+    { eventType: "ENTRY", name: "リエントリー", chipAmount: 0, chargeAmount: 0 },
+    { eventType: "ENTRY", name: "シングル", chipAmount: 0, chargeAmount: 0 },
+    { eventType: "ENTRY", name: "フル", chipAmount: 0, chargeAmount: 0 },
+    { eventType: "ENTRY", name: "エントリーフリー", chipAmount: 0, chargeAmount: 0 },
+    { eventType: "ADD_CHIP", name: "アドオン", chipAmount: 0, chargeAmount: 0 },
+    { eventType: "ADD_CHIP", name: "アドオンフリー", chipAmount: 0, chargeAmount: 0 },
+]
 
 
 interface CreateTournamentDialogProps {
@@ -39,24 +49,24 @@ export function CreateTournamentDialog({ onTournamentCreated, children }: Create
     }
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
+        <Drawer open={open} onOpenChange={setOpen} direction="right">
+            <DrawerTrigger asChild>
                 {children ? children : (
                     <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
                         <Plus className="mr-2 h-4 w-4" /> 新規作成
                     </Button>
                 )}
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>トーナメント新規作成</DialogTitle>
-                    <DialogDescription>
+            </DrawerTrigger>
+            <DrawerContent className="h-full sm:max-w-[760px] flex flex-col">
+                <DrawerHeader className="flex-none border-b">
+                    <DrawerTitle>トーナメント新規作成</DrawerTitle>
+                    <DrawerDescription>
                         新しいトーナメントを作成します。
-                    </DialogDescription>
-                </DialogHeader>
+                    </DrawerDescription>
+                </DrawerHeader>
                 <CreateTournamentForm onSuccess={handleSuccess} />
-            </DialogContent>
-        </Dialog>
+            </DrawerContent>
+        </Drawer>
     )
 }
 
@@ -66,7 +76,7 @@ function CreateTournamentForm({ onSuccess }: { onSuccess: () => void }) {
         Array.from({ length: 10 }, (_, i) => ({ rank: i + 1, amount: 0 }))
     )
     const [hasBounty, setHasBounty] = useState(false)
-    const [chipEventOptions, setChipEventOptions] = useState<ChipEventOption[]>([])
+    const [chipEventOptions, setChipEventOptions] = useState<ChipEventOption[]>(DEFAULT_CHIP_EVENT_OPTIONS)
 
     useEffect(() => {
         if (state.success) {
@@ -119,185 +129,194 @@ function CreateTournamentForm({ onSuccess }: { onSuccess: () => void }) {
     const today = `${year}-${month}-${day}`
 
     return (
-        <form action={action}>
-            <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="eventDate" className="text-right">
-                        開催日
-                    </Label>
-                    <div className="col-span-3">
-                        <Input
-                            id="eventDate"
-                            name="eventDate"
-                            type="date"
-                            defaultValue={today}
-                            min={today}
-                        />
-                        {state.errors?.eventDate && (
-                            <p className="text-red-500 text-xs mt-1">{state.errors.eventDate[0]}</p>
-                        )}
+        <form action={action} className="flex flex-col flex-1 overflow-hidden">
+            <div className="flex-1 overflow-y-auto px-6">
+                <div className="grid gap-4 py-4">
+                    <div className="flex items-center gap-6">
+                        <Label htmlFor="eventDate" className="text-right w-24">
+                            開催日
+                        </Label>
+                        <div>
+                            <Input
+                                id="eventDate"
+                                name="eventDate"
+                                type="date"
+                                defaultValue={today}
+                                min={today}
+                                className="w-[200px]"
+                            />
+                            {state.errors?.eventDate && (
+                                <p className="text-red-500 text-xs mt-1">{state.errors.eventDate[0]}</p>
+                            )}
+                        </div>
                     </div>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="startTime" className="text-right">
-                        開始時刻
-                    </Label>
-                    <div className="col-span-3">
-                        <Input
-                            id="startTime"
-                            name="startTime"
-                            type="time"
-                            defaultValue="19:00"
-                        />
-                        {state.errors?.startTime && (
-                            <p className="text-red-500 text-xs mt-1">{state.errors.startTime[0]}</p>
-                        )}
+                    <div className="flex items-center gap-6">
+                        <Label htmlFor="startTime" className="text-right w-24">
+                            開始時刻
+                        </Label>
+                        <div>
+                            <Input
+                                id="startTime"
+                                name="startTime"
+                                type="time"
+                                defaultValue="19:00"
+                                className="w-[200px]"
+                            />
+                            {state.errors?.startTime && (
+                                <p className="text-red-500 text-xs mt-1">{state.errors.startTime[0]}</p>
+                            )}
+                        </div>
                     </div>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="entryClosesTime" className="text-right">
-                        締切時刻
-                    </Label>
-                    <div className="col-span-3">
-                        <Input
-                            id="entryClosesTime"
-                            name="entryClosesTime"
-                            type="time"
-                            defaultValue="21:10"
-                        />
-                        {state.errors?.entryClosesTime && (
-                            <p className="text-red-500 text-xs mt-1">{state.errors.entryClosesTime[0]}</p>
-                        )}
+                    <div className="flex items-center gap-6">
+                        <Label htmlFor="entryClosesTime" className="text-right w-24">
+                            締切時刻
+                        </Label>
+                        <div>
+                            <Input
+                                id="entryClosesTime"
+                                name="entryClosesTime"
+                                type="time"
+                                defaultValue="21:10"
+                                className="w-[200px]"
+                            />
+                            {state.errors?.entryClosesTime && (
+                                <p className="text-red-500 text-xs mt-1">{state.errors.entryClosesTime[0]}</p>
+                            )}
+                        </div>
                     </div>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="name" className="text-right">
-                        大会名
-                    </Label>
-                    <div className="col-span-3">
-                        <Input
-                            id="name"
-                            name="name"
-                            placeholder="例: デイリーハイパーターボ"
-                        />
-                        {state.errors?.name && (
-                            <p className="text-red-500 text-xs mt-1">{state.errors.name[0]}</p>
-                        )}
-                    </div>
-                </div>
-
-                {/* Prize Section */}
-                <div className="space-y-4 border-t pt-4">
-                    <div className="flex items-center justify-between">
-                        <Label>プライズ設定</Label>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={addPrize}
-                        >
-                            <Plus className="h-4 w-4 mr-1" /> 追加
-                        </Button>
-                    </div>
-                    <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
-                        {prizes.length === 0 && (
-                            <div className="text-center text-sm text-muted-foreground py-2">
-                                プライズ設定なし
-                            </div>
-                        )}
-                        {prizes.map((prize, index) => (
-                            <div key={index} className="flex items-center gap-2">
-                                <div className="w-16 flex-none flex items-center justify-center bg-muted h-10 rounded text-sm font-medium">
-                                    {formatRank(index + 1)}
-                                </div>
-                                <div className="flex-1 relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">¥</span>
-                                    <Input
-                                        type="number"
-                                        value={prize.amount === 0 ? '' : prize.amount}
-                                        onChange={(e) => updatePrize(index, Number(e.target.value))}
-                                        className="pl-7"
-                                        placeholder="0"
-                                    />
-                                </div>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => removePrize(index)}
-                                    className="text-muted-foreground hover:text-destructive shrink-0"
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        ))}
-                    </div>
-                    <input type="hidden" name="prizes" value={JSON.stringify(prizes)} />
-                </div>
-
-                <ChipEventOptionsForm options={chipEventOptions} onChange={setChipEventOptions} />
-
-                {/* Bounty Section */}
-                <div className="space-y-4 border-t pt-4">
-                    <div className="flex items-center space-x-2">
-                        <input
-                            type="checkbox"
-                            id="hasBounty"
-                            name="hasBounty"
-                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                            checked={hasBounty}
-                            onChange={(e) => setHasBounty(e.target.checked)}
-                        />
-                        <Label htmlFor="hasBounty">バウンティあり</Label>
+                    <div className="flex items-center gap-6">
+                        <Label htmlFor="name" className="text-right w-24">
+                            大会名
+                        </Label>
+                        <div>
+                            <Input
+                                id="name"
+                                name="name"
+                                placeholder="例: デイリーハイパーターボ"
+                                className="w-[300px]"
+                            />
+                            {state.errors?.name && (
+                                <p className="text-red-500 text-xs mt-1">{state.errors.name[0]}</p>
+                            )}
+                        </div>
                     </div>
 
-                    {hasBounty && (
-                        <>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="bountyTicketCount" className="text-right">
-                                    チケット枚数
-                                </Label>
-                                <div className="col-span-3">
-                                    <Input
-                                        id="bountyTicketCount"
-                                        name="bountyTicketCount"
-                                        type="number"
-                                        min="1"
-                                        defaultValue="1"
-                                    />
+                    {/* Prize Section */}
+                    <div className="space-y-4 border-t pt-4">
+                        <div className="flex items-center gap-8">
+                            <Label>プライズ設定</Label>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={addPrize}
+                            >
+                                <Plus className="h-4 w-4 mr-1" /> 追加
+                            </Button>
+                        </div>
+                        <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+                            {prizes.length === 0 && (
+                                <div className="text-center text-sm text-muted-foreground py-2">
+                                    プライズ設定なし
                                 </div>
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="bountyTotalAmount" className="text-right">
-                                    バウンティ総額
-                                </Label>
-                                <div className="col-span-3 pb-2 relative">
-                                    <span className="absolute left-3 top-[calc(50%-4px)] -translate-y-1/2 text-muted-foreground text-sm z-10">¥</span>
-                                    <Input
-                                        id="bountyTotalAmount"
-                                        name="bountyTotalAmount"
-                                        type="number"
-                                        min="0"
-                                        className="pl-7"
-                                        placeholder="0"
-                                    />
+                            )}
+                            {prizes.map((prize, index) => (
+                                <div key={index} className="flex items-center gap-4">
+                                    <div className="w-16 flex-none flex items-center justify-center bg-muted h-10 rounded text-sm font-medium">
+                                        {formatRank(index + 1)}
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <div className="relative">
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">¥</span>
+                                            <Input
+                                                type="number"
+                                                value={prize.amount === 0 ? '' : prize.amount}
+                                                onChange={(e) => updatePrize(index, Number(e.target.value))}
+                                                className="pl-7 w-[200px]"
+                                                placeholder="0"
+                                            />
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => removePrize(index)}
+                                            className="text-muted-foreground hover:text-destructive shrink-0"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+
                                 </div>
-                            </div>
-                        </>
+                            ))}
+                        </div>
+                        <input type="hidden" name="prizes" value={JSON.stringify(prizes)} />
+                    </div>
+
+                    <ChipEventOptionsForm options={chipEventOptions} onChange={setChipEventOptions} />
+
+                    {/* Bounty Section */}
+                    <div className="space-y-4 border-t pt-4">
+                        <div className="flex items-center space-x-2">
+                            <input
+                                type="checkbox"
+                                id="hasBounty"
+                                name="hasBounty"
+                                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                checked={hasBounty}
+                                onChange={(e) => setHasBounty(e.target.checked)}
+                            />
+                            <Label htmlFor="hasBounty">バウンティあり</Label>
+                        </div>
+
+                        {hasBounty && (
+                            <>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="bountyTicketCount" className="text-right">
+                                        チケット枚数
+                                    </Label>
+                                    <div className="col-span-3">
+                                        <Input
+                                            id="bountyTicketCount"
+                                            name="bountyTicketCount"
+                                            type="number"
+                                            min="1"
+                                            defaultValue="1"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="bountyTotalAmount" className="text-right">
+                                        バウンティ総額
+                                    </Label>
+                                    <div className="col-span-3 pb-2 relative">
+                                        <span className="absolute left-3 top-[calc(50%-4px)] -translate-y-1/2 text-muted-foreground text-sm z-10">¥</span>
+                                        <Input
+                                            id="bountyTotalAmount"
+                                            name="bountyTotalAmount"
+                                            type="number"
+                                            min="0"
+                                            className="pl-7"
+                                            placeholder="0"
+                                        />
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+
+                    {state.errors?._form && (
+                        <div className="text-red-500 text-sm text-center">
+                            {state.errors._form[0]}
+                        </div>
                     )}
                 </div>
-
-                {state.errors?._form && (
-                    <div className="text-red-500 text-sm text-center">
-                        {state.errors._form[0]}
-                    </div>
-                )}
             </div>
-            <DialogFooter>
+            <DrawerFooter className="flex-none border-t bg-background">
                 <Button type="submit" disabled={isPending}>
                     {isPending ? "作成中..." : "作成"}
                 </Button>
-            </DialogFooter>
+            </DrawerFooter>
         </form>
     )
 }
