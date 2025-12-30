@@ -179,22 +179,6 @@ export function RingGameDialog({
                     </DialogDescription>
                 </DialogHeader>
 
-                {!isJoin && (
-                    <div className="flex items-center justify-between mb-4 px-3 py-2 bg-muted rounded-md text-sm">
-                        <div className="flex flex-col">
-                            <span className="text-muted-foreground text-[10px] uppercase font-bold">総バイイン</span>
-                            <span className="font-mono font-bold">{existingEntry.totalBuyIn.toLocaleString()}</span>
-                        </div>
-                        <ArrowRightLeft className="w-4 h-4 text-muted-foreground/30" />
-                        <div className="flex flex-col text-right">
-                            <span className="text-muted-foreground text-[10px] uppercase font-bold">総キャッシュアウト</span>
-                            <span className="font-mono font-bold text-orange-600">
-                                {existingEntry.totalCashOut > 0 ? existingEntry.totalCashOut.toLocaleString() : "-"}
-                            </span>
-                        </div>
-                    </div>
-                )}
-
                 {isJoin ? (
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">

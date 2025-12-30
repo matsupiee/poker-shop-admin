@@ -324,7 +324,7 @@ export default function DailyVisitsPage() {
                                                                             </div>
 
                                                                             {latestEntry && (
-                                                                                <div className="flex-shrink-0 flex items-center gap-2 px-2 border-l bg-background/50 backdrop-blur-sm">
+                                                                                <div className="w-28 flex-shrink-0 flex items-center justify-end gap-2 px-2 border-l bg-background/50 backdrop-blur-sm">
                                                                                     {(latestEntry.rank || (latestEntry.bountyCount !== undefined && latestEntry.bountyCount > 0)) && (
                                                                                         <div className="flex flex-col items-end gap-1">
                                                                                             {latestEntry.rank && (
@@ -368,37 +368,77 @@ export default function DailyVisitsPage() {
                                                         <div className="w-24 flex-shrink-0 bg-muted px-2 py-2 border-r flex items-center justify-center text-[10px] font-bold text-foreground text-center leading-tight">
                                                             WEBコイン
                                                         </div>
-                                                        <div className="flex-1 flex gap-1 p-1 overflow-x-auto min-h-[64px] scrollbar-hide items-center">
-                                                            {visit.ringGameEntries.filter(e => e.ringGameType === "WEB_COIN").map(entry => (
-                                                                entry.timeline.filter(ev => ev.eventType === "BUY_IN").map((ev, i) => (
-                                                                    <div key={i} className="border rounded px-2 py-1 text-[10px] min-w-[70px] bg-background shadow-sm">
-                                                                        <div className="text-muted-foreground font-mono">{ev.timestamp}</div>
-                                                                        <div className="font-bold">{ev.chipAmount.toLocaleString()}</div>
-                                                                        <div className="text-muted-foreground">¥{(ev.chargeAmount ?? 0).toLocaleString()}</div>
-                                                                    </div>
-                                                                ))
-                                                            ))}
+                                                        <div className="flex-1 flex items-stretch overflow-hidden">
+                                                            <div className="flex-1 flex gap-1 p-1 overflow-x-auto min-h-[64px] scrollbar-hide items-center">
+                                                                {visit.ringGameEntries.filter(e => e.ringGameType === "WEB_COIN").map(entry => (
+                                                                    entry.timeline.map((ev, i) => (
+                                                                        <div key={i} className={cn(
+                                                                            "border rounded px-2 py-1 text-[10px] min-w-[70px] bg-background shadow-sm",
+                                                                            ev.eventType === "CASH_OUT" && "bg-orange-50/50 border-orange-200"
+                                                                        )}>
+                                                                            <div className="flex justify-between items-start">
+                                                                                <span className="text-muted-foreground font-mono">{ev.timestamp}</span>
+                                                                                <Badge variant="outline" className={cn(
+                                                                                    "text-[8px] h-3 px-1 leading-none",
+                                                                                    ev.eventType === "CASH_OUT" ? "bg-orange-100 text-orange-800" : "bg-muted"
+                                                                                )}>
+                                                                                    {ev.eventType === "BUY_IN" ? "B" : "C"}
+                                                                                </Badge>
+                                                                            </div>
+                                                                            <div className={cn("font-bold", ev.eventType === "CASH_OUT" && "text-orange-600")}>
+                                                                                {ev.eventType === "CASH_OUT" ? "-" : ""}{ev.chipAmount.toLocaleString()}
+                                                                            </div>
+                                                                            <div className="text-muted-foreground">
+                                                                                {ev.eventType === "BUY_IN" ? `¥${(ev.chargeAmount ?? 0).toLocaleString()}` : "Cash-out"}
+                                                                            </div>
+                                                                        </div>
+                                                                    ))
+                                                                ))}
+                                                                {(() => {
+                                                                    const entry = visit.ringGameEntries.find(e => e.ringGameType === "WEB_COIN");
+                                                                    return (
+                                                                        <RingGameDialog
+                                                                            visitId={visit.id}
+                                                                            playerName={visit.player.name}
+                                                                            ringGameBuyInOptions={ringGameBuyInOptions}
+                                                                            onSuccess={fetchData}
+                                                                            ringGameType="WEB_COIN"
+                                                                            existingEntry={entry ? {
+                                                                                id: entry.id,
+                                                                                totalBuyIn: entry.totalBuyIn,
+                                                                                totalCashOut: entry.totalCashOut,
+                                                                            } : undefined}
+                                                                            trigger={
+                                                                                <Button variant="ghost" size="icon" className="h-10 w-10 border-2 border-dashed rounded-md text-muted-foreground hover:text-foreground">
+                                                                                    <Plus className="h-4 w-4" />
+                                                                                </Button>
+                                                                            }
+                                                                        />
+                                                                    );
+                                                                })()}
+                                                            </div>
+
                                                             {(() => {
                                                                 const entry = visit.ringGameEntries.find(e => e.ringGameType === "WEB_COIN");
+                                                                if (!entry) return null;
+                                                                const net = entry.totalCashOut - entry.totalBuyIn;
                                                                 return (
-                                                                    <RingGameDialog
-                                                                        visitId={visit.id}
-                                                                        playerName={visit.player.name}
-                                                                        ringGameBuyInOptions={ringGameBuyInOptions}
-                                                                        onSuccess={fetchData}
-                                                                        ringGameType="WEB_COIN"
-                                                                        existingEntry={entry ? {
-                                                                            id: entry.id,
-                                                                            totalBuyIn: entry.totalBuyIn,
-                                                                            totalCashOut: entry.totalCashOut,
-                                                                        } : undefined}
-                                                                        trigger={
-                                                                            <Button variant="ghost" size="icon" className="h-10 w-10 border-2 border-dashed rounded-md text-muted-foreground hover:text-foreground">
-                                                                                <Plus className="h-4 w-4" />
-                                                                            </Button>
-                                                                        }
-                                                                    />
-                                                                );
+                                                                    <div className="w-28 flex-shrink-0 flex items-center justify-start px-3 border-l bg-background/50 backdrop-blur-sm">
+                                                                        {entry.totalCashOut > 0 && (
+                                                                            <div className="flex flex-col items-start">
+                                                                                <span className="text-[10px] text-muted-foreground leading-none mb-1">収支</span>
+                                                                                <Badge variant="secondary" className={cn(
+                                                                                    "h-6 font-bold text-[11px]",
+                                                                                    net > 0 ? "bg-green-100 text-green-800 border-green-200" :
+                                                                                        net < 0 ? "bg-red-100 text-red-800 border-red-200" :
+                                                                                            "bg-slate-100 text-slate-800 border-slate-200"
+                                                                                )}>
+                                                                                    {net > 0 ? "+" : ""}{net.toLocaleString()}
+                                                                                </Badge>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                )
                                                             })()}
                                                         </div>
                                                     </div>
@@ -408,37 +448,77 @@ export default function DailyVisitsPage() {
                                                         <div className="w-24 flex-shrink-0 bg-muted px-2 py-2 border-r flex items-center justify-center text-[10px] font-bold text-foreground text-center leading-tight">
                                                             店内リング
                                                         </div>
-                                                        <div className="flex-1 flex gap-1 p-1 overflow-x-auto min-h-[64px] items-center">
-                                                            {visit.ringGameEntries.filter(e => e.ringGameType === "IN_STORE").map(entry => (
-                                                                entry.timeline.filter(ev => ev.eventType === "BUY_IN").map((ev, i) => (
-                                                                    <div key={i} className="border rounded px-2 py-1 text-[10px] min-w-[70px] bg-background shadow-sm">
-                                                                        <div className="text-muted-foreground font-mono">{ev.timestamp}</div>
-                                                                        <div className="font-bold text-orange-600">{ev.chipAmount.toLocaleString()}</div>
-                                                                        <div className="text-muted-foreground">¥{(ev.chargeAmount ?? 0).toLocaleString()}</div>
-                                                                    </div>
-                                                                ))
-                                                            ))}
+                                                        <div className="flex-1 flex items-stretch overflow-hidden">
+                                                            <div className="flex-1 flex gap-1 p-1 overflow-x-auto min-h-[64px] items-center">
+                                                                {visit.ringGameEntries.filter(e => e.ringGameType === "IN_STORE").map(entry => (
+                                                                    entry.timeline.map((ev, i) => (
+                                                                        <div key={i} className={cn(
+                                                                            "border rounded px-2 py-1 text-[10px] min-w-[70px] bg-background shadow-sm",
+                                                                            ev.eventType === "CASH_OUT" && "bg-orange-50/50 border-orange-200"
+                                                                        )}>
+                                                                            <div className="flex justify-between items-start">
+                                                                                <span className="text-muted-foreground font-mono">{ev.timestamp}</span>
+                                                                                <Badge variant="outline" className={cn(
+                                                                                    "text-[8px] h-3 px-1 leading-none",
+                                                                                    ev.eventType === "CASH_OUT" ? "bg-orange-100 text-orange-800" : "bg-muted"
+                                                                                )}>
+                                                                                    {ev.eventType === "BUY_IN" ? "B" : "C"}
+                                                                                </Badge>
+                                                                            </div>
+                                                                            <div className={cn("font-bold", ev.eventType === "CASH_OUT" ? "text-orange-600" : "text-orange-600")}>
+                                                                                {ev.eventType === "CASH_OUT" ? "-" : ""}{ev.chipAmount.toLocaleString()}
+                                                                            </div>
+                                                                            <div className="text-muted-foreground">
+                                                                                {ev.eventType === "BUY_IN" ? `¥${(ev.chargeAmount ?? 0).toLocaleString()}` : "Cash-out"}
+                                                                            </div>
+                                                                        </div>
+                                                                    ))
+                                                                ))}
+                                                                {(() => {
+                                                                    const entry = visit.ringGameEntries.find(e => e.ringGameType === "IN_STORE");
+                                                                    return (
+                                                                        <RingGameDialog
+                                                                            visitId={visit.id}
+                                                                            playerName={visit.player.name}
+                                                                            ringGameBuyInOptions={ringGameBuyInOptions}
+                                                                            onSuccess={fetchData}
+                                                                            ringGameType="IN_STORE"
+                                                                            existingEntry={entry ? {
+                                                                                id: entry.id,
+                                                                                totalBuyIn: entry.totalBuyIn,
+                                                                                totalCashOut: entry.totalCashOut,
+                                                                            } : undefined}
+                                                                            trigger={
+                                                                                <Button variant="ghost" size="icon" className="h-10 w-10 border-2 border-dashed rounded-md text-muted-foreground hover:text-foreground">
+                                                                                    <Plus className="h-4 w-4" />
+                                                                                </Button>
+                                                                            }
+                                                                        />
+                                                                    );
+                                                                })()}
+                                                            </div>
+
                                                             {(() => {
                                                                 const entry = visit.ringGameEntries.find(e => e.ringGameType === "IN_STORE");
+                                                                if (!entry) return null;
+                                                                const net = entry.totalCashOut - entry.totalBuyIn;
                                                                 return (
-                                                                    <RingGameDialog
-                                                                        visitId={visit.id}
-                                                                        playerName={visit.player.name}
-                                                                        ringGameBuyInOptions={ringGameBuyInOptions}
-                                                                        onSuccess={fetchData}
-                                                                        ringGameType="IN_STORE"
-                                                                        existingEntry={entry ? {
-                                                                            id: entry.id,
-                                                                            totalBuyIn: entry.totalBuyIn,
-                                                                            totalCashOut: entry.totalCashOut,
-                                                                        } : undefined}
-                                                                        trigger={
-                                                                            <Button variant="ghost" size="icon" className="h-10 w-10 border-2 border-dashed rounded-md text-muted-foreground hover:text-foreground">
-                                                                                <Plus className="h-4 w-4" />
-                                                                            </Button>
-                                                                        }
-                                                                    />
-                                                                );
+                                                                    <div className="w-28 flex-shrink-0 flex items-center justify-start px-3 border-l bg-background/50 backdrop-blur-sm">
+                                                                        {entry.totalCashOut > 0 && (
+                                                                            <div className="flex flex-col items-start">
+                                                                                <span className="text-[10px] text-muted-foreground leading-none mb-1">収支</span>
+                                                                                <Badge variant="secondary" className={cn(
+                                                                                    "h-6 font-bold text-[11px]",
+                                                                                    net > 0 ? "bg-green-100 text-green-800 border-green-200" :
+                                                                                        net < 0 ? "bg-red-100 text-red-800 border-red-200" :
+                                                                                            "bg-slate-100 text-slate-800 border-slate-200"
+                                                                                )}>
+                                                                                    {net > 0 ? "+" : ""}{net.toLocaleString()}
+                                                                                </Badge>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                )
                                                             })()}
                                                         </div>
                                                     </div>
