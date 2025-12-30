@@ -15,19 +15,50 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { PlusCircle } from "lucide-react"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import { useMemo } from "react"
+
+export type TournamentChipEventOption = {
+    id: string
+    eventType: "ENTRY" | "ADD_CHIP"
+    name: string
+    chipAmount: number
+    chargeAmount: number
+}
 
 interface AddOnDialogProps {
     tournamentEntryId: string
     playerName?: string
+    chipEventOptions: TournamentChipEventOption[]
     onSuccess?: () => void
 }
 
-export function AddOnDialog({ tournamentEntryId, playerName, onSuccess }: AddOnDialogProps) {
+export function AddOnDialog({ tournamentEntryId, playerName, chipEventOptions, onSuccess }: AddOnDialogProps) {
     const [open, setOpen] = useState(false)
-    const [chipAmount, setChipAmount] = useState<string>("10000")
-    const [chargeAmount, setChargeAmount] = useState<string>("1000")
+    const [selectedOptionId, setSelectedOptionId] = useState<string>("")
+    const [chipAmount, setChipAmount] = useState<string>("")
+    const [chargeAmount, setChargeAmount] = useState<string>("")
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
+
+    const addOnOptions = useMemo(() => {
+        return chipEventOptions.filter(opt => opt.eventType === "ADD_CHIP")
+    }, [chipEventOptions])
+
+    const handleOptionChange = (value: string) => {
+        setSelectedOptionId(value)
+        const option = addOnOptions.find(opt => opt.id === value)
+        if (option) {
+            setChipAmount(option.chipAmount.toString())
+            setChargeAmount(option.chargeAmount.toString())
+        }
+    }
 
     const handleSubmit = async () => {
         setError(null)
@@ -75,10 +106,33 @@ export function AddOnDialog({ tournamentEntryId, playerName, onSuccess }: AddOnD
                 <DialogHeader>
                     <DialogTitle>ADD ON {playerName ? `- ${playerName}` : ""}</DialogTitle>
                     <DialogDescription>
-                        チップを追加します。初期値: 10,000点 / 1,000円
+                        項目を選択してチップを追加します。
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="option" className="text-right">
+                            オプション
+                        </Label>
+                        <div className="col-span-3">
+                            <Select value={selectedOptionId} onValueChange={handleOptionChange}>
+                                <SelectTrigger id="option">
+                                    <SelectValue placeholder="オプションを選択" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {addOnOptions.length === 0 ? (
+                                        <div className="p-2 text-sm text-muted-foreground">利用可能なアドオン設定がありません</div>
+                                    ) : (
+                                        addOnOptions.map((opt) => (
+                                            <SelectItem key={opt.id} value={opt.id}>
+                                                {opt.name} ({opt.chipAmount.toLocaleString()}点 / ¥{opt.chargeAmount.toLocaleString()})
+                                            </SelectItem>
+                                        ))
+                                    )}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="chipAmount" className="text-right">
                             チップ量
@@ -88,8 +142,9 @@ export function AddOnDialog({ tournamentEntryId, playerName, onSuccess }: AddOnD
                                 id="chipAmount"
                                 type="number"
                                 value={chipAmount}
-                                onChange={(e) => setChipAmount(e.target.value)}
-                                min={0}
+                                readOnly
+                                className="bg-muted"
+                                placeholder="自動入力されます"
                             />
                         </div>
                     </div>
@@ -102,8 +157,9 @@ export function AddOnDialog({ tournamentEntryId, playerName, onSuccess }: AddOnD
                                 id="chargeAmount"
                                 type="number"
                                 value={chargeAmount}
-                                onChange={(e) => setChargeAmount(e.target.value)}
-                                min={0}
+                                readOnly
+                                className="bg-muted"
+                                placeholder="自動入力されます"
                             />
                         </div>
                     </div>
@@ -114,7 +170,7 @@ export function AddOnDialog({ tournamentEntryId, playerName, onSuccess }: AddOnD
                     )}
                 </div>
                 <DialogFooter>
-                    <Button onClick={handleSubmit} disabled={isSubmitting}>
+                    <Button onClick={handleSubmit} disabled={isSubmitting || !selectedOptionId}>
                         {isSubmitting ? "追加中..." : "追加"}
                     </Button>
                 </DialogFooter>

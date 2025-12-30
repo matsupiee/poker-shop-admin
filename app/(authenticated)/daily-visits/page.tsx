@@ -295,6 +295,7 @@ export default function DailyVisitsPage() {
                                                                     <AddOnDialog
                                                                         tournamentEntryId={t.id}
                                                                         playerName={visit.player.name}
+                                                                        chipEventOptions={tournaments.find(tourney => tourney.id === t.tournamentId)?.tournamentChipEventOptions ?? []}
                                                                         onSuccess={fetchData}
                                                                     />
                                                                 )}
