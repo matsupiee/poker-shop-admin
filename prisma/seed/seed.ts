@@ -125,6 +125,35 @@ async function main() {
         console.log(`Created Tournament: ${tomorrowName}`);
     }
 
+    // --- Ring Game Buy-In Options ---
+    const ringGameBuyInOptions = [
+        // WEB_COIN
+        { ringGameType: RingGameType.WEB_COIN, chipAmount: 20000, chargeAmount: 2000 },
+        { ringGameType: RingGameType.WEB_COIN, chipAmount: 40000, chargeAmount: 4000 },
+        { ringGameType: RingGameType.WEB_COIN, chipAmount: 60000, chargeAmount: 6000 },
+
+        // IN_STORE
+        { ringGameType: RingGameType.IN_STORE, chipAmount: 20000, chargeAmount: 2000 },
+        { ringGameType: RingGameType.IN_STORE, chipAmount: 30000, chargeAmount: 3000 },
+    ];
+
+    for (const opt of ringGameBuyInOptions) {
+        const existing = await prisma.ringGameBuyInOption.findFirst({
+            where: {
+                ringGameType: opt.ringGameType,
+                chipAmount: opt.chipAmount,
+                chargeAmount: opt.chargeAmount
+            }
+        });
+
+        if (!existing) {
+            await prisma.ringGameBuyInOption.create({
+                data: opt
+            });
+            console.log(`Created RingGameBuyInOption: ${opt.ringGameType} - ${opt.chipAmount}`);
+        }
+    }
+
     console.log('Seeding finished.');
 }
 

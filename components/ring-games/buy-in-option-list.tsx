@@ -101,7 +101,7 @@ export function BuyInOptionList({ options }: BuyInOptionListProps) {
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                            className="text-muted-foreground"
                                             onClick={() => handleDelete(option.id)}
                                         >
                                             <Trash2 className="h-4 w-4" />

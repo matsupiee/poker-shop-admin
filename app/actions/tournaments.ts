@@ -21,6 +21,7 @@ export async function createTournament(prevState: CreateTournamentState, formDat
     const startTimeStr = formData.get("startTime") as string // Expecting HH:MM
     const entryClosesTimeStr = formData.get("entryClosesTime") as string // Expecting HH:MM
     const prizesStr = formData.get("prizes") as string
+    const chipEventOptionsStr = formData.get("chipEventOptions") as string
     const hasBounty = formData.get("hasBounty") === "on"
     const bountyTicketCountStr = formData.get("bountyTicketCount") as string
     const bountyTotalAmountStr = formData.get("bountyTotalAmount") as string
@@ -99,6 +100,25 @@ export async function createTournament(prevState: CreateTournamentState, formDat
         }
     }
 
+    let chipEventOptions: { eventType: "ENTRY" | "ADD_CHIP", name: string, chipAmount: number, chargeAmount: number }[] = []
+    if (chipEventOptionsStr) {
+        try {
+            const parsed = JSON.parse(chipEventOptionsStr)
+            if (Array.isArray(parsed)) {
+                chipEventOptions = parsed
+                    .map((p: any) => ({
+                        eventType: p.eventType,
+                        name: p.name,
+                        chipAmount: Number(p.chipAmount),
+                        chargeAmount: Number(p.chargeAmount)
+                    }))
+                    .filter(p => p.name && !isNaN(p.chipAmount) && !isNaN(p.chargeAmount))
+            }
+        } catch (e) {
+            console.error("Failed to parse chipEventOptions", e)
+        }
+    }
+
     try {
         const startAt = new Date(`${eventDateStr}T${startTimeStr}`)
         let entryClosesAt = new Date(`${eventDateStr}T${entryClosesTimeStr}`)
@@ -118,6 +138,14 @@ export async function createTournament(prevState: CreateTournamentState, formDat
                     create: prizes.map(p => ({
                         rank: Number(p.rank),
                         amount: Number(p.amount)
+                    }))
+                },
+                tournamentChipEventOptions: {
+                    create: chipEventOptions.map(o => ({
+                        eventType: o.eventType,
+                        name: o.name,
+                        chipAmount: o.chipAmount,
+                        chargeAmount: o.chargeAmount
                     }))
                 },
                 tournamentBounty: hasBounty ? {
@@ -172,6 +200,7 @@ export async function getTournaments(date?: Date) {
                         rank: 'asc'
                     }
                 },
+                tournamentChipEventOptions: true,
                 tournamentBounty: true
             },
             orderBy: {
@@ -191,6 +220,7 @@ export async function updateTournament(id: string, prevState: CreateTournamentSt
     const startTimeStr = formData.get("startTime") as string // Expecting HH:MM
     const entryClosesTimeStr = formData.get("entryClosesTime") as string // Expecting HH:MM
     const prizesStr = formData.get("prizes") as string
+    const chipEventOptionsStr = formData.get("chipEventOptions") as string
     const hasBounty = formData.get("hasBounty") === "on"
     const bountyTicketCountStr = formData.get("bountyTicketCount") as string
     const bountyTotalAmountStr = formData.get("bountyTotalAmount") as string
@@ -262,6 +292,25 @@ export async function updateTournament(id: string, prevState: CreateTournamentSt
         }
     }
 
+    let chipEventOptions: { eventType: "ENTRY" | "ADD_CHIP", name: string, chipAmount: number, chargeAmount: number }[] = []
+    if (chipEventOptionsStr) {
+        try {
+            const parsed = JSON.parse(chipEventOptionsStr)
+            if (Array.isArray(parsed)) {
+                chipEventOptions = parsed
+                    .map((p: any) => ({
+                        eventType: p.eventType,
+                        name: p.name,
+                        chipAmount: Number(p.chipAmount),
+                        chargeAmount: Number(p.chargeAmount)
+                    }))
+                    .filter(p => p.name && !isNaN(p.chipAmount) && !isNaN(p.chargeAmount))
+            }
+        } catch (e) {
+            console.error("Failed to parse chipEventOptions", e)
+        }
+    }
+
     try {
         const tournament = await prisma.tournament.findUnique({
             where: { id }
@@ -318,6 +367,23 @@ export async function updateTournament(id: string, prevState: CreateTournamentSt
                 })
             }
 
+            // Replace options
+            await tx.tournamentChipEventOption.deleteMany({
+                where: { tournamentId: id }
+            })
+
+            if (chipEventOptions.length > 0) {
+                await tx.tournamentChipEventOption.createMany({
+                    data: chipEventOptions.map(o => ({
+                        tournamentId: id,
+                        eventType: o.eventType,
+                        name: o.name,
+                        chipAmount: o.chipAmount,
+                        chargeAmount: o.chargeAmount
+                    }))
+                })
+            }
+
             // Handle Bounty
             if (hasBounty) {
                 await tx.tournamentBounty.upsert({
@@ -350,4 +416,3 @@ export async function updateTournament(id: string, prevState: CreateTournamentSt
         }
     }
 }
-

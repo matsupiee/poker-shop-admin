@@ -17,10 +17,15 @@ async function checkAuth() {
 
 export async function getRingGameBuyInOptions() {
     await checkAuth();
-    return prisma.ringGameBuyInOption.findMany({
-        orderBy: {
-            chipAmount: 'asc',
-        },
+    const options = await prisma.ringGameBuyInOption.findMany();
+
+    return options.sort((a, b) => {
+        // 1. ringGameType: WEB_COIN -> IN_STORE
+        if (a.ringGameType !== b.ringGameType) {
+            return a.ringGameType === RingGameType.WEB_COIN ? -1 : 1;
+        }
+        // 2. chargeAmount: asc
+        return a.chargeAmount - b.chargeAmount;
     });
 }
 

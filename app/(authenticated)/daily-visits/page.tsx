@@ -46,12 +46,14 @@ import { RingGameControl } from "@/components/daily-visits/ring-game-control"
 import { SettlementDialog } from "@/components/daily-visits/settlement-dialog"
 import { RingGameDetailsPopover } from "@/components/daily-visits/ring-game-details-popover"
 import { AddOnDialog } from "@/components/tournaments/add-on-dialog"
+import { getRingGameBuyInOptions } from "@/app/actions/ring-game-buy-in-options"
 
 export default function DailyVisitsPage() {
     const [date, setDate] = React.useState<Date | undefined>(new Date())
     const [searchTerm, setSearchTerm] = React.useState("")
     const [visits, setVisits] = React.useState<DailyVisit[]>([])
     const [tournaments, setTournaments] = React.useState<Awaited<ReturnType<typeof getTournaments>>>([])
+    const [ringGameBuyInOptions, setRingGameBuyInOptions] = React.useState<Awaited<ReturnType<typeof getRingGameBuyInOptions>>>([])
     const [isLoading, setIsLoading] = React.useState(true)
     const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])
 
@@ -59,12 +61,14 @@ export default function DailyVisitsPage() {
         if (!date) return
         setIsLoading(true)
         try {
-            const [visitsData, tournamentsData] = await Promise.all([
+            const [visitsData, tournamentsData, ringGameBuyInOptionsData] = await Promise.all([
                 getDailyVisits(date),
-                getTournaments(date)
+                getTournaments(date),
+                getRingGameBuyInOptions()
             ])
             setVisits(visitsData)
             setTournaments(tournamentsData)
+            setRingGameBuyInOptions(ringGameBuyInOptionsData)
         } catch (error) {
             console.error("Failed to fetch data", error)
         } finally {
@@ -369,6 +373,7 @@ export default function DailyVisitsPage() {
                                                         visitId={visit.id}
                                                         playerName={visit.player.name}
                                                         tournaments={tournaments}
+                                                        ringGameBuyInOptions={ringGameBuyInOptions}
                                                         onSuccess={fetchData}
                                                         disabled={!!visit.settlement}
                                                     />

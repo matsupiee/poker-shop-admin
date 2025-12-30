@@ -164,10 +164,10 @@ model Tournament {
   // 参加登録締め切り時刻
   entryClosesAt DateTime @map("entry_closes_at")
 
-  entries                TournamentEntry[]
-  tournamentPrizes       TournamentPrize[]
-  tournamentBounty       TournamentBounty?
-  tournamentEntryOptions TournamentEntryOption[]
+  entries                    TournamentEntry[]
+  tournamentPrizes           TournamentPrize[]
+  tournamentBounty           TournamentBounty?
+  tournamentChipEventOptions TournamentChipEventOption[]
 
   @@map("tournaments")
 }
@@ -256,21 +256,22 @@ model TournamentChipEvent {
   @@map("tournament_chip_events")
 }
 
-model TournamentEntryOption {
+model TournamentChipEventOption {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   tournamentId String @map("tournament_id")
 
-  entrySource TournamentEntrySource @map("entry_source")
+  eventType TournamentChipEventType @map("event_type")
 
-  chipAmount   Int @map("chip_amount") // 初期スタック
-  chargeAmount Int @map("charge_amount") // 参加費（FREEなら0）
+  name         String @map("name")
+  chipAmount   Int    @map("chip_amount")
+  chargeAmount Int    @map("charge_amount")
 
   tournament Tournament @relation(fields: [tournamentId], references: [id])
 
-  @@map("tournament_entry_options")
+  @@map("tournament_chip_event_options")
 }
 
 enum RingGameType {

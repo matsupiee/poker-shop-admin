@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Edit, Plus, Trash2 } from "lucide-react"
+import { ChipEventOption, ChipEventOptionsForm } from "./chip-event-options-form"
 
 const initialState = {
     errors: {},
@@ -50,7 +51,7 @@ export function EditTournamentDialog({ tournament, onTournamentUpdated, children
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>トーナメント編集</DialogTitle>
                     <DialogDescription>
@@ -68,6 +69,7 @@ function EditTournamentForm({ tournament, onSuccess }: { tournament: any, onSucc
     const [state, action, isPending] = useActionState(updateTournamentWithId, initialState)
     const [prizes, setPrizes] = useState<Array<{ rank: number, amount: number }>>([])
     const [hasBounty, setHasBounty] = useState(false)
+    const [chipEventOptions, setChipEventOptions] = useState<ChipEventOption[]>([])
 
     useEffect(() => {
         // Initialize prizes from tournament data
@@ -78,6 +80,18 @@ function EditTournamentForm({ tournament, onSuccess }: { tournament: any, onSucc
             })))
         } else {
             setPrizes(Array.from({ length: 10 }, (_, i) => ({ rank: i + 1, amount: 0 })))
+        }
+
+        // Initialize chip event options
+        if (tournament.tournamentChipEventOptions && tournament.tournamentChipEventOptions.length > 0) {
+            setChipEventOptions(tournament.tournamentChipEventOptions.map((o: any) => ({
+                eventType: o.eventType,
+                name: o.name,
+                chipAmount: o.chipAmount,
+                chargeAmount: o.chargeAmount
+            })))
+        } else {
+            setChipEventOptions([])
         }
 
         // Initialize bounty
@@ -267,6 +281,9 @@ function EditTournamentForm({ tournament, onSuccess }: { tournament: any, onSucc
                     </div>
                     <input type="hidden" name="prizes" value={JSON.stringify(prizes)} />
                 </div>
+
+                {/* Chip Event Options Section */}
+                <ChipEventOptionsForm options={chipEventOptions} onChange={setChipEventOptions} />
 
                 {/* Bounty Section */}
                 <div className="space-y-4 border-t pt-4">

@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Plus, Trash2 } from "lucide-react"
+import { ChipEventOption, ChipEventOptionsForm } from "./chip-event-options-form"
 
 const initialState = {
     errors: {},
@@ -46,7 +47,7 @@ export function CreateTournamentDialog({ onTournamentCreated, children }: Create
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>トーナメント新規作成</DialogTitle>
                     <DialogDescription>
@@ -65,6 +66,7 @@ function CreateTournamentForm({ onSuccess }: { onSuccess: () => void }) {
         Array.from({ length: 10 }, (_, i) => ({ rank: i + 1, amount: 0 }))
     )
     const [hasBounty, setHasBounty] = useState(false)
+    const [chipEventOptions, setChipEventOptions] = useState<ChipEventOption[]>([])
 
     useEffect(() => {
         if (state.success) {
@@ -232,6 +234,8 @@ function CreateTournamentForm({ onSuccess }: { onSuccess: () => void }) {
                     </div>
                     <input type="hidden" name="prizes" value={JSON.stringify(prizes)} />
                 </div>
+
+                <ChipEventOptionsForm options={chipEventOptions} onChange={setChipEventOptions} />
 
                 {/* Bounty Section */}
                 <div className="space-y-4 border-t pt-4">

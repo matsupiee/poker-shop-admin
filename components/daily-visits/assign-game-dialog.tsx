@@ -31,25 +31,55 @@ type AvailableTournament = {
     entryClosesAt: Date | string
 }
 
+type RingGameBuyInOption = {
+    id: string
+    ringGameType: "WEB_COIN" | "IN_STORE"
+    chipAmount: number
+    chargeAmount: number
+}
+
 interface AssignGameDialogProps {
     visitId: string
     playerName: string
     tournaments: AvailableTournament[]
+    ringGameBuyInOptions: RingGameBuyInOption[]
     onSuccess?: () => void
     disabled?: boolean
 }
 
-export function AssignGameDialog({ visitId, playerName, tournaments, onSuccess, disabled }: AssignGameDialogProps) {
+export function AssignGameDialog({ visitId, playerName, tournaments, ringGameBuyInOptions, onSuccess, disabled }: AssignGameDialogProps) {
     const [open, setOpen] = React.useState(false)
     const [mode, setMode] = React.useState<"tournament" | "ring">("tournament")
 
     const [ringGameType, setRingGameType] = React.useState<"WEB_COIN" | "IN_STORE">("IN_STORE")
     const [selectedTournamentId, setSelectedTournamentId] = React.useState<string>("")
     const [chipAmount, setChipAmount] = React.useState<string>("")
+    const [selectedBuyInOptionId, setSelectedBuyInOptionId] = React.useState<string>("")
     const [entrySource, setEntrySource] = React.useState<"BUY_IN" | "FREE" | "SATELLITE">("BUY_IN")
     const [paymentAmount, setPaymentAmount] = React.useState<string>("")
     const [isSubmitting, setIsSubmitting] = React.useState(false)
     const [error, setError] = React.useState<string | null>(null)
+
+    // Filter options based on selected ring game type
+    const availableBuyInOptions = React.useMemo(() => {
+        return ringGameBuyInOptions.filter(opt => opt.ringGameType === ringGameType)
+    }, [ringGameBuyInOptions, ringGameType])
+
+    // Reset buy-in selection when type changes
+    React.useEffect(() => {
+        if (mode === "ring") {
+            setSelectedBuyInOptionId("")
+            setChipAmount("")
+        }
+    }, [ringGameType, mode])
+
+    const handleBuyInOptionChange = (value: string) => {
+        setSelectedBuyInOptionId(value)
+        const option = ringGameBuyInOptions.find(opt => opt.id === value)
+        if (option) {
+            setChipAmount(option.chipAmount.toString())
+        }
+    }
 
     const handleSubmit = async () => {
         setError(null)
@@ -175,7 +205,7 @@ export function AssignGameDialog({ visitId, playerName, tournaments, onSuccess, 
 
                             <div className="grid gap-2">
                                 <Label htmlFor="entrySource">参加区分</Label>
-                                <Select value={entrySource} onValueChange={(val: any) => setEntrySource(val)}>
+                                <Select value={entrySource} onValueChange={(val) => setEntrySource(val as "BUY_IN" | "FREE" | "SATELLITE")}>
                                     <SelectTrigger id="entrySource">
                                         <SelectValue />
                                     </SelectTrigger>
@@ -202,13 +232,29 @@ export function AssignGameDialog({ visitId, playerName, tournaments, onSuccess, 
                         <div className="grid gap-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="ringGameType">リングゲーム種別</Label>
-                                <Select value={ringGameType} onValueChange={(val: any) => setRingGameType(val)}>
+                                <Select value={ringGameType} onValueChange={(val) => setRingGameType(val as "WEB_COIN" | "IN_STORE")}>
                                     <SelectTrigger id="ringGameType">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="IN_STORE">店内リング (In-Store)</SelectItem>
                                         <SelectItem value="WEB_COIN">Webコイン (Web Coin)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="buyInOption">バイインオプション</Label>
+                                <Select value={selectedBuyInOptionId} onValueChange={handleBuyInOptionChange}>
+                                    <SelectTrigger id="buyInOption">
+                                        <SelectValue placeholder="選択してください" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {availableBuyInOptions.map((opt) => (
+                                            <SelectItem key={opt.id} value={opt.id}>
+                                                {opt.chipAmount.toLocaleString()}点 (¥{opt.chargeAmount.toLocaleString()})
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -222,7 +268,13 @@ export function AssignGameDialog({ visitId, playerName, tournaments, onSuccess, 
                             type="number"
                             placeholder="例: 10000"
                             value={chipAmount}
-                            onChange={(e) => setChipAmount(e.target.value)}
+                            readOnly={mode === "ring"}
+                            className={mode === "ring" ? "bg-muted" : ""}
+                            onChange={(e) => {
+                                if (mode !== "ring") {
+                                    setChipAmount(e.target.value)
+                                }
+                            }}
                         />
                     </div>
 
