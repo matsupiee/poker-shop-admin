@@ -4,20 +4,24 @@ import { prisma } from "@/lib/prisma"
 import { format } from "date-fns"
 import { revalidatePath } from "next/cache"
 
-export type TournamentEntryInfo = {
-    id: string
+export type TournamentEventInfo = {
+    eventId: string
+    entryId: string
     tournamentName: string
     tournamentId: string
+    eventType: "ENTRY" | "ADD_CHIP"
+    chipAmount: number
+    chargeAmount: number
     status: "playing" | "eliminated" | "finished"
     rank?: number
     timestamp: string
-    entryCount: number
-    isLatest: boolean
+    isLatestEntry: boolean
 }
 
 export type RingGameChipEventInfo = {
     eventType: "BUY_IN" | "CASH_OUT"
     chipAmount: number
+    chargeAmount?: number
     timestamp: string
 }
 
@@ -41,7 +45,7 @@ export type DailyVisit = {
         name: string
         image?: string
     }
-    tournaments: TournamentEntryInfo[]
+    tournaments: TournamentEventInfo[]
     ringGameEntries: RingGameInfo[]
     settlement?: {
         id: string
@@ -106,30 +110,32 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
             return acc
         }, {} as Record<string, typeof visit.tournamentEntries>)
 
-        // Map tournaments
-        const tournaments: TournamentEntryInfo[] = visit.tournamentEntries.map(entry => {
+        // Map tournaments to a flat list of chip events
+        const tournaments: TournamentEventInfo[] = visit.tournamentEntries.flatMap(entry => {
             // Determine status
             let status: "playing" | "eliminated" | "finished" = "playing"
             if (entry.finalRank) {
-                status = "eliminated" // or finished. Let's use eliminated as generic for now.
+                status = "eliminated"
             }
 
             // Check if this is the latest entry for this tournament in this visit
-            // Since the array is sorted by createdAt ascending, the last one in the group is the latest.
             const entries = entriesByTournament[entry.tournamentId]
             const latestEntry = entries[entries.length - 1]
-            const isLatest = entry.id === latestEntry.id
+            const isLatestEntry = entry.id === latestEntry.id
 
-            return {
-                id: entry.id.toString(),
+            return entry.chipEvents.map(event => ({
+                eventId: event.id,
+                entryId: entry.id,
                 tournamentName: entry.tournament.name,
-                tournamentId: entry.tournament.id.toString(),
+                tournamentId: entry.tournament.id,
+                eventType: event.eventType as "ENTRY" | "ADD_CHIP",
+                chipAmount: event.chipAmount,
+                chargeAmount: event.chargeAmount,
                 status,
                 rank: entry.finalRank ?? undefined,
-                entryCount: 1,
-                timestamp: format(entry.createdAt, "HH:mm"),
-                isLatest
-            }
+                timestamp: format(event.createdAt, "HH:mm"),
+                isLatestEntry
+            }))
         })
 
 
@@ -148,6 +154,7 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
             const timeline: RingGameChipEventInfo[] = entry.chipEvents.map(e => ({
                 eventType: e.eventType,
                 chipAmount: e.chipAmount,
+                chargeAmount: e.chargeAmount ?? undefined,
                 timestamp: format(e.createdAt, "HH:mm")
             }))
 
@@ -440,6 +447,7 @@ export async function settleVisit(visitId: string, breakdown: any, netAmount: nu
                     data: {
                         visitId,
                         netAmount,
+                        taxAmount: 0, // Default to 0, calculation can be added later
                         breakdown
                     }
                 })

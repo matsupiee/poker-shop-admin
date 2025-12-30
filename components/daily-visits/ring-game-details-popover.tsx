@@ -33,10 +33,10 @@ export function RingGameDetailsPopover({ children, timeline }: RingGameDetailsPo
                                 <div key={i} className="flex justify-between items-center text-sm border-b pb-2 last:border-0 last:pb-0">
                                     <span className="text-muted-foreground font-mono text-xs">{event.timestamp}</span>
                                     <span className={cn(
-                                        "font-medium text-xs px-2 py-0.5 rounded-full",
+                                        "font-medium text-xs px-2 py-0.5 rounded-full border",
                                         event.eventType === "BUY_IN"
-                                            ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
-                                            : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                            ? "bg-primary text-primary-foreground"
+                                            : "bg-muted text-muted-foreground"
                                     )}>
                                         {event.eventType === "BUY_IN" ? "BUY IN" : "CASH OUT"}
                                     </span>

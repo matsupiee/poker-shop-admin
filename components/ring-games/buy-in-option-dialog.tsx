@@ -150,7 +150,7 @@ export function BuyInOptionDialog({
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value={RingGameType.WEB_COIN}>WEBコイン</SelectItem>
-                                    <SelectItem value={RingGameType.IN_STORE}>店内コイン</SelectItem>
+                                    <SelectItem value={RingGameType.IN_STORE}>店内リング</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>

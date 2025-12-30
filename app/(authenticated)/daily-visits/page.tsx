@@ -3,7 +3,7 @@
 import * as React from "react"
 import { format } from "date-fns"
 import { ja } from "date-fns/locale"
-import { Calendar as CalendarIcon, Search, Filter, Trophy, Coins, Clock } from "lucide-react"
+import { Calendar as CalendarIcon, Search, Filter, Trophy, Coins, Clock, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -40,7 +40,8 @@ import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getDailyVisits, type DailyVisit } from "@/app/actions/visits"
 import { getTournaments } from "@/app/actions/tournaments"
-import { AssignGameDialog } from "@/components/daily-visits/assign-game-dialog"
+import { TournamentParticipationDialog } from "@/components/daily-visits/tournament-participation-dialog"
+import { RingGameParticipationDialog } from "@/components/daily-visits/ring-game-participation-dialog"
 import { TournamentRankUpdate } from "@/components/daily-visits/tournament-rank-update"
 import { RingGameControl } from "@/components/daily-visits/ring-game-control"
 import { SettlementDialog } from "@/components/daily-visits/settlement-dialog"
@@ -190,7 +191,7 @@ export default function DailyVisitsPage() {
                                     onCheckedChange={() => handleFilterChange("ring_game")}
                                 >
                                     <div className="flex items-center">
-                                        <Coins className="mr-2 h-4 w-4 text-orange-500" />
+                                        <Coins className="mr-2 h-4 w-4 text-muted-foreground" />
                                         リングゲーム参加
                                     </div>
                                 </DropdownMenuCheckboxItem>
@@ -226,9 +227,8 @@ export default function DailyVisitsPage() {
                                     <TableHead className="w-[80px]">会員ID</TableHead>
                                     <TableHead className="min-w-[140px]">プレイヤー</TableHead>
                                     <TableHead className="w-[100px]">来店時刻</TableHead>
-                                    <TableHead className="min-w-[250px]">参加トーナメント</TableHead>
-                                    <TableHead className="min-w-[200px]">リングゲーム</TableHead>
-                                    <TableHead className="text-right">ステータス</TableHead>
+                                    <TableHead className="min-w-[400px]">ゲーム参加状況 (トナメ / リング)</TableHead>
+                                    <TableHead className="text-right w-[120px]">ステータス</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -265,119 +265,156 @@ export default function DailyVisitsPage() {
                                                     {visit.checkInTime}
                                                 </div>
                                             </TableCell>
-                                            <TableCell>
-                                                <div className="space-y-2">
-                                                    {visit.tournaments.length > 0 ? (
-                                                        visit.tournaments.map(t => (
-                                                            <div key={t.id} className="flex items-center text-sm gap-2">
-                                                                <span className="text-xs text-muted-foreground font-mono">
-                                                                    [{t.timestamp}]
-                                                                </span>
-                                                                <Trophy className="w-3.5 h-3.5 text-yellow-600 flex-shrink-0" />
-                                                                <span className="truncate max-w-[150px]" title={t.tournamentName}>
-                                                                    {t.tournamentName}
-                                                                </span>
-                                                                {t.isLatest ? (
+                                            <TableCell className="p-0 border-l border-r">
+                                                <div className="flex flex-col">
+                                                    {/* Tournaments of the day */}
+                                                    {tournaments.map((t, idx) => (
+                                                        <div key={t.id} className={cn("flex items-stretch border-b last:border-0", idx === 0 && "border-t-0")}>
+                                                            <div className="w-24 flex-shrink-0 bg-muted/30 px-2 py-2 border-r flex items-center justify-center text-[10px] font-bold text-center leading-tight">
+                                                                {t.name}
+                                                            </div>
+                                                            <div className="flex-1 flex gap-1 p-1 overflow-x-auto min-h-[64px] items-center">
+                                                                {visit.tournaments.filter(e => e.tournamentId === t.id).map(e => (
                                                                     <TournamentRankUpdate
-                                                                        entryId={t.id}
-                                                                        currentRank={t.rank}
-                                                                        status={t.status}
+                                                                        key={e.eventId}
+                                                                        entryId={e.entryId}
+                                                                        currentRank={e.rank}
+                                                                        status={e.status}
                                                                         onSuccess={fetchData}
-                                                                    />
-                                                                ) : t.rank ? (
-                                                                    <Badge variant="secondary" className="text-[10px] px-1 py-0 h-5">
-                                                                        {t.rank}位
-                                                                    </Badge>
-                                                                ) : (
-                                                                    <span className="text-[10px] text-muted-foreground">リエントリー済み</span>
-                                                                )}
-                                                                {t.isLatest && (
-                                                                    <AddOnDialog
-                                                                        tournamentEntryId={t.id}
-                                                                        playerName={visit.player.name}
-                                                                        chipEventOptions={tournaments.find(tourney => tourney.id === t.tournamentId)?.tournamentChipEventOptions ?? []}
-                                                                        onSuccess={fetchData}
-                                                                    />
-                                                                )}
-                                                                {t.entryCount > 1 && (
-                                                                    <span className="text-xs text-muted-foreground">
-                                                                        ({t.entryCount}E)
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        ))
-                                                    ) : (
-                                                        <span className="text-muted-foreground text-sm">-</span>
-                                                    )}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                {visit.ringGameEntries.length > 0 ? (
-                                                    <div className="flex flex-col gap-2">
-                                                        {visit.ringGameEntries.map((entry) => (
-                                                            <div key={entry.id} className="flex items-start justify-between border-b pb-2 last:border-0 last:pb-0">
-                                                                <RingGameDetailsPopover timeline={entry.timeline}>
-                                                                    <div className="flex flex-col gap-1 text-sm">
-                                                                        <div className="flex items-center gap-2">
-                                                                            <Coins className="w-3.5 h-3.5 text-orange-500" />
-                                                                            <span className="font-medium">
-                                                                                In: {entry.totalBuyIn.toLocaleString()}
-                                                                            </span>
-                                                                            {entry.ringGameType === "WEB_COIN" && (
-                                                                                <Badge variant="outline" className="text-[10px] px-1 h-4 bg-blue-50 text-blue-700 border-blue-200">
-                                                                                    Web
-                                                                                </Badge>
-                                                                            )}
-                                                                            {entry.ringGameType === "IN_STORE" && (
-                                                                                <Badge variant="outline" className="text-[10px] px-1 h-4 bg-orange-50 text-orange-700 border-orange-200">
-                                                                                    店
-                                                                                </Badge>
-                                                                            )}
-                                                                        </div>
-                                                                        {entry.currentStatus === "left" && entry.totalCashOut !== undefined ? (
+                                                                        trigger={
                                                                             <div className={cn(
-                                                                                "flex items-center gap-2",
-                                                                                (entry.totalCashOut - entry.totalBuyIn) >= 0
-                                                                                    ? "text-green-600"
-                                                                                    : "text-red-500"
+                                                                                "border rounded px-2 py-1 text-[10px] min-w-[70px] bg-background shadow-sm hover:border-accent transition-colors cursor-pointer",
+                                                                                e.isLatestEntry && "border-primary/50 bg-primary/5",
+                                                                                e.eventType === "ADD_CHIP" && "bg-yellow-50/50"
                                                                             )}>
-                                                                                <span className="font-bold">
-                                                                                    {(entry.totalCashOut - entry.totalBuyIn) > 0 ? "+" : ""}
-                                                                                    {(entry.totalCashOut - entry.totalBuyIn).toLocaleString()}
-                                                                                </span>
-                                                                                <span className="text-xs text-muted-foreground">(Out: {entry.totalCashOut.toLocaleString()})</span>
+                                                                                <div className="flex justify-between items-start">
+                                                                                    <span className="text-muted-foreground font-mono">{e.timestamp}</span>
+                                                                                    <Badge variant="outline" className="text-[8px] h-3 px-1 leading-none">
+                                                                                        {e.eventType === "ENTRY" ? "E" : "A"}
+                                                                                    </Badge>
+                                                                                </div>
+                                                                                <div className="font-bold">
+                                                                                    {e.eventType === "ENTRY" ? (e.rank ? `${e.rank}位` : (e.status === 'playing' ? 'Playing' : 'Elim')) : `+${e.chipAmount.toLocaleString()}`}
+                                                                                </div>
+                                                                                <div className="text-muted-foreground">¥{e.chargeAmount.toLocaleString()}</div>
                                                                             </div>
-                                                                        ) : (
-                                                                            <Badge variant="outline" className="w-fit text-xs border-green-200 bg-green-50 text-green-700">
-                                                                                プレイ中
-                                                                            </Badge>
-                                                                        )}
-                                                                    </div>
-                                                                </RingGameDetailsPopover>
-                                                                <RingGameControl
-                                                                    ringGameEntryId={entry.id}
+                                                                        }
+                                                                    />
+                                                                ))}
+                                                                <TournamentParticipationDialog
+                                                                    visitId={visit.id}
                                                                     playerName={visit.player.name}
-                                                                    currentBuyIn={entry.totalBuyIn}
-                                                                    currentCashOut={entry.totalCashOut}
+                                                                    tournaments={tournaments}
                                                                     onSuccess={fetchData}
+                                                                    defaultTournamentId={t.id}
+                                                                    trigger={
+                                                                        <Button variant="ghost" size="icon" className="h-10 w-10 border-2 border-dashed rounded-md text-muted-foreground hover:text-foreground">
+                                                                            <Plus className="h-4 w-4" />
+                                                                        </Button>
+                                                                    }
                                                                 />
+                                                                {/* Add-on button for the latest entry */}
+                                                                {visit.tournaments.find(e => e.tournamentId === t.id && e.isLatestEntry) && (
+                                                                    <div className="ml-2">
+                                                                        <AddOnDialog
+                                                                            tournamentEntryId={visit.tournaments.find(e => e.tournamentId === t.id && e.isLatestEntry)!.entryId}
+                                                                            playerName={visit.player.name}
+                                                                            chipEventOptions={tournaments.find(tourney => tourney.id === t.id)?.tournamentChipEventOptions ?? []}
+                                                                            onSuccess={fetchData}
+                                                                        />
+                                                                    </div>
+                                                                )}
                                                             </div>
-                                                        ))}
+                                                        </div>
+                                                    ))}
+
+                                                    {/* Web Ring */}
+                                                    <div className="flex items-stretch border-b last:border-0">
+                                                        <div className="w-24 flex-shrink-0 bg-muted px-2 py-2 border-r flex items-center justify-center text-[10px] font-bold text-foreground text-center leading-tight">
+                                                            WEBコイン
+                                                        </div>
+                                                        <div className="flex-1 flex gap-1 p-1 overflow-x-auto min-h-[64px] items-center">
+                                                            {visit.ringGameEntries.filter(e => e.ringGameType === "WEB_COIN").map(entry => (
+                                                                entry.timeline.filter(ev => ev.eventType === "BUY_IN").map((ev, i) => (
+                                                                    <div key={i} className="border rounded px-2 py-1 text-[10px] min-w-[70px] bg-background shadow-sm">
+                                                                        <div className="text-muted-foreground font-mono">{ev.timestamp}</div>
+                                                                        <div className="font-bold">{ev.chipAmount.toLocaleString()}</div>
+                                                                        <div className="text-muted-foreground">¥{(ev.chargeAmount ?? 0).toLocaleString()}</div>
+                                                                    </div>
+                                                                ))
+                                                            ))}
+                                                            <RingGameParticipationDialog
+                                                                visitId={visit.id}
+                                                                playerName={visit.player.name}
+                                                                ringGameBuyInOptions={ringGameBuyInOptions}
+                                                                onSuccess={fetchData}
+                                                                defaultRingGameType="WEB_COIN"
+                                                                trigger={
+                                                                    <Button variant="ghost" size="icon" className="h-10 w-10 border-2 border-dashed rounded-md text-muted-foreground hover:text-foreground">
+                                                                        <Plus className="h-4 w-4" />
+                                                                    </Button>
+                                                                }
+                                                            />
+                                                            {/* Ring game control (Cash out) */}
+                                                            {visit.ringGameEntries.find(e => e.ringGameType === "WEB_COIN") && (
+                                                                <div className="ml-2">
+                                                                    <RingGameControl
+                                                                        ringGameEntryId={visit.ringGameEntries.find(e => e.ringGameType === "WEB_COIN")!.id}
+                                                                        playerName={visit.player.name}
+                                                                        currentBuyIn={visit.ringGameEntries.find(e => e.ringGameType === "WEB_COIN")!.totalBuyIn}
+                                                                        currentCashOut={visit.ringGameEntries.find(e => e.ringGameType === "WEB_COIN")!.totalCashOut}
+                                                                        onSuccess={fetchData}
+                                                                    />
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                ) : (
-                                                    <span className="text-muted-foreground text-sm">-</span>
-                                                )}
+
+                                                    {/* Store Ring */}
+                                                    <div className="flex items-stretch">
+                                                        <div className="w-24 flex-shrink-0 bg-muted px-2 py-2 border-r flex items-center justify-center text-[10px] font-bold text-foreground text-center leading-tight">
+                                                            店内リング
+                                                        </div>
+                                                        <div className="flex-1 flex gap-1 p-1 overflow-x-auto min-h-[64px] items-center">
+                                                            {visit.ringGameEntries.filter(e => e.ringGameType === "IN_STORE").map(entry => (
+                                                                entry.timeline.filter(ev => ev.eventType === "BUY_IN").map((ev, i) => (
+                                                                    <div key={i} className="border rounded px-2 py-1 text-[10px] min-w-[70px] bg-background shadow-sm">
+                                                                        <div className="text-muted-foreground font-mono">{ev.timestamp}</div>
+                                                                        <div className="font-bold text-orange-600">{ev.chipAmount.toLocaleString()}</div>
+                                                                        <div className="text-muted-foreground">¥{(ev.chargeAmount ?? 0).toLocaleString()}</div>
+                                                                    </div>
+                                                                ))
+                                                            ))}
+                                                            <RingGameParticipationDialog
+                                                                visitId={visit.id}
+                                                                playerName={visit.player.name}
+                                                                ringGameBuyInOptions={ringGameBuyInOptions}
+                                                                onSuccess={fetchData}
+                                                                defaultRingGameType="IN_STORE"
+                                                                trigger={
+                                                                    <Button variant="ghost" size="icon" className="h-10 w-10 border-2 border-dashed rounded-md text-muted-foreground hover:text-foreground">
+                                                                        <Plus className="h-4 w-4" />
+                                                                    </Button>
+                                                                }
+                                                            />
+                                                            {/* Ring game control (Cash out) */}
+                                                            {visit.ringGameEntries.find(e => e.ringGameType === "IN_STORE") && (
+                                                                <div className="ml-2">
+                                                                    <RingGameControl
+                                                                        ringGameEntryId={visit.ringGameEntries.find(e => e.ringGameType === "IN_STORE")!.id}
+                                                                        playerName={visit.player.name}
+                                                                        currentBuyIn={visit.ringGameEntries.find(e => e.ringGameType === "IN_STORE")!.totalBuyIn}
+                                                                        currentCashOut={visit.ringGameEntries.find(e => e.ringGameType === "IN_STORE")!.totalCashOut}
+                                                                        onSuccess={fetchData}
+                                                                    />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    <AssignGameDialog
-                                                        visitId={visit.id}
-                                                        playerName={visit.player.name}
-                                                        tournaments={tournaments}
-                                                        ringGameBuyInOptions={ringGameBuyInOptions}
-                                                        onSuccess={fetchData}
-                                                        disabled={!!visit.settlement}
-                                                    />
                                                     <SettlementDialog
                                                         visitId={visit.id}
                                                         playerName={visit.player.name}

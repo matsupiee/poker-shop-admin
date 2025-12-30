@@ -17,6 +17,7 @@ import { useRouter } from 'next/navigation';
 import type { RingGameBuyInOption } from '@/lib/generated/prisma/client';
 import { RingGameType } from '@/lib/constants';
 import { Pencil, Trash2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface BuyInOptionListProps {
     options: RingGameBuyInOption[];
@@ -85,7 +86,15 @@ export function BuyInOptionList({ options }: BuyInOptionListProps) {
                         {options.map((option) => (
                             <TableRow key={option.id}>
                                 <TableCell>
-                                    {option.ringGameType === RingGameType.WEB_COIN ? 'WEBコイン' : '店内コイン'}
+                                    {option.ringGameType === RingGameType.WEB_COIN ? (
+                                        <Badge variant="default">
+                                            WEBコイン
+                                        </Badge>
+                                    ) : (
+                                        <Badge variant="outline">
+                                            店内リング
+                                        </Badge>
+                                    )}
                                 </TableCell>
                                 <TableCell className="text-right">{formatNumber(option.chipAmount)}</TableCell>
                                 <TableCell className="text-right">{formatCurrency(option.chargeAmount)}</TableCell>

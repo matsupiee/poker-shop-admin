@@ -18,9 +18,10 @@ type Props = {
     currentRank?: number
     status: "playing" | "eliminated" | "finished"
     onSuccess?: () => void
+    trigger?: React.ReactNode
 }
 
-export function TournamentRankUpdate({ entryId, currentRank, status, onSuccess }: Props) {
+export function TournamentRankUpdate({ entryId, currentRank, status, onSuccess, trigger }: Props) {
     const [isOpen, setIsOpen] = React.useState(false)
     const [rank, setRank] = React.useState(currentRank?.toString() ?? "")
     const [isSubmitting, setIsSubmitting] = React.useState(false)
@@ -52,12 +53,14 @@ export function TournamentRankUpdate({ entryId, currentRank, status, onSuccess }
     return (
         <Popover open={isOpen} onOpenChange={setIsOpen}>
             <PopoverTrigger asChild>
-                <Badge
-                    variant={status === "playing" ? "default" : "secondary"}
-                    className="text-[10px] px-1 py-0 h-5 cursor-pointer hover:opacity-80 transition-opacity"
-                >
-                    {status === "playing" ? "プレイ中" : `${currentRank}位`}
-                </Badge>
+                {trigger || (
+                    <Badge
+                        variant={status === "playing" ? "default" : "secondary"}
+                        className="text-[10px] px-1 py-0 h-5 cursor-pointer hover:opacity-80 transition-opacity"
+                    >
+                        {status === "playing" ? "プレイ中" : `${currentRank}位`}
+                    </Badge>
+                )}
             </PopoverTrigger>
             <PopoverContent className="w-48 p-3">
                 <div className="space-y-2">

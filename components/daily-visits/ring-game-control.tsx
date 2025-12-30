@@ -135,7 +135,7 @@ export function RingGameControl({ ringGameEntryId, playerName, currentBuyIn, cur
                 </div>
 
                 <DialogFooter>
-                    <Button onClick={handleSubmit} disabled={isSubmitting || !amount} className={activeTab === "buy-in" ? "" : "bg-orange-600 hover:bg-orange-700"}>
+                    <Button onClick={handleSubmit} disabled={isSubmitting || !amount}>
                         {isSubmitting ? "処理中..." : activeTab === "buy-in" ? "追加する" : "キャッシュアウト"}
                     </Button>
                 </DialogFooter>
