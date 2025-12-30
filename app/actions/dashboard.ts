@@ -36,7 +36,7 @@ export async function getDashboardStats(monthStr: string): Promise<DailyStat[]> 
             }
         },
         include: {
-            ringGameEntry: {
+            ringGameEntries: {
                 include: {
                     chipEvents: true
                 }
@@ -79,7 +79,7 @@ export async function getDashboardStats(monthStr: string): Promise<DailyStat[]> 
         const tournamentEntriesCount = dayTournaments.reduce((sum, t) => sum + t.entries.length, 0)
 
         // Ring Game Participants (Visits today that have a ring game entry)
-        const ringGameEntriesCount = dayVisits.filter(v => v.ringGameEntry !== null).length
+        const ringGameEntriesCount = dayVisits.filter(v => v.ringGameEntries.length > 0).length
 
         // Profit Calculation
         let profit = 0
@@ -92,8 +92,8 @@ export async function getDashboardStats(monthStr: string): Promise<DailyStat[]> 
 
         // Ring Game
         dayVisits.forEach(v => {
-            if (v.ringGameEntry) {
-                v.ringGameEntry.chipEvents.forEach(e => {
+            v.ringGameEntries.forEach(entry => {
+                entry.chipEvents.forEach(e => {
                     if (e.eventType === 'BUY_IN') {
                         // Income: chargeAmount is preferred, fallback to chipAmount
                         profit += (e.chargeAmount ?? e.chipAmount)
@@ -102,7 +102,7 @@ export async function getDashboardStats(monthStr: string): Promise<DailyStat[]> 
                         profit -= e.chipAmount
                     }
                 })
-            }
+            })
         })
 
         // Tournaments

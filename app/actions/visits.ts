@@ -336,7 +336,7 @@ export async function getVisitSettlementDetails(visitId: string) {
                     chipEvents: true
                 }
             },
-            storeCoinDeposit: true
+            inStoreCoinDeposit: true
         }
     })
 
@@ -415,7 +415,7 @@ export async function getVisitSettlementDetails(visitId: string) {
     return {
         items,
         netAmount,
-        isDeposited: !!visit.storeCoinDeposit
+        isDeposited: !!visit.inStoreCoinDeposit
     }
 }
 
@@ -455,7 +455,7 @@ export async function settleVisit(visitId: string, breakdown: any, netAmount: nu
                 throw new Error("来店データが見つかりません")
             }
 
-            const existingDeposit = await tx.storeCoinDeposit.findUnique({
+            const existingDeposit = await tx.inStoreCoinDeposit.findUnique({
                 where: { visitId } // using unique visitId
             })
 
@@ -463,17 +463,17 @@ export async function settleVisit(visitId: string, breakdown: any, netAmount: nu
                 if (existingDeposit) {
                     // Update existing deposit
                     const diff = netAmount - existingDeposit.depositAmount
-                    await tx.storeCoinDeposit.update({
+                    await tx.inStoreCoinDeposit.update({
                         where: { id: existingDeposit.id },
                         data: { depositAmount: netAmount }
                     })
                     await tx.player.update({
                         where: { id: visit.player.id },
-                        data: { storeCoinBalance: { increment: diff } }
+                        data: { inStoreCoinBalance: { increment: diff } }
                     })
                 } else {
                     // Create new deposit
-                    await tx.storeCoinDeposit.create({
+                    await tx.inStoreCoinDeposit.create({
                         data: {
                             playerId: visit.player.id,
                             depositAmount: netAmount,
@@ -482,19 +482,19 @@ export async function settleVisit(visitId: string, breakdown: any, netAmount: nu
                     })
                     await tx.player.update({
                         where: { id: visit.player.id },
-                        data: { storeCoinBalance: { increment: netAmount } }
+                        data: { inStoreCoinBalance: { increment: netAmount } }
                     })
                 }
             } else {
                 // Not depositing or invalid amount for deposit
                 if (existingDeposit) {
                     // Remove existing deposit and revert balance
-                    await tx.storeCoinDeposit.delete({
+                    await tx.inStoreCoinDeposit.delete({
                         where: { id: existingDeposit.id }
                     })
                     await tx.player.update({
                         where: { id: visit.player.id },
-                        data: { storeCoinBalance: { decrement: existingDeposit.depositAmount } }
+                        data: { inStoreCoinBalance: { decrement: existingDeposit.depositAmount } }
                     })
                 }
             }

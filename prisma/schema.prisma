@@ -350,7 +350,11 @@ model Settlement {
   visitId String @map("visit_id")
 
   // 最終的な収支
-  netAmount Int  @map("net_amount")
+  netAmount Int @map("net_amount")
+
+  // 収支がプラスの場合は税金なし、マイナスの場合は税金が-5%
+  taxAmount Int @map("tax_amount")
+
   breakdown Json // 計算レシート
 
   visit Visit @relation(fields: [visitId], references: [id])

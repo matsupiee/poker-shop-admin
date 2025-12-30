@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
-import { Staff } from "@/lib/generated/prisma/client"
+import { Staff, RingGameType } from "@/lib/generated/prisma/client"
 
 // ... imports
 
@@ -87,6 +87,7 @@ export async function createDealerShift(prevState: DealerShiftState, formData: F
                 rakeChip,
                 jpRakeChip,
                 dealerChip,
+                ringGameType: RingGameType.IN_STORE,
             }
         })
 

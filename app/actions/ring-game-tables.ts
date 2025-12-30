@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
+import { RingGameType } from "@/lib/generated/prisma/client"
 
 const sitDownSchema = z.object({
     deskId: z.string(),
@@ -57,6 +58,7 @@ export async function sitDownAtTable(formData: FormData) {
                 ringGameDeskId: deskId,
                 staffId: staffId,
                 startedAt: new Date(),
+                ringGameType: RingGameType.IN_STORE,
             },
         })
 

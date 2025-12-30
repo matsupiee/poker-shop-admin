@@ -6,9 +6,9 @@ export default async function PlayersPage() {
     const playersData = await prisma.player.findMany({
         include: {
             _count: {
-                select: { visitations: true }
+                select: { visits: true }
             },
-            visitations: {
+            visits: {
                 orderBy: { createdAt: 'desc' },
                 take: 1
             }
@@ -23,9 +23,9 @@ export default async function PlayersPage() {
         memberId: p.memberId,
         name: p.name,
         gameId: p.webCoinGameId ?? undefined,
-        balance: p.storeCoinBalance,
-        visitCount: p._count.visitations,
-        lastVisit: p.visitations[0] ? format(p.visitations[0].createdAt, 'yyyy-MM-dd') : "-",
+        balance: p.inStoreCoinBalance,
+        visitCount: p._count.visits,
+        lastVisit: p.visits[0] ? format(p.visits[0].createdAt, 'yyyy-MM-dd') : "-",
         status: "active"
     }))
 
