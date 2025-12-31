@@ -381,16 +381,21 @@ export default function DailyVisitsPage() {
                                                                                 <span className="text-muted-foreground font-mono">{ev.timestamp}</span>
                                                                                 <Badge variant="outline" className={cn(
                                                                                     "text-[8px] h-3 px-1 leading-none",
-                                                                                    ev.eventType === "CASH_OUT" ? "bg-orange-100 text-orange-800" : "bg-muted"
+                                                                                    ev.eventType === "CASH_OUT" ? "bg-orange-100 text-orange-800" :
+                                                                                        ev.eventType === "GIFT" ? "bg-blue-100 text-blue-800" : "bg-muted"
                                                                                 )}>
-                                                                                    {ev.eventType === "BUY_IN" ? "B" : "C"}
+                                                                                    {ev.eventType === "BUY_IN" ? "B" :
+                                                                                        ev.eventType === "CASH_OUT" ? "C" :
+                                                                                            ev.eventType === "GIFT" ? "G" : "W"}
                                                                                 </Badge>
                                                                             </div>
                                                                             <div className={cn("font-bold", ev.eventType === "CASH_OUT" && "text-orange-600")}>
                                                                                 {ev.eventType === "CASH_OUT" ? "-" : ""}{ev.chipAmount.toLocaleString()}
                                                                             </div>
                                                                             <div className="text-muted-foreground">
-                                                                                {ev.eventType === "BUY_IN" ? "Buy-in" : "Cash-out"}
+                                                                                {ev.eventType === "BUY_IN" ? "Buy-in" :
+                                                                                    ev.eventType === "CASH_OUT" ? "Cash-out" :
+                                                                                        ev.eventType === "GIFT" ? "Gift" : "Withdraw"}
                                                                             </div>
                                                                         </div>
                                                                     ))
@@ -459,16 +464,21 @@ export default function DailyVisitsPage() {
                                                                                 <span className="text-muted-foreground font-mono">{ev.timestamp}</span>
                                                                                 <Badge variant="outline" className={cn(
                                                                                     "text-[8px] h-3 px-1 leading-none",
-                                                                                    ev.eventType === "CASH_OUT" ? "bg-orange-100 text-orange-800" : "bg-muted"
+                                                                                    ev.eventType === "CASH_OUT" ? "bg-orange-100 text-orange-800" :
+                                                                                        ev.eventType === "GIFT" ? "bg-blue-100 text-blue-800" : "bg-muted"
                                                                                 )}>
-                                                                                    {ev.eventType === "BUY_IN" ? "B" : "C"}
+                                                                                    {ev.eventType === "BUY_IN" ? "B" :
+                                                                                        ev.eventType === "CASH_OUT" ? "C" :
+                                                                                            ev.eventType === "GIFT" ? "G" : "W"}
                                                                                 </Badge>
                                                                             </div>
-                                                                            <div className={cn("font-bold", ev.eventType === "CASH_OUT" ? "text-orange-600" : "text-orange-600")}>
+                                                                            <div className={cn("font-bold", ev.eventType === "CASH_OUT" && "text-orange-600")}>
                                                                                 {ev.eventType === "CASH_OUT" ? "-" : ""}{ev.chipAmount.toLocaleString()}
                                                                             </div>
                                                                             <div className="text-muted-foreground">
-                                                                                {ev.eventType === "BUY_IN" ? "Buy-in" : "Cash-out"}
+                                                                                {ev.eventType === "BUY_IN" ? "Buy-in" :
+                                                                                    ev.eventType === "CASH_OUT" ? "Cash-out" :
+                                                                                        ev.eventType === "GIFT" ? "Gift" : "Withdraw"}
                                                                             </div>
                                                                         </div>
                                                                     ))

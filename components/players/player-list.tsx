@@ -39,7 +39,8 @@ export type Player = {
     memberId: string
     name: string
     gameId?: string
-    balance: number
+    webCoinBalance: number
+    inStoreCoinBalance: number
     visitCount: number
     lastVisit: string
     status: "active" | "inactive" | "banned"
@@ -106,11 +107,11 @@ export function PlayerList({ initialPlayers }: PlayerListProps) {
                                     <TableHead className="w-[100px]">会員ID</TableHead>
                                     <TableHead>名前</TableHead>
                                     <TableHead>ステータス</TableHead>
-                                    <TableHead className="text-right cursor-pointer hover:bg-muted/50 transition-colors">
-                                        <div className="flex items-center justify-end">
-                                            所持チップ
-                                            <ArrowUpDown className="ml-2 h-4 w-4" />
-                                        </div>
+                                    <TableHead className="text-right">
+                                        預け入れ中<br />webコイン
+                                    </TableHead>
+                                    <TableHead className="text-right">
+                                        店内リング<br />貯チップ
                                     </TableHead>
                                     <TableHead className="text-right">来店回数</TableHead>
                                     <TableHead className="text-right">最終来店日</TableHead>
@@ -120,7 +121,7 @@ export function PlayerList({ initialPlayers }: PlayerListProps) {
                             <TableBody>
                                 {filteredPlayers.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={7} className="h-24 text-center">
+                                        <TableCell colSpan={8} className="h-24 text-center">
                                             該当するプレイヤーが見つかりません。
                                         </TableCell>
                                     </TableRow>
@@ -148,8 +149,11 @@ export function PlayerList({ initialPlayers }: PlayerListProps) {
                                                         player.status === "inactive" ? "休眠" : "利用停止"}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="text-right font-bold">
-                                                {player.balance.toLocaleString()} G
+                                            <TableCell className="text-right font-medium">
+                                                {player.webCoinBalance.toLocaleString()}
+                                            </TableCell>
+                                            <TableCell className="text-right font-medium">
+                                                {player.inStoreCoinBalance.toLocaleString()}
                                             </TableCell>
                                             <TableCell className="text-right">{player.visitCount}回</TableCell>
                                             <TableCell className="text-right">{player.lastVisit}</TableCell>

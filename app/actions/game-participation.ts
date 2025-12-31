@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
+import { WebCoinRingChipEventType, InStoreRingChipEventType } from "@/lib/generated/prisma"
 
 export type GameParticipationState = {
     errors?: {
@@ -128,7 +129,7 @@ export async function addRingGameEntry(
 
 export async function addRingGameChip(
     ringGameEntryId: string,
-    type: "BUY_IN" | "CASH_OUT",
+    type: string,
     amount: number,
     ringGameType: "WEB_COIN" | "IN_STORE"
 ): Promise<GameParticipationState> {
@@ -146,7 +147,7 @@ export async function addRingGameChip(
             await prisma.webCoinRingChipEvent.create({
                 data: {
                     webCoinRingEntryId: entry.id,
-                    eventType: type,
+                    eventType: type as WebCoinRingChipEventType,
                     chipAmount: amount,
                 }
             })
@@ -160,7 +161,7 @@ export async function addRingGameChip(
             await prisma.inStoreRingChipEvent.create({
                 data: {
                     inStoreRingEntryId: entry.id,
-                    eventType: type,
+                    eventType: type as InStoreRingChipEventType,
                     chipAmount: amount,
                 }
             })
@@ -169,7 +170,7 @@ export async function addRingGameChip(
         revalidatePath("/daily-visits")
         return {
             success: true,
-            message: type === "BUY_IN" ? "チップを追加しました" : "キャッシュアウトしました"
+            message: "データを登録しました"
         }
 
     } catch (error) {

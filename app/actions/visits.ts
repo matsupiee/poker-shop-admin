@@ -21,7 +21,7 @@ export type TournamentEventInfo = {
 }
 
 export type RingGameChipEventInfo = {
-    eventType: "BUY_IN" | "CASH_OUT"
+    eventType: string
     chipAmount: number
     timestamp: string
 }
@@ -171,7 +171,7 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
             const status = cashOut > 0 ? "left" : "playing"
 
             const timeline: RingGameChipEventInfo[] = entry.webCoinRingChipEvents.map(e => ({
-                eventType: e.eventType as "BUY_IN" | "CASH_OUT",
+                eventType: e.eventType,
                 chipAmount: e.chipAmount,
                 timestamp: format(e.createdAt, "HH:mm")
             }))
@@ -200,7 +200,7 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
             const status = cashOut > 0 ? "left" : "playing"
 
             const timeline: RingGameChipEventInfo[] = entry.inStoreRingChipEvents.map(e => ({
-                eventType: e.eventType as "BUY_IN" | "CASH_OUT",
+                eventType: e.eventType,
                 chipAmount: e.chipAmount,
                 timestamp: format(e.createdAt, "HH:mm")
             }))

@@ -34,11 +34,15 @@ export function RingGameDetailsPopover({ children, timeline }: RingGameDetailsPo
                                     <span className="text-muted-foreground font-mono text-xs">{event.timestamp}</span>
                                     <span className={cn(
                                         "font-medium text-xs px-2 py-0.5 rounded-full border",
-                                        event.eventType === "BUY_IN"
-                                            ? "bg-primary text-primary-foreground"
-                                            : "bg-muted text-muted-foreground"
+                                        event.eventType === "BUY_IN" ? "bg-primary text-primary-foreground" :
+                                            event.eventType === "CASH_OUT" ? "bg-orange-100 text-orange-800 border-orange-200" :
+                                                event.eventType === "GIFT" ? "bg-blue-100 text-blue-800 border-blue-200" :
+                                                    "bg-muted text-muted-foreground"
                                     )}>
-                                        {event.eventType === "BUY_IN" ? "BUY IN" : "CASH OUT"}
+                                        {event.eventType === "BUY_IN" ? "BUY IN" :
+                                            event.eventType === "CASH_OUT" ? "CASH OUT" :
+                                                event.eventType === "GIFT" ? "GIFT" :
+                                                    event.eventType === "WITHDRAW" ? "WITHDRAW" : event.eventType}
                                     </span>
                                     <span className="font-medium font-mono">
                                         {event.chipAmount.toLocaleString()}

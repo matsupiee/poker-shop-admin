@@ -14,8 +14,14 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Settings2, Plus } from "lucide-react"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 import { addRingGameEntry, addRingGameChip } from "@/app/actions/game-participation"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface WebCoinRingGameDialogProps {
     visitId: string
@@ -41,14 +47,14 @@ export function WebCoinRingGameDialog({
     const [cashOutAmount, setCashOutAmount] = React.useState<string>("")
     const [isSubmitting, setIsSubmitting] = React.useState(false)
     const [error, setError] = React.useState<string | null>(null)
-    const [activeTab, setActiveTab] = React.useState<string>("buy-in")
+    const [eventType, setEventType] = React.useState<string>("BUY_IN")
 
     React.useEffect(() => {
         if (open) {
             setChipAmount("")
             setCashOutAmount("")
             setError(null)
-            setActiveTab("buy-in")
+            setEventType("BUY_IN")
         }
     }, [open])
 
@@ -59,33 +65,17 @@ export function WebCoinRingGameDialog({
         try {
             if (existingEntry) {
                 // Management mode
-                if (activeTab === "buy-in") {
-                    const amount = parseInt(chipAmount)
-                    if (isNaN(amount) || amount <= 0) {
-                        setError("チップ量を入力してください")
-                        setIsSubmitting(false)
-                        return
-                    }
-                    const result = await addRingGameChip(existingEntry.id, "BUY_IN", amount, "WEB_COIN")
-                    if (!result.success) {
-                        setError(result.errors?._form?.[0] || "エラーが発生しました")
-                    } else {
-                        handleSuccess()
-                    }
+                const amount = eventType === "CASH_OUT" ? parseInt(cashOutAmount) : parseInt(chipAmount)
+                if (isNaN(amount) || amount < 0) {
+                    setError("金額を入力してください")
+                    setIsSubmitting(false)
+                    return
+                }
+                const result = await addRingGameChip(existingEntry.id, eventType, amount, "WEB_COIN")
+                if (!result.success) {
+                    setError(result.errors?._form?.[0] || "エラーが発生しました")
                 } else {
-                    // Cash out
-                    const amount = parseInt(cashOutAmount)
-                    if (isNaN(amount) || amount < 0) {
-                        setError("金額は0以上の数値を入力してください")
-                        setIsSubmitting(false)
-                        return
-                    }
-                    const result = await addRingGameChip(existingEntry.id, "CASH_OUT", amount, "WEB_COIN")
-                    if (!result.success) {
-                        setError(result.errors?._form?.[0] || "エラーが発生しました")
-                    } else {
-                        handleSuccess()
-                    }
+                    handleSuccess()
                 }
             } else {
                 // Registration mode
@@ -154,24 +144,22 @@ export function WebCoinRingGameDialog({
                         </div>
                     </div>
                 ) : (
-                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                        <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="buy-in">バイイン追加</TabsTrigger>
-                            <TabsTrigger value="cash-out">キャッシュアウト</TabsTrigger>
-                        </TabsList>
-                        <TabsContent value="buy-in" className="space-y-4 py-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="chipAmountManage">追加チップ量</Label>
-                                <Input
-                                    id="chipAmountManage"
-                                    type="number"
-                                    placeholder="例: 10000"
-                                    value={chipAmount}
-                                    onChange={(e) => setChipAmount(e.target.value)}
-                                />
-                            </div>
-                        </TabsContent>
-                        <TabsContent value="cash-out" className="space-y-4 py-4">
+                    <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="eventType">種別</Label>
+                            <Select value={eventType} onValueChange={setEventType}>
+                                <SelectTrigger id="eventType">
+                                    <SelectValue placeholder="種別を選択" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="BUY_IN">バイイン追加</SelectItem>
+                                    <SelectItem value="CASH_OUT">キャッシュアウト</SelectItem>
+                                    <SelectItem value="GIFT">ギフト（プレゼント）</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {eventType === "CASH_OUT" ? (
                             <div className="grid gap-2">
                                 <Label htmlFor="cashOutAmount">キャッシュアウト額 (チップ量)</Label>
                                 <Input
@@ -182,8 +170,21 @@ export function WebCoinRingGameDialog({
                                     onChange={(e) => setCashOutAmount(e.target.value)}
                                 />
                             </div>
-                        </TabsContent>
-                    </Tabs>
+                        ) : (
+                            <div className="grid gap-2">
+                                <Label htmlFor="chipAmountManage">
+                                    {eventType === "BUY_IN" ? "追加チップ量" : "ギフトチップ量"}
+                                </Label>
+                                <Input
+                                    id="chipAmountManage"
+                                    type="number"
+                                    placeholder="例: 10000"
+                                    value={chipAmount}
+                                    onChange={(e) => setChipAmount(e.target.value)}
+                                />
+                            </div>
+                        )}
+                    </div>
                 )}
 
                 {error && (
@@ -193,9 +194,9 @@ export function WebCoinRingGameDialog({
                 <DialogFooter>
                     <Button
                         onClick={handleSubmit}
-                        disabled={isSubmitting || (activeTab === "buy-in" ? !chipAmount : !cashOutAmount)}
+                        disabled={isSubmitting || (eventType === "CASH_OUT" ? !cashOutAmount : !chipAmount)}
                     >
-                        {isSubmitting ? "処理中..." : (isJoin ? "参加する" : (activeTab === "buy-in" ? "追加する" : "キャッシュアウト"))}
+                        {isSubmitting ? "処理中..." : (isJoin ? "参加する" : "登録する")}
                     </Button>
                 </DialogFooter>
             </DialogContent>
