@@ -23,7 +23,6 @@ export type TournamentEventInfo = {
 export type RingGameChipEventInfo = {
     eventType: "BUY_IN" | "CASH_OUT"
     chipAmount: number
-    chargeAmount?: number
     timestamp: string
 }
 
@@ -88,9 +87,18 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
                     createdAt: 'asc'
                 }
             },
-            ringGameEntries: {
+            webCoinRingEntry: {
                 include: {
-                    chipEvents: {
+                    webCoinRingChipEvents: {
+                        orderBy: {
+                            createdAt: 'asc'
+                        }
+                    }
+                }
+            },
+            inStoreRingEntry: {
+                include: {
+                    inStoreRingChipEvents: {
                         orderBy: {
                             createdAt: 'asc'
                         }
@@ -148,34 +156,65 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
 
 
         // Map ring games
-        const ringGames: RingGameInfo[] = visit.ringGameEntries.map(entry => {
-            const buyIn = entry.chipEvents
+        const ringGames: RingGameInfo[] = []
+
+        if (visit.webCoinRingEntry) {
+            const entry = visit.webCoinRingEntry
+            const buyIn = entry.webCoinRingChipEvents
                 .filter(e => e.eventType === "BUY_IN")
                 .reduce((sum, e) => sum + e.chipAmount, 0)
 
-            const cashOut = entry.chipEvents
+            const cashOut = entry.webCoinRingChipEvents
                 .filter(e => e.eventType === "CASH_OUT")
                 .reduce((sum, e) => sum + e.chipAmount, 0)
 
             const status = cashOut > 0 ? "left" : "playing"
 
-            const timeline: RingGameChipEventInfo[] = entry.chipEvents.map(e => ({
-                eventType: e.eventType,
+            const timeline: RingGameChipEventInfo[] = entry.webCoinRingChipEvents.map(e => ({
+                eventType: e.eventType as "BUY_IN" | "CASH_OUT",
                 chipAmount: e.chipAmount,
-                chargeAmount: e.chargeAmount ?? undefined,
                 timestamp: format(e.createdAt, "HH:mm")
             }))
 
-            return {
+            ringGames.push({
                 id: entry.id,
                 joined: true,
                 currentStatus: status,
                 totalBuyIn: buyIn,
                 totalCashOut: cashOut,
                 timeline,
-                ringGameType: entry.ringGameType
-            }
-        })
+                ringGameType: "WEB_COIN"
+            })
+        }
+
+        if (visit.inStoreRingEntry) {
+            const entry = visit.inStoreRingEntry
+            const buyIn = entry.inStoreRingChipEvents
+                .filter(e => e.eventType === "BUY_IN")
+                .reduce((sum, e) => sum + e.chipAmount, 0)
+
+            const cashOut = entry.inStoreRingChipEvents
+                .filter(e => e.eventType === "CASH_OUT")
+                .reduce((sum, e) => sum + e.chipAmount, 0)
+
+            const status = cashOut > 0 ? "left" : "playing"
+
+            const timeline: RingGameChipEventInfo[] = entry.inStoreRingChipEvents.map(e => ({
+                eventType: e.eventType as "BUY_IN" | "CASH_OUT",
+                chipAmount: e.chipAmount,
+                timestamp: format(e.createdAt, "HH:mm")
+            }))
+
+            ringGames.push({
+                id: entry.id,
+                joined: true,
+                currentStatus: status,
+                totalBuyIn: buyIn,
+                totalCashOut: cashOut,
+                timeline,
+                ringGameType: "IN_STORE"
+            })
+        }
 
         const settlementInfo = visit.settlements[0] ? {
             id: visit.settlements[0].id,
@@ -349,9 +388,14 @@ export async function getVisitSettlementDetails(visitId: string) {
                     chipEvents: true
                 }
             },
-            ringGameEntries: {
+            webCoinRingEntry: {
                 include: {
-                    chipEvents: true
+                    webCoinRingChipEvents: true
+                }
+            },
+            inStoreRingEntry: {
+                include: {
+                    inStoreRingChipEvents: true
                 }
             },
             inStoreCoinDeposit: true
@@ -421,19 +465,19 @@ export async function getVisitSettlementDetails(visitId: string) {
     }
 
     // 3. Ring Games
-    for (const entry of visit.ringGameEntries) {
-        const groupId = `ring_${entry.ringGameType}`
-        const groupName = entry.ringGameType === "WEB_COIN" ? "webコインリング" : "店内リング"
+    const processRingEntry = (entry: any, type: "WEB_COIN" | "IN_STORE") => {
+        const groupId = `ring_${type}`
+        const groupName = type === "WEB_COIN" ? "webコインリング" : "店内リング"
+        const events = type === "WEB_COIN" ? entry.webCoinRingChipEvents : entry.inStoreRingChipEvents
 
         // Buy In (Cost)
-        const buyIns = entry.chipEvents.filter(e => e.eventType === "BUY_IN")
+        const buyIns = events.filter((e: any) => e.eventType === "BUY_IN")
         for (const event of buyIns) {
-            const amount = event.chargeAmount ?? event.chipAmount
-            if (amount > 0) {
+            if (event.chipAmount > 0) {
                 items.push({
                     type: "ring_game_buyin",
                     label: "購入",
-                    amount: -amount,
+                    amount: -event.chipAmount,
                     groupId,
                     groupName
                 })
@@ -441,7 +485,7 @@ export async function getVisitSettlementDetails(visitId: string) {
         }
 
         // Cash Out (Credit)
-        const cashOuts = entry.chipEvents.filter(e => e.eventType === "CASH_OUT")
+        const cashOuts = events.filter((e: any) => e.eventType === "CASH_OUT")
         for (const event of cashOuts) {
             if (event.chipAmount > 0) {
                 items.push({
@@ -453,6 +497,14 @@ export async function getVisitSettlementDetails(visitId: string) {
                 })
             }
         }
+    }
+
+    if (visit.webCoinRingEntry) {
+        processRingEntry(visit.webCoinRingEntry, "WEB_COIN")
+    }
+
+    if (visit.inStoreRingEntry) {
+        processRingEntry(visit.inStoreRingEntry, "IN_STORE")
     }
 
     const netAmount = items.reduce((sum, item) => sum + item.amount, 0)

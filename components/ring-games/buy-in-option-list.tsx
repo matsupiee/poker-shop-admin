@@ -11,10 +11,12 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { BuyInOptionDialog } from './buy-in-option-dialog';
-import { deleteRingGameBuyInOption } from '@/app/actions/ring-game-buy-in-options';
+import {
+    deleteRingGameBuyInOption,
+    type RingGameBuyInOption,
+} from '@/app/actions/ring-game-buy-in-options';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import type { RingGameBuyInOption } from '@/lib/generated/prisma/client';
 import { RingGameType } from '@/lib/constants';
 import { Pencil, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -38,11 +40,11 @@ export function BuyInOptionList({ options }: BuyInOptionListProps) {
         setIsDialogOpen(true);
     };
 
-    const handleDelete = async (id: string) => {
+    const handleDelete = async (id: string, ringGameType: typeof RingGameType[keyof typeof RingGameType]) => {
         if (!confirm('本当に削除しますか？')) return;
 
         try {
-            const result = await deleteRingGameBuyInOption(id);
+            const result = await deleteRingGameBuyInOption(id, ringGameType as any);
             if (result.success) {
                 toast.success('削除しました');
                 router.refresh();
@@ -61,10 +63,6 @@ export function BuyInOptionList({ options }: BuyInOptionListProps) {
     const formatNumber = (num: number) => {
         return new Intl.NumberFormat('ja-JP').format(num);
     };
-
-    // Group by RingGameType for better display or just list them mixed?
-    // Let's list mixed but maybe sorted or filterable. The server action sorts by chip amount.
-    // Maybe explicit type labels are enough.
 
     return (
         <div>
@@ -86,15 +84,9 @@ export function BuyInOptionList({ options }: BuyInOptionListProps) {
                         {options.map((option) => (
                             <TableRow key={option.id}>
                                 <TableCell>
-                                    {option.ringGameType === RingGameType.WEB_COIN ? (
-                                        <Badge variant="default">
-                                            WEBコイン
-                                        </Badge>
-                                    ) : (
-                                        <Badge variant="outline">
-                                            店内リング
-                                        </Badge>
-                                    )}
+                                    <Badge variant="outline">
+                                        店内リング
+                                    </Badge>
                                 </TableCell>
                                 <TableCell className="text-right">{formatNumber(option.chipAmount)}</TableCell>
                                 <TableCell className="text-right">{formatCurrency(option.chargeAmount)}</TableCell>
@@ -111,7 +103,7 @@ export function BuyInOptionList({ options }: BuyInOptionListProps) {
                                             variant="ghost"
                                             size="icon"
                                             className="text-muted-foreground"
-                                            onClick={() => handleDelete(option.id)}
+                                            onClick={() => handleDelete(option.id, option.ringGameType)}
                                         >
                                             <Trash2 className="h-4 w-4" />
                                         </Button>

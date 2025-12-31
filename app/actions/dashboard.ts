@@ -23,10 +23,6 @@ export async function getDashboardStats(monthStr: string): Promise<DailyStat[]> 
 
     const days = eachDayOfInterval({ start: monthStart, end: monthEnd })
 
-    // Fetch all data for the month to minimize queries? 
-    // Or querying per day might be clearer but more DB calls (30 calls). 
-    // Given the likely volume, fetching all for month and aggregating in JS is better.
-
     // 1. Visits (with RingGame and Fees)
     const visits = await prisma.visit.findMany({
         where: {
@@ -36,16 +32,20 @@ export async function getDashboardStats(monthStr: string): Promise<DailyStat[]> 
             }
         },
         include: {
-            ringGameEntries: {
+            webCoinRingEntry: {
                 include: {
-                    chipEvents: true
+                    webCoinRingChipEvents: true
+                }
+            },
+            inStoreRingEntry: {
+                include: {
+                    inStoreRingChipEvents: true
                 }
             }
         }
     })
 
     // 2. Tournaments (with Entries and Prizes)
-    // We base Tournament stats on the Tournament date, not the player visit date (though they usually align)
     const tournaments = await prisma.tournament.findMany({
         where: {
             startAt: {
@@ -79,7 +79,7 @@ export async function getDashboardStats(monthStr: string): Promise<DailyStat[]> 
         const tournamentEntriesCount = dayTournaments.reduce((sum, t) => sum + t.entries.length, 0)
 
         // Ring Game Participants (Visits today that have a ring game entry)
-        const ringGameEntriesCount = dayVisits.filter(v => v.ringGameEntries.length > 0).length
+        const ringGameEntriesCount = dayVisits.filter(v => !!v.webCoinRingEntry || !!v.inStoreRingEntry).length
 
         // Profit Calculation
         let profit = 0
@@ -92,17 +92,24 @@ export async function getDashboardStats(monthStr: string): Promise<DailyStat[]> 
 
         // Ring Game
         dayVisits.forEach(v => {
-            v.ringGameEntries.forEach(entry => {
-                entry.chipEvents.forEach(e => {
+            if (v.webCoinRingEntry) {
+                v.webCoinRingEntry.webCoinRingChipEvents.forEach(e => {
                     if (e.eventType === 'BUY_IN') {
-                        // Income: chargeAmount is preferred, fallback to chipAmount
-                        profit += (e.chargeAmount ?? e.chipAmount)
+                        profit += e.chipAmount
                     } else if (e.eventType === 'CASH_OUT') {
-                        // Expense
                         profit -= e.chipAmount
                     }
                 })
-            })
+            }
+            if (v.inStoreRingEntry) {
+                v.inStoreRingEntry.inStoreRingChipEvents.forEach(e => {
+                    if (e.eventType === 'BUY_IN') {
+                        profit += e.chipAmount
+                    } else if (e.eventType === 'CASH_OUT') {
+                        profit -= e.chipAmount
+                    }
+                })
+            }
         })
 
         // Tournaments
@@ -110,13 +117,10 @@ export async function getDashboardStats(monthStr: string): Promise<DailyStat[]> 
             // + Entry Fees (Income)
             t.entries.forEach(entry => {
                 entry.chipEvents.forEach(e => {
-                    // ENTRY or ADD_CHIP are income
-                    // Use chargeAmount
                     profit += e.chargeAmount
                 })
 
                 // - Prizes (Expense)
-                // If the entry has a rank, check if there's a prize for that rank
                 if (entry.finalRank) {
                     const prize = t.tournamentPrizes.find(p => p.rank === entry.finalRank)
                     if (prize) {

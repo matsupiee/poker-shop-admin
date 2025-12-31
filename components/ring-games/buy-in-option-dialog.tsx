@@ -18,12 +18,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import type { RingGameBuyInOption } from '@/lib/generated/prisma/client';
 import { RingGameType, type RingGameTypeKey } from '@/lib/constants'; // Use local constant for client
 import { useState, useEffect } from 'react';
 import {
     createRingGameBuyInOption,
     updateRingGameBuyInOption,
+    type RingGameBuyInOption,
 } from '@/app/actions/ring-game-buy-in-options';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -40,7 +40,7 @@ export function BuyInOptionDialog({
     option,
 }: BuyInOptionDialogProps) {
     // edit mode only
-    const [ringGameType, setRingGameType] = useState<RingGameTypeKey>(RingGameType.WEB_COIN);
+    const [ringGameType, setRingGameType] = useState<RingGameTypeKey>(RingGameType.IN_STORE);
     const [chipAmount, setChipAmount] = useState('');
     const [chargeAmount, setChargeAmount] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,7 +52,7 @@ export function BuyInOptionDialog({
             setChipAmount(option.chipAmount.toString());
             setChargeAmount(option.chargeAmount.toString());
         } else {
-            setRingGameType(RingGameType.WEB_COIN);
+            setRingGameType(RingGameType.IN_STORE);
             setChipAmount('');
             setChargeAmount('');
         }
@@ -88,7 +88,7 @@ export function BuyInOptionDialog({
                 // Update
                 const result = await updateRingGameBuyInOption({
                     id: option.id,
-                    ringGameType,
+                    ringGameType: ringGameType as any,
                     chipAmount: parsedChipAmount,
                     chargeAmount: parsedChargeAmount,
                 });
@@ -103,7 +103,7 @@ export function BuyInOptionDialog({
             } else {
                 // Create
                 const result = await createRingGameBuyInOption({
-                    ringGameType,
+                    ringGameType: ringGameType as any,
                     chipAmount: parsedChipAmount,
                     chargeAmount: parsedChargeAmount,
                 });
@@ -149,7 +149,6 @@ export function BuyInOptionDialog({
                                     <SelectValue placeholder="種類を選択" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value={RingGameType.WEB_COIN}>WEBコイン</SelectItem>
                                     <SelectItem value={RingGameType.IN_STORE}>店内リング</SelectItem>
                                 </SelectContent>
                             </Select>

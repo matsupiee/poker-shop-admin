@@ -143,7 +143,8 @@ model Visit {
 
   player             Player              @relation(fields: [playerId], references: [id])
   tournamentEntries  TournamentEntry[]
-  ringGameEntries    RingGameEntry[]
+  webCoinRingEntry   WebCoinRingEntry?
+  inStoreRingEntry   InStoreRingEntry?
   settlements        Settlement[]
   webCoinDeposit     WebCoinDeposit?
   inStoreCoinDeposit InStoreCoinDeposit?
@@ -266,65 +267,88 @@ model TournamentChipEventOption {
   @@map("tournament_chip_event_options")
 }
 
-enum RingGameType {
-  WEB_COIN
-  IN_STORE
-}
-
-// リングゲーム参加
-model RingGameEntry {
+model WebCoinRingEntry {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  visitId String @map("visit_id")
+  visitId String @unique @map("visit_id")
 
-  // webコインリングか店内リングか選択
-  ringGameType RingGameType @map("ring_game_type")
+  visit                 Visit                  @relation(fields: [visitId], references: [id])
+  webCoinRingChipEvents WebCoinRingChipEvent[]
 
-  visit      Visit               @relation(fields: [visitId], references: [id])
-  chipEvents RingGameChipEvent[]
-
-  @@unique([visitId, ringGameType])
-  @@map("ring_game_entries")
+  @@map("web_coin_ring_entries")
 }
 
-// BUY_IN / CASH_OUT
-enum RingGameChipEventType {
+enum WebCoinRingChipEventType {
   BUY_IN
   CASH_OUT
+  GIFT // 早期来店などによるプレゼント
 }
 
-// リングゲームのチップの動きを記録する
-model RingGameChipEvent {
+model WebCoinRingChipEvent {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  ringGameEntryId String                @map("ring_game_entry_id")
-  eventType       RingGameChipEventType @map("event_type")
+  webCoinRingEntryId String                   @map("web_coin_ring_entry_id")
+  eventType          WebCoinRingChipEventType @map("event_type")
+  chipAmount         Int                      @map("chip_amount")
 
-  // チップ量
-  chipAmount   Int  @map("chip_amount")
-  // 支払請求額(BUY_INの場合だけ記録)
-  chargeAmount Int? @map("charge_amount")
+  webCoinRingEntry WebCoinRingEntry @relation(fields: [webCoinRingEntryId], references: [id])
 
-  ringGameEntry RingGameEntry @relation(fields: [ringGameEntryId], references: [id])
-
-  @@map("ring_game_chip_events")
+  @@map("web_coin_ring_chip_events")
 }
 
-model RingGameBuyInOption {
+model InStoreRingEntry {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  visitId String @unique @map("visit_id")
+
+  visit                 Visit                  @relation(fields: [visitId], references: [id])
+  inStoreRingChipEvents InStoreRingChipEvent[]
+
+  @@map("in_store_ring_entries")
+}
+
+enum InStoreRingChipEventType {
+  BUY_IN
+  CASH_OUT
+  GIFT // 早期来店などによるプレゼント
+  WITHDRAW // 引き出し(webコインリングは最後に精算するので、引き出しの概念はない)
+}
+
+model InStoreRingChipEvent {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  inStoreRingEntryId String                   @map("in_store_ring_entry_id")
+  eventType          InStoreRingChipEventType @map("event_type")
+  chipAmount         Int                      @map("chip_amount")
+
+  inStoreRingEntry InStoreRingEntry @relation(fields: [inStoreRingEntryId], references: [id])
+
+  @@map("in_store_ring_chip_events")
+}
+
+// 店内リングだけ、BUY_INできる額は固定
+model InStoreRingBuyInOption {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  ringGameType RingGameType @map("ring_game_type")
+  chipAmount   Int @map("chip_amount") // 例: 100
+  chargeAmount Int @map("charge_amount") // 例: 3000円
 
-  chipAmount   Int @map("chip_amount") // 例: 20000
-  chargeAmount Int @map("charge_amount") // 例: 2000円
+  @@map("in_store_ring_buy_in_options")
+}
 
-  @@map("ring_game_buy_in_options")
+enum RingGameType {
+  WEB_COIN
+  IN_STORE
 }
 
 model RingGameDesk {

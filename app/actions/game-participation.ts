@@ -69,42 +69,49 @@ export async function addTournamentEntry(
 export async function addRingGameEntry(
     visitId: string,
     chipAmount: number,
-    ringGameType: "WEB_COIN" | "IN_STORE",
-    chargeAmount?: number
+    ringGameType: "WEB_COIN" | "IN_STORE"
 ): Promise<GameParticipationState> {
     if (!visitId) return { errors: { visitId: ["Visit ID is required"] } }
     if (chipAmount < 0) return { errors: { _form: ["チップ量は0以上である必要があります"] } }
 
     try {
-        const existingEntry = await prisma.ringGameEntry.findUnique({
-            where: {
-                visitId_ringGameType: {
+        if (ringGameType === "WEB_COIN") {
+            const existingEntry = await prisma.webCoinRingEntry.findUnique({
+                where: { visitId }
+            })
+            if (existingEntry) {
+                return { success: false, errors: { _form: ["すでにこの種類のリングゲームに参加しています"] } }
+            }
+            await prisma.webCoinRingEntry.create({
+                data: {
                     visitId,
-                    ringGameType
-                }
-            }
-        })
-
-        if (existingEntry) {
-            return {
-                success: false,
-                errors: { _form: ["すでにこの種類のリングゲームに参加しています"] }
-            }
-        }
-
-        await prisma.ringGameEntry.create({
-            data: {
-                visitId,
-                ringGameType,
-                chipEvents: {
-                    create: {
-                        eventType: "BUY_IN",
-                        chipAmount: chipAmount,
-                        chargeAmount: chargeAmount
+                    webCoinRingChipEvents: {
+                        create: {
+                            eventType: "BUY_IN",
+                            chipAmount,
+                        }
                     }
                 }
+            })
+        } else {
+            const existingEntry = await prisma.inStoreRingEntry.findUnique({
+                where: { visitId }
+            })
+            if (existingEntry) {
+                return { success: false, errors: { _form: ["すでにこの種類のリングゲームに参加しています"] } }
             }
-        })
+            await prisma.inStoreRingEntry.create({
+                data: {
+                    visitId,
+                    inStoreRingChipEvents: {
+                        create: {
+                            eventType: "BUY_IN",
+                            chipAmount,
+                        }
+                    }
+                }
+            })
+        }
 
         revalidatePath("/daily-visits")
         return { success: true, message: "リングゲームに参加しました" }
@@ -123,31 +130,41 @@ export async function addRingGameChip(
     ringGameEntryId: string,
     type: "BUY_IN" | "CASH_OUT",
     amount: number,
-    chargeAmount?: number
+    ringGameType: "WEB_COIN" | "IN_STORE"
 ): Promise<GameParticipationState> {
     if (!ringGameEntryId) return { errors: { _form: ["Ring Game Entry ID is required"] } }
-    if (amount <= 0) return { errors: { _form: ["チップ量は0より大きい必要があります"] } }
+    if (amount < 0) return { errors: { _form: ["チップ量は0以上である必要があります"] } }
 
     try {
-        const entry = await prisma.ringGameEntry.findUnique({
-            where: { id: ringGameEntryId }
-        })
-
-        if (!entry) {
-            return {
-                success: false,
-                errors: { _form: ["リングゲームに参加していません"] }
+        if (ringGameType === "WEB_COIN") {
+            const entry = await prisma.webCoinRingEntry.findUnique({
+                where: { id: ringGameEntryId }
+            })
+            if (!entry) {
+                return { success: false, errors: { _form: ["リングゲームに参加していません"] } }
             }
+            await prisma.webCoinRingChipEvent.create({
+                data: {
+                    webCoinRingEntryId: entry.id,
+                    eventType: type,
+                    chipAmount: amount,
+                }
+            })
+        } else {
+            const entry = await prisma.inStoreRingEntry.findUnique({
+                where: { id: ringGameEntryId }
+            })
+            if (!entry) {
+                return { success: false, errors: { _form: ["リングゲームに参加していません"] } }
+            }
+            await prisma.inStoreRingChipEvent.create({
+                data: {
+                    inStoreRingEntryId: entry.id,
+                    eventType: type,
+                    chipAmount: amount,
+                }
+            })
         }
-
-        await prisma.ringGameChipEvent.create({
-            data: {
-                ringGameEntryId: entry.id,
-                eventType: type,
-                chipAmount: amount,
-                chargeAmount: chargeAmount
-            }
-        })
 
         revalidatePath("/daily-visits")
         return {

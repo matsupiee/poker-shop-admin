@@ -20,23 +20,20 @@ import {
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Coins, Settings2, Plus, ArrowRightLeft } from "lucide-react"
+import { Settings2, Plus } from "lucide-react"
 import { addRingGameEntry, addRingGameChip } from "@/app/actions/game-participation"
-import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-type RingGameBuyInOption = {
+type InStoreRingBuyInOption = {
     id: string
-    ringGameType: "WEB_COIN" | "IN_STORE"
     chipAmount: number
     chargeAmount: number
 }
 
-interface RingGameDialogProps {
+interface InStoreRingGameDialogProps {
     visitId: string
     playerName: string
-    ringGameType: "WEB_COIN" | "IN_STORE"
-    ringGameBuyInOptions: RingGameBuyInOption[]
+    buyInOptions: InStoreRingBuyInOption[]
     existingEntry?: {
         id: string
         totalBuyIn: number
@@ -46,17 +43,15 @@ interface RingGameDialogProps {
     trigger?: React.ReactNode
 }
 
-export function RingGameDialog({
+export function InStoreRingGameDialog({
     visitId,
     playerName,
-    ringGameType: initialType,
-    ringGameBuyInOptions,
+    buyInOptions,
     existingEntry,
     onSuccess,
     trigger
-}: RingGameDialogProps) {
+}: InStoreRingGameDialogProps) {
     const [open, setOpen] = React.useState(false)
-    const [ringGameType, setRingGameType] = React.useState<"WEB_COIN" | "IN_STORE">(initialType)
     const [selectedBuyInOptionId, setSelectedBuyInOptionId] = React.useState<string>("")
     const [chipAmount, setChipAmount] = React.useState<string>("")
     const [cashOutAmount, setCashOutAmount] = React.useState<string>("")
@@ -64,25 +59,19 @@ export function RingGameDialog({
     const [error, setError] = React.useState<string | null>(null)
     const [activeTab, setActiveTab] = React.useState<string>("buy-in")
 
-    // Sync ringGameType with initialType when props change or dialog opens
     React.useEffect(() => {
         if (open) {
-            setRingGameType(initialType)
             setSelectedBuyInOptionId("")
             setChipAmount("")
             setCashOutAmount("")
             setError(null)
             setActiveTab("buy-in")
         }
-    }, [open, initialType])
-
-    const availableBuyInOptions = React.useMemo(() => {
-        return ringGameBuyInOptions.filter(opt => opt.ringGameType === ringGameType)
-    }, [ringGameBuyInOptions, ringGameType])
+    }, [open])
 
     const handleBuyInOptionChange = (value: string) => {
         setSelectedBuyInOptionId(value)
-        const option = ringGameBuyInOptions.find(opt => opt.id === value)
+        const option = buyInOptions.find(opt => opt.id === value)
         if (option) {
             setChipAmount(option.chipAmount.toString())
         }
@@ -97,13 +86,12 @@ export function RingGameDialog({
                 // Management mode
                 if (activeTab === "buy-in") {
                     const amount = parseInt(chipAmount)
-                    const option = ringGameBuyInOptions.find(opt => opt.id === selectedBuyInOptionId)
                     if (isNaN(amount) || amount <= 0) {
-                        setError("チップ量を選択してください")
+                        setError("バイインオプションを選択してください")
                         setIsSubmitting(false)
                         return
                     }
-                    const result = await addRingGameChip(existingEntry.id, "BUY_IN", amount, option?.chargeAmount)
+                    const result = await addRingGameChip(existingEntry.id, "BUY_IN", amount, "IN_STORE")
                     if (!result.success) {
                         setError(result.errors?._form?.[0] || "エラーが発生しました")
                     } else {
@@ -112,12 +100,12 @@ export function RingGameDialog({
                 } else {
                     // Cash out
                     const amount = parseInt(cashOutAmount)
-                    if (isNaN(amount) || amount <= 0) {
-                        setError("金額は1以上の数値を入力してください")
+                    if (isNaN(amount) || amount < 0) {
+                        setError("金額は0以上の数値を入力してください")
                         setIsSubmitting(false)
                         return
                     }
-                    const result = await addRingGameChip(existingEntry.id, "CASH_OUT", amount)
+                    const result = await addRingGameChip(existingEntry.id, "CASH_OUT", amount, "IN_STORE")
                     if (!result.success) {
                         setError(result.errors?._form?.[0] || "エラーが発生しました")
                     } else {
@@ -127,13 +115,12 @@ export function RingGameDialog({
             } else {
                 // Registration mode
                 const amount = parseInt(chipAmount)
-                const option = ringGameBuyInOptions.find(opt => opt.id === selectedBuyInOptionId)
                 if (isNaN(amount) || amount < 0) {
-                    setError("チップ量を選択してください")
+                    setError("バイインオプションを選択してください")
                     setIsSubmitting(false)
                     return
                 }
-                const result = await addRingGameEntry(visitId, amount, ringGameType, option?.chargeAmount)
+                const result = await addRingGameEntry(visitId, amount, "IN_STORE")
                 if (!result.success) {
                     setError(result.errors?._form?.[0] || "エラーが発生しました")
                 } else {
@@ -163,47 +150,24 @@ export function RingGameDialog({
                 {trigger || (
                     <Button variant="outline" size="sm" className="h-8">
                         {isJoin ? <Plus className="w-4 h-4 mr-2" /> : <Settings2 className="w-4 h-4 mr-2" />}
-                        {isJoin ? "リング参加" : "リング管理"}
+                        {isJoin ? "店内リング参加" : "店内リング管理"}
                     </Button>
                 )}
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                     <DialogTitle>
-                        {isJoin ? "リングゲーム参加登録" : "リングゲーム管理"} ({playerName})
+                        {isJoin ? "店内リング参加登録" : "店内リング管理"} ({playerName})
                     </DialogTitle>
                     <DialogDescription>
                         {isJoin
-                            ? "リングゲームの種別とバイインオプションを選択してください。"
-                            : "チップの追加購入(リバイ)またはキャッシュアウトを記録します。"}
+                            ? "バイインオプションを選択してください。"
+                            : "チップの追加バイインまたはキャッシュアウトを記録します。"}
                     </DialogDescription>
                 </DialogHeader>
 
                 {isJoin ? (
                     <div className="grid gap-4 py-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="ringGameType">リングゲーム種別</Label>
-                            <Select value={ringGameType} onValueChange={(val) => setRingGameType(val as "WEB_COIN" | "IN_STORE")}>
-                                <SelectTrigger id="ringGameType">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="IN_STORE">
-                                        <div className="flex items-center gap-2">
-                                            <Badge variant="outline">店内リング</Badge>
-                                            <span className="text-muted-foreground text-xs">(In-Store)</span>
-                                        </div>
-                                    </SelectItem>
-                                    <SelectItem value="WEB_COIN">
-                                        <div className="flex items-center gap-2">
-                                            <Badge variant="default">WEBコイン</Badge>
-                                            <span className="text-muted-foreground text-xs">(Web Coin)</span>
-                                        </div>
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
                         <div className="grid gap-2">
                             <Label htmlFor="buyInOption">バイインオプション</Label>
                             <Select value={selectedBuyInOptionId} onValueChange={handleBuyInOptionChange}>
@@ -211,7 +175,7 @@ export function RingGameDialog({
                                     <SelectValue placeholder="選択してください" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {availableBuyInOptions.map((opt) => (
+                                    {buyInOptions.map((opt) => (
                                         <SelectItem key={opt.id} value={opt.id}>
                                             {opt.chipAmount.toLocaleString()}点 (¥{opt.chargeAmount.toLocaleString()})
                                         </SelectItem>
@@ -246,7 +210,7 @@ export function RingGameDialog({
                                         <SelectValue placeholder="選択してください" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {availableBuyInOptions.map((opt) => (
+                                        {buyInOptions.map((opt) => (
                                             <SelectItem key={opt.id} value={opt.id}>
                                                 {opt.chipAmount.toLocaleString()}点 (¥{opt.chargeAmount.toLocaleString()})
                                             </SelectItem>

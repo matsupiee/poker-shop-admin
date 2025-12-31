@@ -42,9 +42,10 @@ import { getDailyVisits, type DailyVisit } from "@/app/actions/visits"
 import { getTournaments } from "@/app/actions/tournaments"
 import { getRingGameBuyInOptions } from "@/app/actions/ring-game-buy-in-options"
 import { TournamentDialog } from "@/components/daily-visits/tournament-dialog"
-import { RingGameDialog } from "@/components/daily-visits/ring-game-dialog"
 import { TournamentResultUpdate } from "@/components/daily-visits/tournament-result-update"
 import { SettlementDialog } from "@/components/daily-visits/settlement-dialog"
+import { WebCoinRingGameDialog } from "@/components/daily-visits/web-coin-ring-game-dialog"
+import { InStoreRingGameDialog } from "@/components/daily-visits/in-store-ring-game-dialog"
 import { RingGameDetailsPopover } from "@/components/daily-visits/ring-game-details-popover"
 
 export default function DailyVisitsPage() {
@@ -389,7 +390,7 @@ export default function DailyVisitsPage() {
                                                                                 {ev.eventType === "CASH_OUT" ? "-" : ""}{ev.chipAmount.toLocaleString()}
                                                                             </div>
                                                                             <div className="text-muted-foreground">
-                                                                                {ev.eventType === "BUY_IN" ? `¥${(ev.chargeAmount ?? 0).toLocaleString()}` : "Cash-out"}
+                                                                                {ev.eventType === "BUY_IN" ? "Buy-in" : "Cash-out"}
                                                                             </div>
                                                                         </div>
                                                                     ))
@@ -397,12 +398,10 @@ export default function DailyVisitsPage() {
                                                                 {(() => {
                                                                     const entry = visit.ringGameEntries.find(e => e.ringGameType === "WEB_COIN");
                                                                     return (
-                                                                        <RingGameDialog
+                                                                        <WebCoinRingGameDialog
                                                                             visitId={visit.id}
                                                                             playerName={visit.player.name}
-                                                                            ringGameBuyInOptions={ringGameBuyInOptions}
                                                                             onSuccess={fetchData}
-                                                                            ringGameType="WEB_COIN"
                                                                             existingEntry={entry ? {
                                                                                 id: entry.id,
                                                                                 totalBuyIn: entry.totalBuyIn,
@@ -469,7 +468,7 @@ export default function DailyVisitsPage() {
                                                                                 {ev.eventType === "CASH_OUT" ? "-" : ""}{ev.chipAmount.toLocaleString()}
                                                                             </div>
                                                                             <div className="text-muted-foreground">
-                                                                                {ev.eventType === "BUY_IN" ? `¥${(ev.chargeAmount ?? 0).toLocaleString()}` : "Cash-out"}
+                                                                                {ev.eventType === "BUY_IN" ? "Buy-in" : "Cash-out"}
                                                                             </div>
                                                                         </div>
                                                                     ))
@@ -477,12 +476,11 @@ export default function DailyVisitsPage() {
                                                                 {(() => {
                                                                     const entry = visit.ringGameEntries.find(e => e.ringGameType === "IN_STORE");
                                                                     return (
-                                                                        <RingGameDialog
+                                                                        <InStoreRingGameDialog
                                                                             visitId={visit.id}
                                                                             playerName={visit.player.name}
-                                                                            ringGameBuyInOptions={ringGameBuyInOptions}
+                                                                            buyInOptions={ringGameBuyInOptions}
                                                                             onSuccess={fetchData}
-                                                                            ringGameType="IN_STORE"
                                                                             existingEntry={entry ? {
                                                                                 id: entry.id,
                                                                                 totalBuyIn: entry.totalBuyIn,

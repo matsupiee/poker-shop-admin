@@ -47,13 +47,13 @@ async function main() {
 
     // --- Players ---
     const playersData = [
-        { memberId: '1001', name: 'Player One', webCoinGameId: 'WC001' },
-        { memberId: '1002', name: 'Player Two', webCoinGameId: 'WC002' },
-        { memberId: '1003', name: 'Player Three', webCoinGameId: 'WC003' },
-        { memberId: '1004', name: 'Player Four', webCoinGameId: 'WC004' },
-        { memberId: '1005', name: 'Player Five', webCoinGameId: 'WC005' },
-        { memberId: '8001', name: 'Guest A', webCoinGameId: null },
-        { memberId: '8002', name: 'Guest B', webCoinGameId: null },
+        { memberId: '1001', name: 'タロー', webCoinGameId: 'WC001' },
+        { memberId: '1002', name: 'ハナコ', webCoinGameId: 'WC002' },
+        { memberId: '1003', name: 'マイケル', webCoinGameId: 'WC003' },
+        { memberId: '1004', name: 'ジョニー', webCoinGameId: 'WC004' },
+        { memberId: '1005', name: 'アリス', webCoinGameId: 'WC005' },
+        { memberId: '8001', name: 'サニー', webCoinGameId: null },
+        { memberId: '8002', name: 'ジェシカ', webCoinGameId: null },
     ];
 
     for (const p of playersData) {
@@ -127,30 +127,28 @@ async function main() {
 
     // --- Ring Game Buy-In Options ---
     const ringGameBuyInOptions = [
-        // WEB_COIN
-        { ringGameType: RingGameType.WEB_COIN, chipAmount: 20000, chargeAmount: 2000 },
-        { ringGameType: RingGameType.WEB_COIN, chipAmount: 40000, chargeAmount: 4000 },
-        { ringGameType: RingGameType.WEB_COIN, chipAmount: 60000, chargeAmount: 6000 },
-
         // IN_STORE
-        { ringGameType: RingGameType.IN_STORE, chipAmount: 20000, chargeAmount: 2000 },
-        { ringGameType: RingGameType.IN_STORE, chipAmount: 30000, chargeAmount: 3000 },
+        { chipAmount: 100, chargeAmount: 3000 },
+        { chipAmount: 200, chargeAmount: 5000 },
+        { chipAmount: 400, chargeAmount: 9000 },
     ];
 
     for (const opt of ringGameBuyInOptions) {
-        const existing = await prisma.ringGameBuyInOption.findFirst({
+        const existing = await prisma.inStoreRingBuyInOption.findFirst({
             where: {
-                ringGameType: opt.ringGameType,
                 chipAmount: opt.chipAmount,
                 chargeAmount: opt.chargeAmount
             }
         });
 
         if (!existing) {
-            await prisma.ringGameBuyInOption.create({
-                data: opt
+            await prisma.inStoreRingBuyInOption.create({
+                data: {
+                    chipAmount: opt.chipAmount,
+                    chargeAmount: opt.chargeAmount
+                }
             });
-            console.log(`Created RingGameBuyInOption: ${opt.ringGameType} - ${opt.chipAmount}`);
+            console.log(`Created InStoreRingBuyInOption: ${opt.chipAmount}`);
         }
     }
 
