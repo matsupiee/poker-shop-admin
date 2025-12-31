@@ -26,6 +26,8 @@ type BreakdownItem = {
     type: string
     label: string
     amount: number
+    groupId: string
+    groupName: string
 }
 
 export function SettlementDialog({ visitId, playerName, isSettled, onSuccess }: SettlementDialogProps) {
@@ -44,7 +46,7 @@ export function SettlementDialog({ visitId, playerName, isSettled, onSuccess }: 
             setLoading(true)
             setError(null)
             getVisitSettlementDetails(visitId)
-                .then((data) => {
+                .then((data: any) => {
                     setBreakdown(data.items)
                     setNetAmount(data.netAmount)
                     setDepositToSavings(data.isDeposited)
@@ -76,6 +78,18 @@ export function SettlementDialog({ visitId, playerName, isSettled, onSuccess }: 
             setSubmitting(false)
         }
     }
+
+    // Group items by groupId
+    const groupedBreakdown = React.useMemo(() => {
+        const groups: Record<string, { name: string, items: BreakdownItem[] }> = {}
+        breakdown.forEach(item => {
+            if (!groups[item.groupId]) {
+                groups[item.groupId] = { name: item.groupName, items: [] }
+            }
+            groups[item.groupId].items.push(item)
+        })
+        return groups
+    }, [breakdown])
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -114,22 +128,29 @@ export function SettlementDialog({ visitId, playerName, isSettled, onSuccess }: 
                                 </div>
                             )}
                             <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-                                <div className="p-4 space-y-2">
+                                <div className="p-4 space-y-4">
                                     {breakdown.length === 0 ? (
                                         <p className="text-center text-sm text-muted-foreground py-2">
                                             明細はありません
                                         </p>
                                     ) : (
-                                        breakdown.map((item, index) => (
-                                            <div key={index} className="flex justify-between items-center text-sm">
-                                                <span className="text-muted-foreground">{item.label}</span>
-                                                <span className={cn(
-                                                    "font-mono font-medium",
-                                                    item.amount > 0 ? "text-green-600" : "text-red-500"
-                                                )}>
-                                                    {item.amount > 0 ? "+" : ""}
-                                                    {item.amount.toLocaleString()}
-                                                </span>
+                                        Object.entries(groupedBreakdown).map(([groupId, group], groupIndex) => (
+                                            <div key={groupId} className={cn("space-y-2", groupIndex > 0 && "pt-2 border-t border-dashed")}>
+                                                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{group.name}</h4>
+                                                <div className="space-y-1">
+                                                    {group.items.map((item, index) => (
+                                                        <div key={index} className="flex justify-between items-center text-sm">
+                                                            <span className="text-muted-foreground">{item.label}</span>
+                                                            <span className={cn(
+                                                                "font-mono font-medium",
+                                                                item.amount > 0 ? "text-green-600" : "text-red-500"
+                                                            )}>
+                                                                {item.amount > 0 ? "+" : ""}
+                                                                {item.amount.toLocaleString()}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
                                         ))
                                     )}

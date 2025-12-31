@@ -364,26 +364,45 @@ export async function getVisitSettlementDetails(visitId: string) {
 
     // 1. Entrance & Food
     const items = []
-    // ... (rest of logic same)
 
     if (visit.entranceFee) {
-        items.push({ type: "entrance", label: "入場料", amount: -visit.entranceFee })
+        items.push({
+            type: "entrance",
+            label: "入場料",
+            amount: -visit.entranceFee,
+            groupId: "entrance",
+            groupName: "入場料"
+        })
     }
     if (visit.foodFee) {
-        items.push({ type: "food", label: "飲食代", amount: -visit.foodFee })
+        items.push({
+            type: "food",
+            label: "飲食代",
+            amount: -visit.foodFee,
+            groupId: "entrance",
+            groupName: "入場料"
+        })
     }
 
     // 2. Tournaments
     for (const entry of visit.tournamentEntries) {
-        // Costs
-        // Assuming chargeAmount is the cost.
-        const entryCost = entry.chipEvents.reduce((sum, e) => sum + e.chargeAmount, 0)
-        if (entryCost > 0) {
-            items.push({
-                type: "tournament_entry",
-                label: `大会: ${entry.tournament.name}`,
-                amount: -entryCost
-            })
+        const groupId = `tournament_${entry.tournamentId}`
+        const groupName = entry.tournament.name
+
+        // Detailed Cost Breakdown
+        for (const event of entry.chipEvents) {
+            if (event.chargeAmount > 0) {
+                let label = "エントリー"
+                if (event.eventType === "ADD_CHIP") label = "アドオン/リエントリー"
+
+                items.push({
+                    type: "tournament_entry",
+                    label: label,
+                    amount: -event.chargeAmount,
+                    groupId,
+                    groupName
+                })
+            }
         }
 
         // Prizes
@@ -392,8 +411,10 @@ export async function getVisitSettlementDetails(visitId: string) {
             if (prize) {
                 items.push({
                     type: "tournament_prize",
-                    label: `入賞: ${entry.tournament.name} (${entry.finalRank}位)`,
-                    amount: prize.amount
+                    label: `入賞 (${entry.finalRank}位)`,
+                    amount: prize.amount,
+                    groupId,
+                    groupName
                 })
             }
         }
@@ -401,30 +422,36 @@ export async function getVisitSettlementDetails(visitId: string) {
 
     // 3. Ring Games
     for (const entry of visit.ringGameEntries) {
-        const gameLabel = entry.ringGameType === "WEB_COIN" ? "Webリング" : "店内リング"
+        const groupId = `ring_${entry.ringGameType}`
+        const groupName = entry.ringGameType === "WEB_COIN" ? "webコインリング" : "店内リング"
 
         // Buy In (Cost)
         const buyIns = entry.chipEvents.filter(e => e.eventType === "BUY_IN")
-        const totalBuyInCost = buyIns.reduce((sum, e) => sum + (e.chargeAmount ?? e.chipAmount), 0)
-
-        if (totalBuyInCost > 0) {
-            items.push({
-                type: "ring_game_buyin",
-                label: `${gameLabel}購入`,
-                amount: -totalBuyInCost
-            })
+        for (const event of buyIns) {
+            const amount = event.chargeAmount ?? event.chipAmount
+            if (amount > 0) {
+                items.push({
+                    type: "ring_game_buyin",
+                    label: "購入",
+                    amount: -amount,
+                    groupId,
+                    groupName
+                })
+            }
         }
 
         // Cash Out (Credit)
         const cashOuts = entry.chipEvents.filter(e => e.eventType === "CASH_OUT")
-        const totalCashOutVal = cashOuts.reduce((sum, e) => sum + e.chipAmount, 0) // Assuming 1 chip = 1 currency unit
-
-        if (totalCashOutVal > 0) {
-            items.push({
-                type: "ring_game_cashout",
-                label: `${gameLabel}換金`,
-                amount: totalCashOutVal
-            })
+        for (const event of cashOuts) {
+            if (event.chipAmount > 0) {
+                items.push({
+                    type: "ring_game_cashout",
+                    label: "換金",
+                    amount: event.chipAmount,
+                    groupId,
+                    groupName
+                })
+            }
         }
     }
 

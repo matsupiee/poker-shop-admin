@@ -170,7 +170,7 @@ export default function DailyTournamentsPage() {
                                     <CardFooter className="pt-2 border-t bg-muted/20">
                                         <Link href={`/tournaments/${tournament.id}`} className="w-full">
                                             <Button variant="ghost" className="w-full justify-between group">
-                                                詳細・管理
+                                                詳細
                                                 <span className="group-hover:translate-x-1 transition-transform">→</span>
                                             </Button>
                                         </Link>
