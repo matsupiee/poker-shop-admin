@@ -137,7 +137,7 @@ export function WebCoinRingGameDialog({
                             <Input
                                 id="chipAmount"
                                 type="number"
-                                placeholder="例: 20000"
+                                placeholder="例: 200"
                                 value={chipAmount}
                                 onChange={(e) => setChipAmount(e.target.value)}
                             />
@@ -165,7 +165,7 @@ export function WebCoinRingGameDialog({
                                 <Input
                                     id="cashOutAmount"
                                     type="number"
-                                    placeholder="例: 15000"
+                                    placeholder="例: 150"
                                     value={cashOutAmount}
                                     onChange={(e) => setCashOutAmount(e.target.value)}
                                 />
@@ -178,7 +178,7 @@ export function WebCoinRingGameDialog({
                                 <Input
                                     id="chipAmountManage"
                                     type="number"
-                                    placeholder="例: 10000"
+                                    placeholder="例: 100"
                                     value={chipAmount}
                                     onChange={(e) => setChipAmount(e.target.value)}
                                 />

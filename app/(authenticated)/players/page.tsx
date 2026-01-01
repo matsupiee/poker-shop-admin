@@ -24,7 +24,7 @@ export default async function PlayersPage() {
         name: p.name,
         gameId: p.webCoinGameId ?? undefined,
         webCoinBalance: p.webCoinBalance,
-        inStoreCoinBalance: p.inStoreCoinBalance,
+        inStoreChipBalance: p.inStoreChipBalance,
         visitCount: p._count.visits,
         lastVisit: p.visits[0] ? format(p.visits[0].createdAt, 'yyyy-MM-dd') : "-",
         status: "active"

@@ -32,7 +32,7 @@ type InStoreRingBuyInOption = {
 interface InStoreRingGameDialogProps {
     visitId: string
     playerName: string
-    inStoreCoinBalance: number
+    inStoreChipBalance: number
     buyInOptions: InStoreRingBuyInOption[]
     existingEntry?: {
         id: string
@@ -46,7 +46,7 @@ interface InStoreRingGameDialogProps {
 export function InStoreRingGameDialog({
     visitId,
     playerName,
-    inStoreCoinBalance,
+    inStoreChipBalance,
     buyInOptions,
     existingEntry,
     onSuccess,
@@ -98,8 +98,8 @@ export function InStoreRingGameDialog({
                     return
                 }
 
-                if (eventType === "WITHDRAW" && amount > inStoreCoinBalance) {
-                    setError(`預かりチップ残高(${inStoreCoinBalance.toLocaleString()}点)を超える額は入力できません`)
+                if (eventType === "WITHDRAW" && amount > inStoreChipBalance) {
+                    setError(`預かりチップ残高(${inStoreChipBalance.toLocaleString()}点)を超える額は入力できません`)
                     setIsSubmitting(false)
                     return
                 }
@@ -245,7 +245,7 @@ export function InStoreRingGameDialog({
                                 <Input
                                     id="cashOutAmount"
                                     type="number"
-                                    placeholder="例: 15000"
+                                    placeholder="例: 150"
                                     value={cashOutAmount}
                                     onChange={(e) => setCashOutAmount(e.target.value)}
                                 />
@@ -258,14 +258,14 @@ export function InStoreRingGameDialog({
                                     </Label>
                                     {eventType === "WITHDRAW" && (
                                         <span className="text-xs text-muted-foreground">
-                                            残高: {inStoreCoinBalance.toLocaleString()}点
+                                            残高: {inStoreChipBalance.toLocaleString()}点
                                         </span>
                                     )}
                                 </div>
                                 <Input
                                     id="chipAmountExtra"
                                     type="number"
-                                    placeholder="例: 10000"
+                                    placeholder="例: 100"
                                     value={chipAmount}
                                     onChange={(e) => setChipAmount(e.target.value)}
                                 />

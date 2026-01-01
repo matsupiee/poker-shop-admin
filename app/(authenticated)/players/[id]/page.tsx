@@ -61,7 +61,7 @@ export default async function PlayerDetailPage(props: PageProps) {
                 name: player.name,
                 memberId: player.memberId,
                 webCoinBalance: player.webCoinBalance,
-                inStoreCoinBalance: player.inStoreCoinBalance,
+                inStoreChipBalance: player.inStoreChipBalance,
             }}
             visits={visits}
             chipLogs={chipLogs}

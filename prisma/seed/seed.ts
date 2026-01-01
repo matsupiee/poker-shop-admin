@@ -58,13 +58,25 @@ async function main() {
 
     for (const p of playersData) {
         if (!await prisma.player.findUnique({ where: { memberId: p.memberId } })) {
-            await prisma.player.create({
+            const player = await prisma.player.create({
                 data: {
                     memberId: p.memberId,
                     name: p.name,
                     webCoinGameId: p.webCoinGameId,
                     webCoinBalance: 10000,
-                    inStoreCoinBalance: 20000,
+                    inStoreChipBalance: 1000,
+                },
+            });
+            await prisma.webCoinDeposit.create({
+                data: {
+                    playerId: player.id,
+                    depositAmount: 10000,
+                },
+            });
+            await prisma.inStoreChipDeposit.create({
+                data: {
+                    playerId: player.id,
+                    depositAmount: 1000,
                 },
             });
             console.log(`Created Player: ${p.name}`);

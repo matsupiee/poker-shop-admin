@@ -35,7 +35,7 @@ type PlayerDetailProps = {
         name: string
         memberId: string
         webCoinBalance: number
-        inStoreCoinBalance: number
+        inStoreChipBalance: number
     }
     visits: Visit[]
     chipLogs: ChipLog[]
@@ -72,7 +72,7 @@ export function PlayerDetail({ player, visits, chipLogs }: PlayerDetailProps) {
                         <CardTitle className="text-sm font-medium">店内リング 貯チップ</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{player.inStoreCoinBalance.toLocaleString()}</div>
+                        <div className="text-2xl font-bold">{player.inStoreChipBalance.toLocaleString()}</div>
                     </CardContent>
                 </Card>
                 <Card>

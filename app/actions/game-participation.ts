@@ -2,7 +2,8 @@
 
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
-import { WebCoinRingChipEventType, InStoreRingChipEventType } from "@/lib/generated/prisma"
+import { withdrawInStoreChip } from "./in-store-chip"
+import { InStoreRingChipEventType, WebCoinRingChipEventType } from "@/lib/generated/prisma/client"
 
 export type GameParticipationState = {
     errors?: {
@@ -166,24 +167,29 @@ export async function addRingGameChip(
                 return { success: false, errors: { _form: ["リングゲームに参加していません"] } }
             }
 
-            if (type === "WITHDRAW") {
-                if (amount > entry.visit.player.inStoreCoinBalance) {
-                    return {
-                        success: false,
-                        errors: {
-                            _form: [`預かりチップ残高(${entry.visit.player.inStoreCoinBalance.toLocaleString()}点)を超える額は引き出せません`]
-                        }
-                    }
-                }
-            }
-
-            await prisma.inStoreRingChipEvent.create({
+            // まずInStoreRingChipEventを作成
+            const chipEvent = await prisma.inStoreRingChipEvent.create({
                 data: {
                     inStoreRingEntryId: entry.id,
                     eventType: type as InStoreRingChipEventType,
                     chipAmount: amount,
                 }
             })
+
+            // WITHDRAWの場合は、chipEventIdを渡してwithdrawInStoreChipメソッドを呼び出す
+            if (type === "WITHDRAW") {
+                try {
+                    await withdrawInStoreChip(entry.visit.playerId, amount, chipEvent.id)
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : "引き出しに失敗しました"
+                    return {
+                        success: false,
+                        errors: {
+                            _form: [errorMessage]
+                        }
+                    }
+                }
+            }
         }
 
         revalidatePath("/daily-visits")

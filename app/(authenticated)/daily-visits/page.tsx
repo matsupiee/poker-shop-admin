@@ -489,7 +489,7 @@ export default function DailyVisitsPage() {
                                                                         <InStoreRingGameDialog
                                                                             visitId={visit.id}
                                                                             playerName={visit.player.name}
-                                                                            inStoreCoinBalance={visit.player.inStoreCoinBalance}
+                                                                            inStoreChipBalance={visit.player.inStoreChipBalance}
                                                                             buyInOptions={ringGameBuyInOptions}
                                                                             onSuccess={fetchData}
                                                                             existingEntry={entry ? {

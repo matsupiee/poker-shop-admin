@@ -40,7 +40,7 @@ export type Player = {
     name: string
     gameId?: string
     webCoinBalance: number
-    inStoreCoinBalance: number
+    inStoreChipBalance: number
     visitCount: number
     lastVisit: string
     status: "active" | "inactive" | "banned"
@@ -153,7 +153,7 @@ export function PlayerList({ initialPlayers }: PlayerListProps) {
                                                 {player.webCoinBalance.toLocaleString()}
                                             </TableCell>
                                             <TableCell className="text-right font-medium">
-                                                {player.inStoreCoinBalance.toLocaleString()}
+                                                {player.inStoreChipBalance.toLocaleString()}
                                             </TableCell>
                                             <TableCell className="text-right">{player.visitCount}回</TableCell>
                                             <TableCell className="text-right">{player.lastVisit}</TableCell>

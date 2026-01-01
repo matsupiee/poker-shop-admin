@@ -46,7 +46,7 @@ export type DailyVisit = {
         name: string
         image?: string
         webCoinBalance: number
-        inStoreCoinBalance: number
+        inStoreChipBalance: number
     }
     tournaments: TournamentEventInfo[]
     ringGameEntries: RingGameInfo[]
@@ -233,7 +233,7 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
                 memberId: visit.player.memberId,
                 name: visit.player.name,
                 webCoinBalance: visit.player.webCoinBalance,
-                inStoreCoinBalance: visit.player.inStoreCoinBalance,
+                inStoreChipBalance: visit.player.inStoreChipBalance,
                 // image: visit.player.image // Add if available in schema later
             },
             tournaments,
@@ -402,7 +402,7 @@ export async function getVisitSettlementDetails(visitId: string) {
                     inStoreRingChipEvents: true
                 }
             },
-            inStoreCoinDeposit: true
+            inStoreChipDeposit: true
         }
     })
 
@@ -516,7 +516,7 @@ export async function getVisitSettlementDetails(visitId: string) {
     return {
         items,
         netAmount,
-        isDeposited: !!visit.inStoreCoinDeposit
+        isDeposited: !!visit.inStoreChipDeposit
     }
 }
 
@@ -557,7 +557,7 @@ export async function settleVisit(visitId: string, breakdown: any, netAmount: nu
                 throw new Error("来店データが見つかりません")
             }
 
-            const existingDeposit = await tx.inStoreCoinDeposit.findUnique({
+            const existingDeposit = await tx.inStoreChipDeposit.findUnique({
                 where: { visitId } // using unique visitId
             })
 
@@ -565,17 +565,17 @@ export async function settleVisit(visitId: string, breakdown: any, netAmount: nu
                 if (existingDeposit) {
                     // Update existing deposit
                     const diff = netAmount - existingDeposit.depositAmount
-                    await tx.inStoreCoinDeposit.update({
+                    await tx.inStoreChipDeposit.update({
                         where: { id: existingDeposit.id },
                         data: { depositAmount: netAmount }
                     })
                     await tx.player.update({
                         where: { id: visit.player.id },
-                        data: { inStoreCoinBalance: { increment: diff } }
+                        data: { inStoreChipBalance: { increment: diff } }
                     })
                 } else {
                     // Create new deposit
-                    await tx.inStoreCoinDeposit.create({
+                    await tx.inStoreChipDeposit.create({
                         data: {
                             playerId: visit.player.id,
                             depositAmount: netAmount,
@@ -584,19 +584,19 @@ export async function settleVisit(visitId: string, breakdown: any, netAmount: nu
                     })
                     await tx.player.update({
                         where: { id: visit.player.id },
-                        data: { inStoreCoinBalance: { increment: netAmount } }
+                        data: { inStoreChipBalance: { increment: netAmount } }
                     })
                 }
             } else {
                 // Not depositing or invalid amount for deposit
                 if (existingDeposit) {
                     // Remove existing deposit and revert balance
-                    await tx.inStoreCoinDeposit.delete({
+                    await tx.inStoreChipDeposit.delete({
                         where: { id: existingDeposit.id }
                     })
                     await tx.player.update({
                         where: { id: visit.player.id },
-                        data: { inStoreCoinBalance: { decrement: existingDeposit.depositAmount } }
+                        data: { inStoreChipBalance: { decrement: existingDeposit.depositAmount } }
                     })
                 }
             }

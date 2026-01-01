@@ -114,7 +114,7 @@ model Player {
   name          String
 
   webCoinBalance     Int @default(0) @map("web_coin_balance")
-  inStoreCoinBalance Int @default(0) @map("in_store_coin_balance")
+  inStoreChipBalance Int @default(0) @map("in_store_chip_balance")
 
   visits Visit[]
 
@@ -331,6 +331,9 @@ model InStoreRingChipEvent {
 
   inStoreRingEntry InStoreRingEntry @relation(fields: [inStoreRingEntryId], references: [id])
 
+  // eventType=WITHDRAWの場合のみInStoreChipWithdrawとリレーションが貼られる
+  inStoreChipWithdraw InStoreChipWithdraw?
+
   @@map("in_store_ring_chip_events")
 }
 
@@ -494,11 +497,13 @@ model InStoreChipWithdraw {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
-  playerId String @map("player_id")
+  playerId               String  @map("player_id")
+  inStoreRingChipEventId String? @unique @map("in_store_ring_chip_event_id")
 
   withdrawAmount Int @map("withdraw_amount") // 引き出し額
 
   player                            Player                             @relation(fields: [playerId], references: [id])
+  inStoreRingChipEvent              InStoreRingChipEvent?              @relation(fields: [inStoreRingChipEventId], references: [id])
   inStoreChipDepositWithdrawAmounts InStoreChipDepositWithdrawAmount[]
 
   @@map("in_store_chip_withdraws")
