@@ -1,9 +1,5 @@
 "use client"
 
-import * as React from "react"
-import { useRouter } from "next/navigation"
-import { format, parse } from "date-fns"
-import { ja } from "date-fns/locale"
 import { Calendar as CalendarIcon, Users, Trophy, DollarSign } from "lucide-react"
 
 import { DailyStat } from "@/app/actions/dashboard"
@@ -16,13 +12,13 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover"
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 
 interface DashboardViewProps {
@@ -31,13 +27,26 @@ interface DashboardViewProps {
 }
 
 export function DashboardView({ month, stats }: DashboardViewProps) {
-    const router = useRouter()
-    const [open, setOpen] = React.useState(false)
+    // Generate month options (last 24 months + next 12 months)
+    const generateMonthOptions = () => {
+        const options: Array<{ value: string; label: string }> = []
+        const now = new Date()
+        const startDate = new Date(now.getFullYear() - 2, now.getMonth(), 1)
+        const endDate = new Date(now.getFullYear() + 1, now.getMonth(), 1)
 
-    // Parse the current month string to a Date object
-    const currentDate = React.useMemo(() => {
-        return parse(month, "yyyy-MM", new Date())
-    }, [month])
+        let current = new Date(startDate)
+        while (current <= endDate) {
+            const year = current.getFullYear()
+            const monthNum = current.getMonth() + 1
+            const value = `${year}-${String(monthNum).padStart(2, '0')}`
+            const label = `${year}年${monthNum}月`
+            options.push({ value, label })
+            current.setMonth(current.getMonth() + 1)
+        }
+        return options.reverse() // 新しい月が上に来るように
+    }
+
+    const monthOptions = generateMonthOptions()
 
     // Calculate Monthly Totals
     const totalVisitors = stats.reduce((acc, curr) => acc + curr.visitors, 0)
@@ -46,13 +55,8 @@ export function DashboardView({ month, stats }: DashboardViewProps) {
     const totalRingGameEntries = stats.reduce((acc, curr) => acc + curr.ringGameEntries, 0)
     const totalProfit = stats.reduce((acc, curr) => acc + curr.grossProfit, 0)
 
-    const handleMonthSelect = (date: Date | undefined) => {
-        if (date) {
-            const newMonth = format(date, "yyyy-MM")
-            setOpen(false)
-            // Use window.location for full page reload to fetch new data
-            window.location.href = `/?month=${newMonth}`
-        }
+    const handleMonthChange = (newMonth: string) => {
+        window.location.href = `/?month=${newMonth}`
     }
 
     return (
@@ -60,33 +64,19 @@ export function DashboardView({ month, stats }: DashboardViewProps) {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
                 <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">対象月:</span>
-                    <Popover open={open} onOpenChange={setOpen}>
-                        <PopoverTrigger asChild>
-                            <Button
-                                variant="outline"
-                                className={cn(
-                                    "w-[200px] justify-start text-left font-normal",
-                                    !currentDate && "text-muted-foreground"
-                                )}
-                            >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {currentDate ? format(currentDate, "yyyy年M月", { locale: ja }) : "月を選択"}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="end">
-                            <Calendar
-                                mode="single"
-                                selected={currentDate}
-                                onSelect={handleMonthSelect}
-                                captionLayout="dropdown"
-                                startMonth={new Date(2020, 0)}
-                                endMonth={new Date(new Date().getFullYear() + 1, 11)}
-                                locale={ja}
-                                className="rounded-md border"
-                            />
-                        </PopoverContent>
-                    </Popover>
+                    <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                    <Select value={month} onValueChange={handleMonthChange}>
+                        <SelectTrigger className="w-[160px]">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {monthOptions.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
             </div>
 
