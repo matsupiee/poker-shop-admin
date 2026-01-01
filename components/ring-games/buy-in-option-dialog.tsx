@@ -18,7 +18,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { RingGameType, type RingGameTypeKey } from '@/lib/constants'; // Use local constant for client
+import { RingGameType, RingGameTypeKey } from '@/lib/prisma/client-safe-types'; // Use local constant for client
 import { useState, useEffect } from 'react';
 import {
     createRingGameBuyInOption,

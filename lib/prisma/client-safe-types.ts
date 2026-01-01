@@ -7,4 +7,4 @@ export const RingGameType = {
   IN_STORE: "IN_STORE"
 } as const
 
-export type RingGameType = typeof RingGameType[keyof typeof RingGameType]
+export type RingGameTypeKey = typeof RingGameType[keyof typeof RingGameType]

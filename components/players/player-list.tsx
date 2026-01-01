@@ -33,6 +33,7 @@ import { useRouter } from "next/navigation"
 import { CreatePlayerDialog } from "./create-player-dialog"
 import { EditPlayerDialog } from "./edit-player-dialog"
 import { RegisterVisitDialog } from "@/components/visits/register-visit-dialog"
+import { CopyButton } from "@/components/ui/copy-button"
 
 export type Player = {
     id: string
@@ -132,14 +133,28 @@ export function PlayerList({ initialPlayers }: PlayerListProps) {
                                             className="cursor-pointer hover:bg-muted/50"
                                             onClick={() => router.push(`/players/${player.id}`)}
                                         >
-                                            <TableCell className="font-medium">{player.memberId}</TableCell>
+                                            <TableCell className="font-medium">
+                                                <div className="flex items-center gap-2">
+                                                    <span>{player.memberId}</span>
+                                                    <CopyButton
+                                                        text={player.memberId}
+                                                        successMessage="会員IDをコピーしました"
+                                                    />
+                                                </div>
+                                            </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-3">
                                                     <Avatar className="h-8 w-8">
                                                         <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${player.name}`} alt={player.name} />
                                                         <AvatarFallback>{player.name.slice(0, 2)}</AvatarFallback>
                                                     </Avatar>
-                                                    <span>{player.name}</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span>{player.name}</span>
+                                                        <CopyButton
+                                                            text={player.name}
+                                                            successMessage="名前をコピーしました"
+                                                        />
+                                                    </div>
                                                 </div>
                                             </TableCell>
                                             <TableCell>

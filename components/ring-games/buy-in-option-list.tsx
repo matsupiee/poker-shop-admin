@@ -17,7 +17,7 @@ import {
 } from '@/app/actions/ring-game-buy-in-options';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { RingGameType } from '@/lib/constants';
+import { RingGameType } from '@/lib/prisma/client-safe-types';
 import { Pencil, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
