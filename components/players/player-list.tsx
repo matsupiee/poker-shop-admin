@@ -166,11 +166,6 @@ export function PlayerList({ initialPlayers }: PlayerListProps) {
                                                         </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
-                                                        <DropdownMenuLabel>アクション</DropdownMenuLabel>
-                                                        <DropdownMenuItem onClick={() => navigator.clipboard.writeText(player.memberId)}>
-                                                            会員IDをコピー
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuSeparator />
                                                         <DropdownMenuItem onClick={() => {
                                                             setSelectedPlayerForVisit(player)
                                                             setIsVisitDialogOpen(true)

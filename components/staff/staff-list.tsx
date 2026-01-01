@@ -123,7 +123,6 @@ export function StaffList({ initialStaff }: StaffListProps) {
                                                         </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
-                                                        <DropdownMenuLabel>アクション</DropdownMenuLabel>
                                                         <DropdownMenuItem>詳細を表示</DropdownMenuItem>
                                                         <DropdownMenuItem>編集する</DropdownMenuItem>
                                                         <DropdownMenuItem className="text-destructive">削除する</DropdownMenuItem>
