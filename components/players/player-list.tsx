@@ -127,7 +127,11 @@ export function PlayerList({ initialPlayers }: PlayerListProps) {
                                     </TableRow>
                                 ) : (
                                     filteredPlayers.map((player) => (
-                                        <TableRow key={player.id}>
+                                        <TableRow
+                                            key={player.id}
+                                            className="cursor-pointer hover:bg-muted/50"
+                                            onClick={() => router.push(`/players/${player.id}`)}
+                                        >
                                             <TableCell className="font-medium">{player.memberId}</TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-3">
@@ -157,7 +161,7 @@ export function PlayerList({ initialPlayers }: PlayerListProps) {
                                             </TableCell>
                                             <TableCell className="text-right">{player.visitCount}回</TableCell>
                                             <TableCell className="text-right">{player.lastVisit}</TableCell>
-                                            <TableCell>
+                                            <TableCell onClick={(e) => e.stopPropagation()}>
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
                                                         <Button variant="ghost" className="h-8 w-8 p-0">
@@ -173,14 +177,12 @@ export function PlayerList({ initialPlayers }: PlayerListProps) {
                                                             来店登録
                                                         </DropdownMenuItem>
                                                         <DropdownMenuSeparator />
-                                                        <DropdownMenuItem onClick={() => router.push(`/players/${player.id}`)}>詳細を表示</DropdownMenuItem>
                                                         <DropdownMenuItem onClick={() => {
                                                             setSelectedPlayerForEdit(player)
                                                             setIsEditDialogOpen(true)
                                                         }}>
                                                             編集する
                                                         </DropdownMenuItem>
-                                                        <DropdownMenuItem className="text-destructive">削除する</DropdownMenuItem>
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                             </TableCell>

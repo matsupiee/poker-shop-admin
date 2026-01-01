@@ -112,70 +112,64 @@ export default function DailyTournamentsPage() {
                             }
 
                             return (
-                                <Card key={tournament.id} className="flex flex-col">
-                                    <CardHeader className="pb-3">
-                                        <div className="flex justify-between items-start gap-2">
-                                            <Badge
-                                                variant="outline"
-                                                className={cn(
-                                                    "mb-2",
-                                                    status === "registering" && "bg-green-100 text-green-800 border-green-200",
-                                                    status === "running" && "bg-blue-100 text-blue-800 border-blue-200",
-                                                    status === "finished" && "bg-gray-100 text-gray-800 border-gray-200",
-                                                    status === "upcoming" && "bg-yellow-50 text-yellow-800 border-yellow-200"
-                                                )}
-                                            >
-                                                {status === "upcoming" ? "開催前" :
-                                                    status === "registering" ? "エントリー受付中" :
-                                                        status === "running" ? "進行中" :
-                                                            status === "finished" ? "終了" : "中止"}
-                                            </Badge>
-                                            <div className="flex items-center gap-2">
-                                                <div className="text-sm font-medium text-muted-foreground flex items-center">
-                                                    <Clock className="w-3 h-3 mr-1" />
-                                                    {startTime}
-                                                </div>
-                                                <EditTournamentDialog tournament={tournament} onTournamentUpdated={fetchTournaments} />
-                                            </div>
-                                        </div>
-                                        <CardTitle className="leading-tight">{tournament.name}</CardTitle>
-                                        <CardDescription>
-                                            Buy-in: 設定なし
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="flex-1">
-                                        <div className="grid grid-cols-2 gap-4 mt-2">
-                                            <div className="flex flex-col">
-                                                <span className="text-xs text-muted-foreground">エントリー</span>
-                                                <div className="flex items-end gap-1">
-                                                    <Users className="w-5 h-5 mb-0.5 text-primary" />
-                                                    <span className="text-xl font-bold">{tournament._count?.entries || 0}</span>
+                                <Link key={tournament.id} href={`/tournaments/${tournament.id}`} className="h-full">
+                                    <Card className="flex flex-col h-full">
+                                        <CardHeader className="pb-3">
+                                            <div className="flex justify-between items-start gap-2">
+                                                <Badge
+                                                    variant="outline"
+                                                    className={cn(
+                                                        "mb-2",
+                                                        status === "registering" && "bg-green-100 text-green-800 border-green-200",
+                                                        status === "running" && "bg-blue-100 text-blue-800 border-blue-200",
+                                                        status === "finished" && "bg-gray-100 text-gray-800 border-gray-200",
+                                                        status === "upcoming" && "bg-yellow-50 text-yellow-800 border-yellow-200"
+                                                    )}
+                                                >
+                                                    {status === "upcoming" ? "開催前" :
+                                                        status === "registering" ? "エントリー受付中" :
+                                                            status === "running" ? "進行中" :
+                                                                status === "finished" ? "終了" : "中止"}
+                                                </Badge>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="text-sm font-medium text-muted-foreground flex items-center">
+                                                        <Clock className="w-3 h-3 mr-1" />
+                                                        {startTime}
+                                                    </div>
+                                                    <EditTournamentDialog tournament={tournament} onTournamentUpdated={fetchTournaments} />
                                                 </div>
                                             </div>
-                                            <div className="flex flex-col">
-                                                <span className="text-xs text-muted-foreground">プライズ総額</span>
-                                                <div className="flex items-end gap-1">
-                                                    <Trophy className="w-5 h-5 mb-0.5 text-yellow-600" />
-                                                    <span className="text-sm font-medium pt-1">
-                                                        {tournament.tournamentPrizes && tournament.tournamentPrizes.length > 0 ? (
-                                                            `${tournament.tournamentPrizes.reduce((sum: number, p: any) => sum + p.amount, 0).toLocaleString()}`
-                                                        ) : (
-                                                            "未確定"
-                                                        )}
-                                                    </span>
+                                            <CardTitle className="leading-tight">{tournament.name}</CardTitle>
+                                            <CardDescription>
+                                                Buy-in: 設定なし
+                                            </CardDescription>
+                                        </CardHeader>
+                                        <CardContent className="flex-1">
+                                            <div className="grid grid-cols-2 gap-4 mt-2">
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs text-muted-foreground">エントリー</span>
+                                                    <div className="flex items-end gap-1">
+                                                        <Users className="w-5 h-5 mb-0.5 text-primary" />
+                                                        <span className="text-xl font-bold">{tournament._count?.entries || 0}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs text-muted-foreground">プライズ総額</span>
+                                                    <div className="flex items-end gap-1">
+                                                        <Trophy className="w-5 h-5 mb-0.5 text-yellow-600" />
+                                                        <span className="text-sm font-medium pt-1">
+                                                            {tournament.tournamentPrizes && tournament.tournamentPrizes.length > 0 ? (
+                                                                `${tournament.tournamentPrizes.reduce((sum: number, p: any) => sum + p.amount, 0).toLocaleString()}`
+                                                            ) : (
+                                                                "未確定"
+                                                            )}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </CardContent>
-                                    <CardFooter className="pt-2 border-t bg-muted/20">
-                                        <Link href={`/tournaments/${tournament.id}`} className="w-full">
-                                            <Button variant="ghost" className="w-full justify-between group">
-                                                詳細
-                                                <span className="group-hover:translate-x-1 transition-transform">→</span>
-                                            </Button>
-                                        </Link>
-                                    </CardFooter>
-                                </Card>
+                                        </CardContent>
+                                    </Card>
+                                </Link>
                             )
                         })}
                     </>

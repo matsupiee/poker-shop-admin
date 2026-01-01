@@ -38,6 +38,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import Link from "next/link"
 import { getDailyVisits, type DailyVisit } from "@/app/actions/visits"
 import { getTournaments } from "@/app/actions/tournaments"
 import { getRingGameBuyInOptions } from "@/app/actions/ring-game-buy-in-options"
@@ -250,13 +251,13 @@ export default function DailyVisitsPage() {
                                                 {visit.player.memberId}
                                             </TableCell>
                                             <TableCell>
-                                                <div className="flex items-center gap-3">
+                                                <Link href={`/players/${visit.player.id}`} className="flex items-center gap-3 hover:opacity-70 transition-opacity">
                                                     <Avatar className="h-8 w-8">
                                                         <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${visit.player.name}`} />
                                                         <AvatarFallback>{visit.player.name.slice(0, 2)}</AvatarFallback>
                                                     </Avatar>
                                                     <span className="font-medium">{visit.player.name}</span>
-                                                </div>
+                                                </Link>
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center text-muted-foreground">
