@@ -1,12 +1,12 @@
 "use client"
 
 import * as React from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { format } from "date-fns"
-import { Calendar as CalendarIcon, Users, Trophy, DollarSign, Receipt } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { format, parse } from "date-fns"
+import { ja } from "date-fns/locale"
+import { Calendar as CalendarIcon, Users, Trophy, DollarSign } from "lucide-react"
 
 import { DailyStat } from "@/app/actions/dashboard"
-import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
     Table,
@@ -16,6 +16,13 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 
 interface DashboardViewProps {
@@ -25,6 +32,12 @@ interface DashboardViewProps {
 
 export function DashboardView({ month, stats }: DashboardViewProps) {
     const router = useRouter()
+    const [open, setOpen] = React.useState(false)
+
+    // Parse the current month string to a Date object
+    const currentDate = React.useMemo(() => {
+        return parse(month, "yyyy-MM", new Date())
+    }, [month])
 
     // Calculate Monthly Totals
     const totalVisitors = stats.reduce((acc, curr) => acc + curr.visitors, 0)
@@ -33,10 +46,12 @@ export function DashboardView({ month, stats }: DashboardViewProps) {
     const totalRingGameEntries = stats.reduce((acc, curr) => acc + curr.ringGameEntries, 0)
     const totalProfit = stats.reduce((acc, curr) => acc + curr.grossProfit, 0)
 
-    const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newMonth = e.target.value
-        if (newMonth) {
-            router.push(`/?month=${newMonth}`)
+    const handleMonthSelect = (date: Date | undefined) => {
+        if (date) {
+            const newMonth = format(date, "yyyy-MM")
+            setOpen(false)
+            // Use window.location for full page reload to fetch new data
+            window.location.href = `/?month=${newMonth}`
         }
     }
 
@@ -46,12 +61,32 @@ export function DashboardView({ month, stats }: DashboardViewProps) {
                 <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
                 <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">対象月:</span>
-                    <Input
-                        type="month"
-                        value={month}
-                        onChange={handleMonthChange}
-                        className="w-auto"
-                    />
+                    <Popover open={open} onOpenChange={setOpen}>
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant="outline"
+                                className={cn(
+                                    "w-[200px] justify-start text-left font-normal",
+                                    !currentDate && "text-muted-foreground"
+                                )}
+                            >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {currentDate ? format(currentDate, "yyyy年M月", { locale: ja }) : "月を選択"}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="end">
+                            <Calendar
+                                mode="single"
+                                selected={currentDate}
+                                onSelect={handleMonthSelect}
+                                captionLayout="dropdown"
+                                startMonth={new Date(2020, 0)}
+                                endMonth={new Date(new Date().getFullYear() + 1, 11)}
+                                locale={ja}
+                                className="rounded-md border"
+                            />
+                        </PopoverContent>
+                    </Popover>
                 </div>
             </div>
 

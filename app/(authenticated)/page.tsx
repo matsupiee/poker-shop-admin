@@ -4,12 +4,15 @@ import { getDashboardStats } from "@/app/actions/dashboard"
 import { DashboardView } from "@/components/dashboard/dashboard-view"
 
 type Props = {
-  searchParams: { [key: string]: string | string[] | undefined }
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
 export default async function DashboardPage({ searchParams }: Props) {
+  // Await searchParams before accessing properties
+  const params = await searchParams
+
   // Get month from searchParams or default to current month
-  let month = typeof searchParams.month === 'string' ? searchParams.month : format(new Date(), "yyyy-MM")
+  let month = typeof params.month === 'string' ? params.month : format(new Date(), "yyyy-MM")
 
   // Validate format (simple check)
   if (!/^\d{4}-\d{2}$/.test(month)) {

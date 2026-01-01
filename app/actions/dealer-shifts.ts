@@ -12,6 +12,7 @@ export type DealerShiftState = {
         startedAt?: string[]
         endedAt?: string[]
         ringGameDeskId?: string[]
+        ringGameType?: string[]
         rakeChip?: string[]
         jpRakeChip?: string[]
         dealerChip?: string[]
@@ -26,6 +27,7 @@ export async function createDealerShift(prevState: DealerShiftState, formData: F
     const startTimeStr = formData.get("startTime") as string // HH:MM
     const endTimeStr = formData.get("endTime") as string // HH:MM
     const ringGameDeskId = formData.get("ringGameDeskId") as string
+    const ringGameTypeStr = formData.get("ringGameType") as string
     const rakeChipStr = formData.get("rakeChip") as string
     const jpRakeChipStr = formData.get("jpRakeChip") as string
     const dealerChipStr = formData.get("dealerChip") as string
@@ -46,6 +48,10 @@ export async function createDealerShift(prevState: DealerShiftState, formData: F
 
     if (!ringGameDeskId) {
         errors.ringGameDeskId = ["テーブルを選択してください"]
+    }
+
+    if (!ringGameTypeStr || !Object.values(RingGameType).includes(ringGameTypeStr as RingGameType)) {
+        errors.ringGameType = ["リングゲームの種類を選択してください"]
     }
 
     const rakeChip = rakeChipStr ? parseInt(rakeChipStr) : 0
@@ -87,7 +93,7 @@ export async function createDealerShift(prevState: DealerShiftState, formData: F
                 rakeChip,
                 jpRakeChip,
                 dealerChip,
-                ringGameType: RingGameType.IN_STORE,
+                ringGameType: ringGameTypeStr as RingGameType,
             }
         })
 
@@ -111,6 +117,7 @@ export async function updateDealerShift(id: string, prevState: DealerShiftState,
     const startTimeStr = formData.get("startTime") as string // HH:MM
     const endTimeStr = formData.get("endTime") as string // HH:MM
     const ringGameDeskId = formData.get("ringGameDeskId") as string
+    const ringGameTypeStr = formData.get("ringGameType") as string
     const rakeChipStr = formData.get("rakeChip") as string
     const jpRakeChipStr = formData.get("jpRakeChip") as string
     const dealerChipStr = formData.get("dealerChip") as string
@@ -131,6 +138,10 @@ export async function updateDealerShift(id: string, prevState: DealerShiftState,
 
     if (!ringGameDeskId) {
         errors.ringGameDeskId = ["テーブルを選択してください"]
+    }
+
+    if (!ringGameTypeStr || !Object.values(RingGameType).includes(ringGameTypeStr as RingGameType)) {
+        errors.ringGameType = ["リングゲームの種類を選択してください"]
     }
 
     const rakeChip = rakeChipStr ? parseInt(rakeChipStr) : 0
@@ -170,6 +181,7 @@ export async function updateDealerShift(id: string, prevState: DealerShiftState,
                 startedAt,
                 endedAt,
                 ringGameDeskId,
+                ringGameType: ringGameTypeStr as RingGameType,
                 rakeChip,
                 jpRakeChip,
                 dealerChip,

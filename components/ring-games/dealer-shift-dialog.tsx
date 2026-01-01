@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Plus, Pencil } from "lucide-react"
+import { Plus } from "lucide-react"
 import {
     Select,
     SelectContent,
@@ -23,6 +23,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { RingGameDealerShift, Staff, RingGameDesk } from "@/lib/generated/prisma/client"
+import { RingGameType } from "@/lib/prisma/client-safe-types"
 import { format } from "date-fns"
 
 const initialState = {
@@ -94,6 +95,7 @@ function DealerShiftForm({
 
     const [staffId, setStaffId] = useState(initialData?.staffId || "")
     const [deskId, setDeskId] = useState(initialData?.ringGameDeskId || "")
+    const [ringGameType, setRingGameType] = useState<string>(initialData?.ringGameType || RingGameType.WEB_COIN)
 
     // Initial values
     const today = format(new Date(), 'yyyy-MM-dd')
@@ -192,6 +194,27 @@ function DealerShiftForm({
                         <input type="hidden" name="ringGameDeskId" value={deskId} />
                         {state.errors?.ringGameDeskId && (
                             <p className="text-red-500 text-xs mt-1">{state.errors.ringGameDeskId[0]}</p>
+                        )}
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="ringGameType" className="text-right">
+                        種類
+                    </Label>
+                    <div className="col-span-3">
+                        <Select value={ringGameType} onValueChange={setRingGameType} name="ringGameType">
+                            <SelectTrigger>
+                                <SelectValue placeholder="リングゲームの種類を選択" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value={RingGameType.WEB_COIN}>Webコイン</SelectItem>
+                                <SelectItem value={RingGameType.IN_STORE}>店内チップ</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <input type="hidden" name="ringGameType" value={ringGameType} />
+                        {state.errors?.ringGameType && (
+                            <p className="text-red-500 text-xs mt-1">{state.errors.ringGameType[0]}</p>
                         )}
                     </div>
                 </div>
