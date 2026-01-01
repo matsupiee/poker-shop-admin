@@ -52,22 +52,6 @@ export function RegisterVisitDialog({ player, open, onOpenChange }: RegisterVisi
                     <input type="hidden" name="playerId" value={player.id} />
                     <div className="grid gap-4 py-4">
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="visitDate" className="text-right">
-                                来店日
-                            </Label>
-                            <div className="col-span-3">
-                                <Input
-                                    id="visitDate"
-                                    name="visitDate"
-                                    type="date"
-                                    defaultValue={new Date().toISOString().split('T')[0]}
-                                />
-                                {state.errors?.visitDate && (
-                                    <p className="text-red-500 text-xs mt-1">{state.errors.visitDate[0]}</p>
-                                )}
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="entranceFee" className="text-right">
                                 入場料
                             </Label>

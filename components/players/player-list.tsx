@@ -194,6 +194,7 @@ export function PlayerList({ initialPlayers }: PlayerListProps) {
             </Card>
 
             <RegisterVisitDialog
+                key={selectedPlayerForVisit?.id}
                 player={selectedPlayerForVisit}
                 open={isVisitDialogOpen}
                 onOpenChange={setIsVisitDialogOpen}

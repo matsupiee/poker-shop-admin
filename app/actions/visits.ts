@@ -253,23 +253,14 @@ export type RegisterVisitState = {
     success?: boolean
 }
 
-export async function registerVisit(prevState: RegisterVisitState, formData: FormData): Promise<RegisterVisitState> {
+export async function registerVisit(_: RegisterVisitState, formData: FormData): Promise<RegisterVisitState> {
     const playerId = formData.get("playerId") as string
-    const visitDateStr = formData.get("visitDate") as string // Expecting YYYY-MM-DD
     const entranceFeeStr = formData.get("entranceFee") as string
 
     const errors: RegisterVisitState["errors"] = {}
 
     if (!playerId) {
         errors.playerId = ["プレイヤーが選択されていません"]
-    }
-
-    let visitDate = new Date()
-    if (visitDateStr) {
-        visitDate = new Date(visitDateStr)
-        if (isNaN(visitDate.getTime())) {
-            errors.visitDate = ["日付の形式が正しくありません"]
-        }
     }
 
     let entranceFee: number | null = null
@@ -287,26 +278,25 @@ export async function registerVisit(prevState: RegisterVisitState, formData: For
     }
 
     try {
-        // Check for existing visit on the same day
-        const startOfDay = new Date(visitDate)
-        startOfDay.setHours(0, 0, 0, 0)
-        const endOfDay = new Date(visitDate)
-        endOfDay.setHours(23, 59, 59, 999)
-
         const existing = await prisma.visit.findFirst({
             where: {
                 playerId: playerId,
-                createdAt: {
-                    gte: startOfDay,
-                    lte: endOfDay
-                }
-            }
+            },
+            include: {
+                settlements: true
+            },
+            orderBy: [{
+                createdAt: "desc"
+            }]
         })
 
-        if (existing) {
+        console.log({ existing })
+
+        // Only block if there's an existing visit without settlement
+        if (existing && existing.settlements.length === 0) {
             return {
                 errors: {
-                    _form: ["このプレイヤーは指定された日に既に来店済みです"]
+                    _form: ["このプレイヤーの前回の来店の決済が完了していません。決済を完了させてください"]
                 }
             }
         }
@@ -314,7 +304,6 @@ export async function registerVisit(prevState: RegisterVisitState, formData: For
         await prisma.visit.create({
             data: {
                 playerId: playerId,
-                createdAt: visitDate, // Use visitDate input as createdAt
                 entranceFee: entranceFee,
             }
         })
