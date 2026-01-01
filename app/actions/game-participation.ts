@@ -153,11 +153,30 @@ export async function addRingGameChip(
             })
         } else {
             const entry = await prisma.inStoreRingEntry.findUnique({
-                where: { id: ringGameEntryId }
+                where: { id: ringGameEntryId },
+                include: {
+                    visit: {
+                        include: {
+                            player: true
+                        }
+                    }
+                }
             })
             if (!entry) {
                 return { success: false, errors: { _form: ["リングゲームに参加していません"] } }
             }
+
+            if (type === "WITHDRAW") {
+                if (amount > entry.visit.player.inStoreCoinBalance) {
+                    return {
+                        success: false,
+                        errors: {
+                            _form: [`預かりチップ残高(${entry.visit.player.inStoreCoinBalance.toLocaleString()}点)を超える額は引き出せません`]
+                        }
+                    }
+                }
+            }
+
             await prisma.inStoreRingChipEvent.create({
                 data: {
                     inStoreRingEntryId: entry.id,

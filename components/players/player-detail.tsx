@@ -34,6 +34,7 @@ type PlayerDetailProps = {
         id: string
         name: string
         memberId: string
+        webCoinBalance: number
         inStoreCoinBalance: number
     }
     visits: Visit[]
@@ -60,10 +61,18 @@ export function PlayerDetail({ player, visits, chipLogs }: PlayerDetailProps) {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">所持チップ</CardTitle>
+                        <CardTitle className="text-sm font-medium">預け入れ中webコイン</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{player.inStoreCoinBalance.toLocaleString()} G</div>
+                        <div className="text-2xl font-bold">{player.webCoinBalance.toLocaleString()}</div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">店内リング 貯チップ</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{player.inStoreCoinBalance.toLocaleString()}</div>
                     </CardContent>
                 </Card>
                 <Card>
@@ -140,7 +149,7 @@ export function PlayerDetail({ player, visits, chipLogs }: PlayerDetailProps) {
                                                 <TableCell>{format(new Date(log.createdAt), "yyyy/MM/dd HH:mm")}</TableCell>
                                                 <TableCell>{log.type === "deposit" ? "預入" : "引出"}</TableCell>
                                                 <TableCell className={`text-right font-bold ${log.type === "deposit" ? "text-green-600" : "text-red-600"}`}>
-                                                    {log.type === "deposit" ? "+" : "-"}{log.amount.toLocaleString()} G
+                                                    {log.type === "deposit" ? "+" : "-"}{log.amount.toLocaleString()}
                                                 </TableCell>
                                             </TableRow>
                                         ))}

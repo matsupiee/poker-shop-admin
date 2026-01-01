@@ -122,9 +122,9 @@ model Player {
   webCoinDeposits  WebCoinDeposit[]
   webCoinWithdraws WebCoinWithdraw[]
 
-  // 店内コイン
-  inStoreCoinDeposits  InStoreCoinDeposit[]
-  inStoreCoinWithdraws InStoreCoinWithdraw[]
+  // 店内リング専用チップ
+  inStoreChipDeposits  InStoreChipDeposit[]
+  inStoreChipWithdraws InStoreChipWithdraw[]
 
   @@map("players")
 }
@@ -147,7 +147,7 @@ model Visit {
   inStoreRingEntry   InStoreRingEntry?
   settlements        Settlement[]
   webCoinDeposit     WebCoinDeposit?
-  inStoreCoinDeposit InStoreCoinDeposit?
+  inStoreChipDeposit InStoreChipDeposit?
 
   @@map("visits")
 }
@@ -457,7 +457,7 @@ model WebCoinWithdraw {
   @@map("web_coin_withdraws")
 }
 
-model InStoreCoinDeposit {
+model InStoreChipDeposit {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -468,28 +468,28 @@ model InStoreCoinDeposit {
 
   player                            Player                             @relation(fields: [playerId], references: [id])
   visit                             Visit?                             @relation(fields: [visitId], references: [id])
-  inStoreCoinDepositWithdrawAmounts InStoreCoinDepositWithdrawAmount[]
+  inStoreChipDepositWithdrawAmounts InStoreChipDepositWithdrawAmount[]
 
-  @@map("in_store_coin_deposits")
+  @@map("in_store_chip_deposits")
 }
 
-model InStoreCoinDepositWithdrawAmount {
+model InStoreChipDepositWithdrawAmount {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
-  inStoreCoinDepositId  String @map("in_store_coin_deposit_id")
-  inStoreCoinWithdrawId String @map("in_store_coin_withdraw_id")
+  inStoreChipDepositId  String @map("in_store_chip_deposit_id")
+  inStoreChipWithdrawId String @map("in_store_chip_withdraw_id")
 
   amount Int
 
-  inStoreCoinDeposit  InStoreCoinDeposit  @relation(fields: [inStoreCoinDepositId], references: [id])
-  inStoreCoinWithdraw InStoreCoinWithdraw @relation(fields: [inStoreCoinWithdrawId], references: [id])
+  inStoreChipDeposit  InStoreChipDeposit  @relation(fields: [inStoreChipDepositId], references: [id])
+  inStoreChipWithdraw InStoreChipWithdraw @relation(fields: [inStoreChipWithdrawId], references: [id])
 
-  @@map("in_store_coin_deposit_withdraw_amounts")
+  @@map("in_store_chip_deposit_withdraw_amounts")
 }
 
-model InStoreCoinWithdraw {
+model InStoreChipWithdraw {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
@@ -499,7 +499,7 @@ model InStoreCoinWithdraw {
   withdrawAmount Int @map("withdraw_amount") // 引き出し額
 
   player                            Player                             @relation(fields: [playerId], references: [id])
-  inStoreCoinDepositWithdrawAmounts InStoreCoinDepositWithdrawAmount[]
+  inStoreChipDepositWithdrawAmounts InStoreChipDepositWithdrawAmount[]
 
-  @@map("in_store_coin_withdraws")
+  @@map("in_store_chip_withdraws")
 }

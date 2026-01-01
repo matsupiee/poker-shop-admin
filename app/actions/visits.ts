@@ -45,6 +45,8 @@ export type DailyVisit = {
         memberId: string
         name: string
         image?: string
+        webCoinBalance: number
+        inStoreCoinBalance: number
     }
     tournaments: TournamentEventInfo[]
     ringGameEntries: RingGameInfo[]
@@ -230,6 +232,8 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
                 id: visit.player.id.toString(),
                 memberId: visit.player.memberId,
                 name: visit.player.name,
+                webCoinBalance: visit.player.webCoinBalance,
+                inStoreCoinBalance: visit.player.inStoreCoinBalance,
                 // image: visit.player.image // Add if available in schema later
             },
             tournaments,

@@ -16,10 +16,10 @@ export default async function PlayerDetailPage(props: PageProps) {
             visits: {
                 orderBy: { createdAt: 'desc' }
             },
-            inStoreCoinDeposits: {
+            inStoreChipDeposits: {
                 orderBy: { createdAt: 'desc' }
             },
-            inStoreCoinWithdraws: {
+            inStoreChipWithdraws: {
                 orderBy: { createdAt: 'desc' }
             }
         }
@@ -36,14 +36,14 @@ export default async function PlayerDetailPage(props: PageProps) {
         foodFee: v.foodFee
     }))
 
-    const deposits: ChipLog[] = player.inStoreCoinDeposits.map(d => ({
+    const deposits: ChipLog[] = player.inStoreChipDeposits.map(d => ({
         id: d.id,
         type: 'deposit',
         amount: d.depositAmount,
         createdAt: d.createdAt
     }))
 
-    const withdraws: ChipLog[] = player.inStoreCoinWithdraws.map(w => ({
+    const withdraws: ChipLog[] = player.inStoreChipWithdraws.map(w => ({
         id: w.id,
         type: 'withdraw',
         amount: w.withdrawAmount,
@@ -60,6 +60,7 @@ export default async function PlayerDetailPage(props: PageProps) {
                 id: player.id,
                 name: player.name,
                 memberId: player.memberId,
+                webCoinBalance: player.webCoinBalance,
                 inStoreCoinBalance: player.inStoreCoinBalance,
             }}
             visits={visits}

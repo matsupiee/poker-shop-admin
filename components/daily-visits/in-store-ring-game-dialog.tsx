@@ -32,6 +32,7 @@ type InStoreRingBuyInOption = {
 interface InStoreRingGameDialogProps {
     visitId: string
     playerName: string
+    inStoreCoinBalance: number
     buyInOptions: InStoreRingBuyInOption[]
     existingEntry?: {
         id: string
@@ -45,6 +46,7 @@ interface InStoreRingGameDialogProps {
 export function InStoreRingGameDialog({
     visitId,
     playerName,
+    inStoreCoinBalance,
     buyInOptions,
     existingEntry,
     onSuccess,
@@ -92,6 +94,12 @@ export function InStoreRingGameDialog({
 
                 if (eventType === "BUY_IN" && !selectedBuyInOptionId) {
                     setError("バイインオプションを選択してください")
+                    setIsSubmitting(false)
+                    return
+                }
+
+                if (eventType === "WITHDRAW" && amount > inStoreCoinBalance) {
+                    setError(`預かりチップ残高(${inStoreCoinBalance.toLocaleString()}点)を超える額は入力できません`)
                     setIsSubmitting(false)
                     return
                 }
@@ -244,9 +252,16 @@ export function InStoreRingGameDialog({
                             </div>
                         ) : (
                             <div className="grid gap-2">
-                                <Label htmlFor="chipAmountExtra">
-                                    {eventType === "GIFT" ? "ギフトチップ量" : "引き出しチップ量"}
-                                </Label>
+                                <div className="flex justify-between items-center">
+                                    <Label htmlFor="chipAmountExtra">
+                                        {eventType === "GIFT" ? "ギフトチップ量" : "引き出しチップ量"}
+                                    </Label>
+                                    {eventType === "WITHDRAW" && (
+                                        <span className="text-xs text-muted-foreground">
+                                            残高: {inStoreCoinBalance.toLocaleString()}点
+                                        </span>
+                                    )}
+                                </div>
                                 <Input
                                     id="chipAmountExtra"
                                     type="number"
