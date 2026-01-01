@@ -25,6 +25,7 @@ export type Visit = {
 export type ChipLog = {
     id: string
     type: "deposit" | "withdraw"
+    chipType: "web_coin" | "in_store_chip"
     amount: number
     createdAt: Date
 }
@@ -38,10 +39,11 @@ type PlayerDetailProps = {
         inStoreChipBalance: number
     }
     visits: Visit[]
-    chipLogs: ChipLog[]
+    webCoinLogs: ChipLog[]
+    inStoreChipLogs: ChipLog[]
 }
 
-export function PlayerDetail({ player, visits, chipLogs }: PlayerDetailProps) {
+export function PlayerDetail({ player, visits, webCoinLogs, inStoreChipLogs }: PlayerDetailProps) {
     return (
         <div className="container mx-auto py-10 space-y-8">
             <div className="flex items-center gap-4">
@@ -88,7 +90,8 @@ export function PlayerDetail({ player, visits, chipLogs }: PlayerDetailProps) {
             <Tabs defaultValue="visits" className="space-y-4">
                 <TabsList>
                     <TabsTrigger value="visits">来店履歴</TabsTrigger>
-                    <TabsTrigger value="chips">チップ履歴</TabsTrigger>
+                    <TabsTrigger value="web-coins">webコイン履歴</TabsTrigger>
+                    <TabsTrigger value="in-store-chips">店内チップ履歴</TabsTrigger>
                 </TabsList>
                 <TabsContent value="visits" className="space-y-4">
                     <Card>
@@ -127,11 +130,11 @@ export function PlayerDetail({ player, visits, chipLogs }: PlayerDetailProps) {
                         </CardContent>
                     </Card>
                 </TabsContent>
-                <TabsContent value="chips" className="space-y-4">
+                <TabsContent value="web-coins" className="space-y-4">
                     <Card>
                         <CardHeader>
-                            <CardTitle>チップ履歴</CardTitle>
-                            <CardDescription>チップの預け入れ・引き出し記録です。</CardDescription>
+                            <CardTitle>webコイン履歴</CardTitle>
+                            <CardDescription>webコインの預け入れ・引き出し記録です。</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="rounded-md border">
@@ -144,7 +147,7 @@ export function PlayerDetail({ player, visits, chipLogs }: PlayerDetailProps) {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {chipLogs.map((log) => (
+                                        {webCoinLogs.map((log) => (
                                             <TableRow key={log.id}>
                                                 <TableCell>{format(new Date(log.createdAt), "yyyy/MM/dd HH:mm")}</TableCell>
                                                 <TableCell>{log.type === "deposit" ? "預入" : "引出"}</TableCell>
@@ -153,10 +156,49 @@ export function PlayerDetail({ player, visits, chipLogs }: PlayerDetailProps) {
                                                 </TableCell>
                                             </TableRow>
                                         ))}
-                                        {chipLogs.length === 0 && (
+                                        {webCoinLogs.length === 0 && (
                                             <TableRow>
                                                 <TableCell colSpan={3} className="text-center py-4 text-muted-foreground">
-                                                    チップ履歴がありません
+                                                    webコイン履歴がありません
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                <TabsContent value="in-store-chips" className="space-y-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>店内チップ履歴</CardTitle>
+                            <CardDescription>店内チップの預け入れ・引き出し記録です。</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="rounded-md border">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>日時</TableHead>
+                                            <TableHead>種別</TableHead>
+                                            <TableHead className="text-right">金額</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {inStoreChipLogs.map((log) => (
+                                            <TableRow key={log.id}>
+                                                <TableCell>{format(new Date(log.createdAt), "yyyy/MM/dd HH:mm")}</TableCell>
+                                                <TableCell>{log.type === "deposit" ? "預入" : "引出"}</TableCell>
+                                                <TableCell className={`text-right font-bold ${log.type === "deposit" ? "text-green-600" : "text-red-600"}`}>
+                                                    {log.type === "deposit" ? "+" : "-"}{log.amount.toLocaleString()}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                        {inStoreChipLogs.length === 0 && (
+                                            <TableRow>
+                                                <TableCell colSpan={3} className="text-center py-4 text-muted-foreground">
+                                                    店内チップ履歴がありません
                                                 </TableCell>
                                             </TableRow>
                                         )}

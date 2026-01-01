@@ -16,6 +16,12 @@ export default async function PlayerDetailPage(props: PageProps) {
             visits: {
                 orderBy: { createdAt: 'desc' }
             },
+            webCoinDeposits: {
+                orderBy: { createdAt: 'desc' }
+            },
+            webCoinWithdraws: {
+                orderBy: { createdAt: 'desc' }
+            },
             inStoreChipDeposits: {
                 orderBy: { createdAt: 'desc' }
             },
@@ -36,21 +42,43 @@ export default async function PlayerDetailPage(props: PageProps) {
         foodFee: v.foodFee
     }))
 
-    const deposits: ChipLog[] = player.inStoreChipDeposits.map(d => ({
+    const webCoinDeposits: ChipLog[] = player.webCoinDeposits.map(d => ({
         id: d.id,
         type: 'deposit',
+        chipType: 'web_coin',
         amount: d.depositAmount,
         createdAt: d.createdAt
     }))
 
-    const withdraws: ChipLog[] = player.inStoreChipWithdraws.map(w => ({
+    const webCoinWithdraws: ChipLog[] = player.webCoinWithdraws.map(w => ({
         id: w.id,
         type: 'withdraw',
+        chipType: 'web_coin',
         amount: w.withdrawAmount,
         createdAt: w.createdAt
     }))
 
-    const chipLogs = [...deposits, ...withdraws].sort((a, b) =>
+    const webCoinLogs = [...webCoinDeposits, ...webCoinWithdraws].sort((a, b) =>
+        b.createdAt.getTime() - a.createdAt.getTime()
+    )
+
+    const inStoreChipDeposits: ChipLog[] = player.inStoreChipDeposits.map(d => ({
+        id: d.id,
+        type: 'deposit',
+        chipType: 'in_store_chip',
+        amount: d.depositAmount,
+        createdAt: d.createdAt
+    }))
+
+    const inStoreChipWithdraws: ChipLog[] = player.inStoreChipWithdraws.map(w => ({
+        id: w.id,
+        type: 'withdraw',
+        chipType: 'in_store_chip',
+        amount: w.withdrawAmount,
+        createdAt: w.createdAt
+    }))
+
+    const inStoreChipLogs = [...inStoreChipDeposits, ...inStoreChipWithdraws].sort((a, b) =>
         b.createdAt.getTime() - a.createdAt.getTime()
     )
 
@@ -64,7 +92,8 @@ export default async function PlayerDetailPage(props: PageProps) {
                 inStoreChipBalance: player.inStoreChipBalance,
             }}
             visits={visits}
-            chipLogs={chipLogs}
+            webCoinLogs={webCoinLogs}
+            inStoreChipLogs={inStoreChipLogs}
         />
     )
 }
