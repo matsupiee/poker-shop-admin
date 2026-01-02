@@ -271,7 +271,12 @@ export default function DailyVisitsPage() {
                                                     {tournaments.map((t, idx) => (
                                                         <div key={t.id} className={cn("flex items-stretch border-b last:border-0", idx === 0 && "border-t-0")}>
                                                             <div className="w-24 flex-shrink-0 bg-muted/30 px-2 py-2 border-r flex items-center justify-center text-[10px] font-bold text-center leading-tight">
-                                                                {t.name}
+                                                                <Link
+                                                                    href={`/tournaments/${t.id}`}
+                                                                    className="hover:text-primary transition-colors"
+                                                                >
+                                                                    {t.name}
+                                                                </Link>
                                                             </div>
                                                             <div className="flex-1 overflow-hidden relative flex items-stretch">
                                                                 {(() => {
@@ -391,7 +396,7 @@ export default function DailyVisitsPage() {
                                                                                 </Badge>
                                                                             </div>
                                                                             <div className={cn("font-bold", ev.eventType === "CASH_OUT" && "text-orange-600")}>
-                                                                                {ev.eventType === "CASH_OUT" ? "-" : ""}{ev.chipAmount.toLocaleString()}
+                                                                                {ev.chipAmount.toLocaleString()}
                                                                             </div>
                                                                             <div className="text-muted-foreground">
                                                                                 {ev.eventType === "BUY_IN" ? "Buy-in" :
@@ -474,7 +479,7 @@ export default function DailyVisitsPage() {
                                                                                 </Badge>
                                                                             </div>
                                                                             <div className={cn("font-bold", ev.eventType === "CASH_OUT" && "text-orange-600")}>
-                                                                                {ev.eventType === "CASH_OUT" ? "-" : ""}{ev.chipAmount.toLocaleString()}
+                                                                                {ev.chipAmount.toLocaleString()}
                                                                             </div>
                                                                             <div className="text-muted-foreground">
                                                                                 {ev.eventType === "BUY_IN" ? "Buy-in" :

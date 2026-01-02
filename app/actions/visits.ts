@@ -114,8 +114,6 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
         }
     })
 
-    console.log({ visits })
-
     return visits.map(visit => {
         // Group entries by tournament to find the latest one for each tournament
         const entriesByTournament = visit.tournamentEntries.reduce((acc, entry) => {
@@ -322,15 +320,20 @@ export async function registerVisit(_: RegisterVisitState, formData: FormData): 
     }
 }
 
-export async function updateTournamentResult(entryId: string, rank?: number, bountyCount?: number) {
+export async function updateTournamentResult(entryId: string, inputRank?: number, inputBountyCount?: number) {
     try {
         const entry = await prisma.tournamentEntry.findUnique({
             where: { id: entryId },
             include: {
-                visit: true
+                visit: true,
+                tournament: {
+                    include: {
+                        tournamentPrizes: true,
+                        tournamentBounty: true
+                    }
+                }
             }
         })
-
         if (!entry) {
             return { success: false, error: "Entry not found" }
         }
@@ -347,16 +350,36 @@ export async function updateTournamentResult(entryId: string, rank?: number, bou
                 createdAt: 'desc'
             }
         })
-
         if (latestEntry && latestEntry.id !== entry.id) {
             return { success: false, error: "最新のエントリー以外には結果を記録できません" }
+        }
+
+        // Calculate prize amount
+        let prizeAmount = 0
+
+        const rank = inputRank ?? entry.finalRank
+        const bountyCount = inputBountyCount ?? entry.bountyCount
+
+        // Add rank prize if applicable
+        if (rank) {
+            const prize = entry.tournament.tournamentPrizes.find(p => p.rank === rank)
+            if (prize) {
+                prizeAmount += prize.amount
+            }
+        }
+
+        // Add bounty prize if applicable
+        if (bountyCount && bountyCount > 0 && entry.tournament.tournamentBounty) {
+            const bountyPerKill = entry.tournament.tournamentBounty.totalAmount / entry.tournament.tournamentBounty.ticketCount
+            prizeAmount += bountyPerKill * bountyCount
         }
 
         await prisma.tournamentEntry.update({
             where: { id: entryId },
             data: {
                 finalRank: rank,
-                bountyCount: bountyCount
+                bountyCount: bountyCount,
+                prizeAmount: prizeAmount > 0 ? prizeAmount : null
             }
         })
         revalidatePath("/daily-visits")
