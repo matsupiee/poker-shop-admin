@@ -113,12 +113,25 @@ export function InStoreRingGameDialog({
             } else {
                 // Registration mode
                 const amount = parseInt(chipAmount)
-                if (isNaN(amount) || amount < 0) {
+                if (isNaN(amount) || amount <= 0) {
+                    setError("チップ量を入力してください")
+                    setIsSubmitting(false)
+                    return
+                }
+
+                if (eventType === "BUY_IN" && !selectedBuyInOptionId) {
                     setError("バイインオプションを選択してください")
                     setIsSubmitting(false)
                     return
                 }
-                const result = await addRingGameEntry(visitId, amount, "IN_STORE")
+
+                if (eventType === "WITHDRAW" && amount > inStoreChipBalance) {
+                    setError(`預かりチップ残高(${inStoreChipBalance.toLocaleString()}点)を超える額は入力できません`)
+                    setIsSubmitting(false)
+                    return
+                }
+
+                const result = await addRingGameEntry(visitId, amount, "IN_STORE", eventType)
                 if (!result.success) {
                     setError(result.errors?._form?.[0] || "エラーが発生しました")
                 } else {
@@ -167,32 +180,70 @@ export function InStoreRingGameDialog({
                 {isJoin ? (
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="buyInOption">バイインオプション</Label>
-                            <Select value={selectedBuyInOptionId} onValueChange={handleBuyInOptionChange}>
-                                <SelectTrigger id="buyInOption">
-                                    <SelectValue placeholder="選択してください" />
+                            <Label htmlFor="eventType">開始方法</Label>
+                            <Select value={eventType} onValueChange={setEventType}>
+                                <SelectTrigger id="eventType">
+                                    <SelectValue placeholder="種別を選択" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {buyInOptions.map((opt) => (
-                                        <SelectItem key={opt.id} value={opt.id}>
-                                            {opt.chipAmount.toLocaleString()}点 (¥{opt.chargeAmount.toLocaleString()})
-                                        </SelectItem>
-                                    ))}
+                                    <SelectItem value="BUY_IN">バイイン</SelectItem>
+                                    <SelectItem value="WITHDRAW">引き出し（貯チップより）</SelectItem>
+                                    <SelectItem value="GIFT">ギフト（プレゼント）</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
 
-                        <div className="grid gap-2">
-                            <Label htmlFor="chipAmount">開始チップ量</Label>
-                            <Input
-                                id="chipAmount"
-                                type="number"
-                                placeholder="オプションを選択してください"
-                                value={chipAmount}
-                                readOnly
-                                className="bg-muted"
-                            />
-                        </div>
+                        {eventType === "BUY_IN" ? (
+                            <>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="buyInOption">バイインオプション</Label>
+                                    <Select value={selectedBuyInOptionId} onValueChange={handleBuyInOptionChange}>
+                                        <SelectTrigger id="buyInOption">
+                                            <SelectValue placeholder="選択してください" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {buyInOptions.map((opt) => (
+                                                <SelectItem key={opt.id} value={opt.id}>
+                                                    {opt.chipAmount.toLocaleString()}点 (¥{opt.chargeAmount.toLocaleString()})
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <Label htmlFor="chipAmount">開始チップ量</Label>
+                                    <Input
+                                        id="chipAmount"
+                                        type="number"
+                                        placeholder="オプションを選択してください"
+                                        value={chipAmount}
+                                        readOnly
+                                        className="bg-muted"
+                                    />
+                                </div>
+                            </>
+                        ) : (
+                            <div className="grid gap-2">
+                                <div className="flex justify-between items-center">
+                                    <Label htmlFor="chipAmountJoin">
+                                        {eventType === "GIFT" ? "ギフトチップ量" : "引き出しチップ量"}
+                                    </Label>
+                                    {eventType === "WITHDRAW" && (
+                                        <span className="text-xs text-muted-foreground">
+                                            残高: {inStoreChipBalance.toLocaleString()}点
+                                        </span>
+                                    )}
+                                </div>
+                                <Input
+                                    id="chipAmountJoin"
+                                    type="number"
+                                    placeholder="例: 100"
+                                    value={chipAmount}
+                                    onChange={(e) => setChipAmount(e.target.value)}
+                                />
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <div className="grid gap-4 py-4">

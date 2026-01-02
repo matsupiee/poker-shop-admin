@@ -71,7 +71,8 @@ export async function addTournamentEntry(
 export async function addRingGameEntry(
     visitId: string,
     chipAmount: number,
-    ringGameType: "WEB_COIN" | "IN_STORE"
+    ringGameType: "WEB_COIN" | "IN_STORE",
+    eventType: string = "BUY_IN"
 ): Promise<GameParticipationState> {
     if (!visitId) return { errors: { visitId: ["Visit ID is required"] } }
     if (chipAmount < 0) return { errors: { _form: ["チップ量は0以上である必要があります"] } }
@@ -89,7 +90,7 @@ export async function addRingGameEntry(
                     visitId,
                     webCoinRingChipEvents: {
                         create: {
-                            eventType: "BUY_IN",
+                            eventType: eventType as WebCoinRingChipEventType,
                             chipAmount,
                         }
                     }
@@ -102,17 +103,47 @@ export async function addRingGameEntry(
             if (existingEntry) {
                 return { success: false, errors: { _form: ["すでにこの種類のリングゲームに参加しています"] } }
             }
-            await prisma.inStoreRingEntry.create({
+
+            // 店内リングエントリを作成し、訪問情報とプレイヤー情報を取得
+            const visit = await prisma.visit.findUnique({
+                where: { id: visitId },
+                include: { player: true }
+            })
+
+            if (!visit) {
+                return { success: false, errors: { _form: ["訪問データが見つかりません"] } }
+            }
+
+            const entry = await prisma.inStoreRingEntry.create({
                 data: {
                     visitId,
                     inStoreRingChipEvents: {
                         create: {
-                            eventType: "BUY_IN",
+                            eventType: eventType as InStoreRingChipEventType,
                             chipAmount,
                         }
                     }
+                },
+                include: {
+                    inStoreRingChipEvents: true
                 }
             })
+
+            // WITHDRAWの場合は、プレイヤーの貯チップから引き出す
+            if (eventType === "WITHDRAW") {
+                const chipEvent = entry.inStoreRingChipEvents[0]
+                try {
+                    await withdrawInStoreChip(visit.playerId, chipAmount, chipEvent.id)
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : "引き出しに失敗しました"
+                    return {
+                        success: false,
+                        errors: {
+                            _form: [errorMessage]
+                        }
+                    }
+                }
+            }
         }
 
         revalidatePath("/daily-visits")
