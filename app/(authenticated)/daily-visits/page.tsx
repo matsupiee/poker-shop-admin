@@ -543,6 +543,7 @@ export default function DailyVisitsPage() {
                                                 <SettlementDialog
                                                     visitId={visit.id}
                                                     playerName={visit.player.name}
+                                                    webCoinBalance={visit.player.webCoinBalance}
                                                     isSettled={!!visit.settlement}
                                                     onSuccess={fetchData}
                                                 />

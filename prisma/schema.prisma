@@ -219,9 +219,9 @@ model TournamentEntry {
   bountyCount Int? @map("bounty_count") // そのエントリー中に飛ばした人数
   prizeAmount Int? @map("prize_amount") // そのエントリーで獲得したprize
 
-  visit      Visit                 @relation(fields: [visitId], references: [id])
-  tournament Tournament            @relation(fields: [tournamentId], references: [id])
-  chipEvents TournamentChipEvent[]
+  visit                Visit                 @relation(fields: [visitId], references: [id])
+  tournament           Tournament            @relation(fields: [tournamentId], references: [id])
+  tournamentChipEvents TournamentChipEvent[]
 
   @@map("tournament_entries")
 }
@@ -402,16 +402,42 @@ model Settlement {
   visitId String @map("visit_id")
 
   // 最終的な収支
+  // 支払う場合はマイナス、支払う必要がない場合はプラス
   netAmount Int @map("net_amount")
 
-  // 収支がプラスの場合は税金なし、マイナスの場合は税金が-5%
-  taxAmount Int @map("tax_amount")
-
-  breakdown Json // 計算レシート
-
-  visit Visit @relation(fields: [visitId], references: [id])
+  visit           Visit            @relation(fields: [visitId], references: [id])
+  settlementItems SettlementItem[]
 
   @@map("settlements")
+}
+
+enum SettlementItemType {
+  // トーナメント
+  TOURNAMENT_TOTAL_CHARGE
+  TOURNAMENT_TOTAL_PRIZE
+  // webコイン リングゲーム
+  WEB_COIN_RING_TOTAL_BUY_IN
+  WEB_COIN_RING_TOTAL_CASH_OUT
+  // 店内リング
+  IN_STORE_CHIP_WITHDRAW_FEE
+  IN_STORE_CHIP_BUY_IN_FEE
+  // 消費税
+  CONSUMPTION_TAX
+}
+
+model SettlementItem {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  settlementId String @map("settlement_id")
+
+  settlementItemType SettlementItemType @map("settlement_item_type")
+  amount             Int
+
+  settlement Settlement @relation(fields: [settlementId], references: [id])
+
+  @@map("settlement_items")
 }
 
 model WebCoinDeposit {

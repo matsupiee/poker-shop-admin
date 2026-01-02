@@ -68,6 +68,77 @@ export async function addTournamentEntry(
     }
 }
 
+export async function addTournamentAddOn(
+    tournamentEntryId: string,
+    chipAmount: number,
+    chargeAmount: number
+): Promise<GameParticipationState> {
+    if (!tournamentEntryId) return { errors: { _form: ["Entry ID is required"] } }
+    if (chipAmount < 0) return { errors: { _form: ["チップ量は0以上である必要があります"] } }
+    if (chargeAmount < 0) return { errors: { _form: ["支払い額は0以上である必要があります"] } }
+
+    try {
+        const entry = await prisma.tournamentEntry.findUnique({
+            where: { id: tournamentEntryId },
+            include: {
+                tournament: true,
+                visit: {
+                    include: {
+                        player: true
+                    }
+                }
+            }
+        })
+
+        if (!entry) {
+            return { errors: { _form: ["参加データが見つかりません"] } }
+        }
+
+        // Check if this is the latest entry for the player in this tournament
+        const latestEntry = await prisma.tournamentEntry.findFirst({
+            where: {
+                tournamentId: entry.tournamentId,
+                visit: {
+                    playerId: entry.visit.playerId
+                }
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        })
+
+        if (latestEntry && latestEntry.id !== entry.id) {
+            return {
+                errors: {
+                    _form: ["最新のエントリー以外にはアドオンできません"]
+                }
+            }
+        }
+
+        await prisma.tournamentChipEvent.create({
+            data: {
+                tournamentEntryId,
+                eventType: "ADD_CHIP",
+                chipAmount,
+                chargeAmount
+            }
+        })
+
+        revalidatePath("/daily-visits")
+        revalidatePath("/tournaments")
+        revalidatePath(`/tournaments/${entry.tournamentId}`)
+        return { success: true, message: "アドオンを追加しました" }
+
+    } catch (error) {
+        console.error("Failed to add tournament add-on:", error)
+        return {
+            errors: {
+                _form: ["アドオンの追加に失敗しました"]
+            }
+        }
+    }
+}
+
 export async function addRingGameEntry(
     visitId: string,
     chipAmount: number,
@@ -234,77 +305,6 @@ export async function addRingGameChip(
         return {
             errors: {
                 _form: ["処理に失敗しました"]
-            }
-        }
-    }
-}
-
-export async function addTournamentAddOn(
-    tournamentEntryId: string,
-    chipAmount: number,
-    chargeAmount: number
-): Promise<GameParticipationState> {
-    if (!tournamentEntryId) return { errors: { _form: ["Entry ID is required"] } }
-    if (chipAmount < 0) return { errors: { _form: ["チップ量は0以上である必要があります"] } }
-    if (chargeAmount < 0) return { errors: { _form: ["支払い額は0以上である必要があります"] } }
-
-    try {
-        const entry = await prisma.tournamentEntry.findUnique({
-            where: { id: tournamentEntryId },
-            include: {
-                tournament: true,
-                visit: {
-                    include: {
-                        player: true
-                    }
-                }
-            }
-        })
-
-        if (!entry) {
-            return { errors: { _form: ["参加データが見つかりません"] } }
-        }
-
-        // Check if this is the latest entry for the player in this tournament
-        const latestEntry = await prisma.tournamentEntry.findFirst({
-            where: {
-                tournamentId: entry.tournamentId,
-                visit: {
-                    playerId: entry.visit.playerId
-                }
-            },
-            orderBy: {
-                createdAt: 'desc'
-            }
-        })
-
-        if (latestEntry && latestEntry.id !== entry.id) {
-            return {
-                errors: {
-                    _form: ["最新のエントリー以外にはアドオンできません"]
-                }
-            }
-        }
-
-        await prisma.tournamentChipEvent.create({
-            data: {
-                tournamentEntryId,
-                eventType: "ADD_CHIP",
-                chipAmount,
-                chargeAmount
-            }
-        })
-
-        revalidatePath("/daily-visits")
-        revalidatePath("/tournaments")
-        revalidatePath(`/tournaments/${entry.tournamentId}`)
-        return { success: true, message: "アドオンを追加しました" }
-
-    } catch (error) {
-        console.error("Failed to add tournament add-on:", error)
-        return {
-            errors: {
-                _form: ["アドオンの追加に失敗しました"]
             }
         }
     }
