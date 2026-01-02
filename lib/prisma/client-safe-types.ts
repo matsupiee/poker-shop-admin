@@ -4,7 +4,7 @@
 
 export const RingGameType = {
   WEB_COIN: "WEB_COIN",
-  IN_STORE: "IN_STORE"
-} as const
+  IN_STORE: "IN_STORE",
+} as const;
 
-export type RingGameTypeKey = typeof RingGameType[keyof typeof RingGameType]
+export type RingGameTypeKey = (typeof RingGameType)[keyof typeof RingGameType];

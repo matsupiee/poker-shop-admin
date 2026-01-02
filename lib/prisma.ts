@@ -4,19 +4,19 @@ import { PrismaClient } from "@/lib/generated/prisma/client";
 // @see https://www.prisma.io/docs/guides/nextjs#26-set-up-prisma-client
 
 const globalForPrisma = global as unknown as {
-    prisma: PrismaClient;
+  prisma: PrismaClient;
 };
 
 const adapter = new PrismaPg({
-    connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.DATABASE_URL,
 });
 
 export const prisma =
-    globalForPrisma.prisma ||
-    new PrismaClient({
-        adapter,
-    });
+  globalForPrisma.prisma ||
+  new PrismaClient({
+    adapter,
+  });
 
 if (process.env.NODE_ENV !== "production") {
-    globalForPrisma.prisma = prisma;
+  globalForPrisma.prisma = prisma;
 }

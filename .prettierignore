@@ -12,6 +12,7 @@ lib/generated
 generated
 *.tsbuildinfo
 next-env.d.ts
+pnpm-lock.yaml
 
 # Database
 docker
@@ -30,5 +31,5 @@ docker
 # Prisma
 prisma/migrations
 
-
-
+# serena
+.serena

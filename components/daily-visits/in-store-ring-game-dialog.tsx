@@ -1,343 +1,387 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Button } from "@/components/ui/button"
+import * as React from "react";
+import { Button } from "@/components/ui/button";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog"
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Settings2, Plus } from "lucide-react"
-import { addRingGameEntry, addRingGameChip } from "@/app/actions/game-participation"
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Settings2, Plus } from "lucide-react";
+import {
+  addRingGameEntry,
+  addRingGameChip,
+} from "@/app/actions/game-participation";
 
 type InStoreRingBuyInOption = {
-    id: string
-    chipAmount: number
-    chargeAmount: number
-}
+  id: string;
+  chipAmount: number;
+  chargeAmount: number;
+};
 
 interface InStoreRingGameDialogProps {
-    visitId: string
-    playerName: string
-    inStoreChipBalance: number
-    buyInOptions: InStoreRingBuyInOption[]
-    existingEntry?: {
-        id: string
-        totalBuyIn: number
-        totalCashOut: number
-    }
-    onSuccess?: () => void
-    trigger?: React.ReactNode
+  visitId: string;
+  playerName: string;
+  inStoreChipBalance: number;
+  buyInOptions: InStoreRingBuyInOption[];
+  existingEntry?: {
+    id: string;
+    totalBuyIn: number;
+    totalCashOut: number;
+  };
+  onSuccess?: () => void;
+  trigger?: React.ReactNode;
 }
 
 export function InStoreRingGameDialog({
-    visitId,
-    playerName,
-    inStoreChipBalance,
-    buyInOptions,
-    existingEntry,
-    onSuccess,
-    trigger
+  visitId,
+  playerName,
+  inStoreChipBalance,
+  buyInOptions,
+  existingEntry,
+  onSuccess,
+  trigger,
 }: InStoreRingGameDialogProps) {
-    const [open, setOpen] = React.useState(false)
-    const [selectedBuyInOptionId, setSelectedBuyInOptionId] = React.useState<string>("")
-    const [chipAmount, setChipAmount] = React.useState<string>("")
-    const [cashOutAmount, setCashOutAmount] = React.useState<string>("")
-    const [isSubmitting, setIsSubmitting] = React.useState(false)
-    const [error, setError] = React.useState<string | null>(null)
-    const [eventType, setEventType] = React.useState<string>("BUY_IN")
+  const [open, setOpen] = React.useState(false);
+  const [selectedBuyInOptionId, setSelectedBuyInOptionId] =
+    React.useState<string>("");
+  const [chipAmount, setChipAmount] = React.useState<string>("");
+  const [cashOutAmount, setCashOutAmount] = React.useState<string>("");
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [eventType, setEventType] = React.useState<string>("BUY_IN");
 
-    React.useEffect(() => {
-        if (open) {
-            setSelectedBuyInOptionId("")
-            setChipAmount("")
-            setCashOutAmount("")
-            setError(null)
-            setEventType("BUY_IN")
-        }
-    }, [open])
-
-    const handleBuyInOptionChange = (value: string) => {
-        setSelectedBuyInOptionId(value)
-        const option = buyInOptions.find(opt => opt.id === value)
-        if (option) {
-            setChipAmount(option.chipAmount.toString())
-        }
+  React.useEffect(() => {
+    if (open) {
+      setSelectedBuyInOptionId("");
+      setChipAmount("");
+      setCashOutAmount("");
+      setError(null);
+      setEventType("BUY_IN");
     }
+  }, [open]);
 
-    const handleSubmit = async () => {
-        setError(null)
-        setIsSubmitting(true)
+  const handleBuyInOptionChange = (value: string) => {
+    setSelectedBuyInOptionId(value);
+    const option = buyInOptions.find((opt) => opt.id === value);
+    if (option) {
+      setChipAmount(option.chipAmount.toString());
+    }
+  };
 
-        try {
-            if (existingEntry) {
-                // Management mode
-                const amount = eventType === "CASH_OUT" ? parseInt(cashOutAmount) : parseInt(chipAmount)
-                if (isNaN(amount) || amount < 0) {
-                    setError("金額を入力してください")
-                    setIsSubmitting(false)
-                    return
-                }
+  const handleSubmit = async () => {
+    setError(null);
+    setIsSubmitting(true);
 
-                if (eventType === "BUY_IN" && !selectedBuyInOptionId) {
-                    setError("バイインオプションを選択してください")
-                    setIsSubmitting(false)
-                    return
-                }
+    try {
+      if (existingEntry) {
+        // Management mode
+        const amount =
+          eventType === "CASH_OUT"
+            ? parseInt(cashOutAmount)
+            : parseInt(chipAmount);
+        if (isNaN(amount) || amount < 0) {
+          setError("金額を入力してください");
+          setIsSubmitting(false);
+          return;
+        }
 
-                if (eventType === "WITHDRAW" && amount > inStoreChipBalance) {
-                    setError(`預かりチップ残高(${inStoreChipBalance.toLocaleString()}点)を超える額は入力できません`)
-                    setIsSubmitting(false)
-                    return
-                }
+        if (eventType === "BUY_IN" && !selectedBuyInOptionId) {
+          setError("バイインオプションを選択してください");
+          setIsSubmitting(false);
+          return;
+        }
 
-                const result = await addRingGameChip(existingEntry.id, eventType, amount, "IN_STORE")
-                if (!result.success) {
-                    setError(result.errors?._form?.[0] || "エラーが発生しました")
-                } else {
-                    handleSuccess()
-                }
-            } else {
-                // Registration mode
-                const amount = parseInt(chipAmount)
-                if (isNaN(amount) || amount <= 0) {
-                    setError("チップ量を入力してください")
-                    setIsSubmitting(false)
-                    return
-                }
+        if (eventType === "WITHDRAW" && amount > inStoreChipBalance) {
+          setError(
+            `預かりチップ残高(${inStoreChipBalance.toLocaleString()}点)を超える額は入力できません`
+          );
+          setIsSubmitting(false);
+          return;
+        }
 
-                if (eventType === "BUY_IN" && !selectedBuyInOptionId) {
-                    setError("バイインオプションを選択してください")
-                    setIsSubmitting(false)
-                    return
-                }
+        const result = await addRingGameChip(
+          existingEntry.id,
+          eventType,
+          amount,
+          "IN_STORE"
+        );
+        if (!result.success) {
+          setError(result.errors?._form?.[0] || "エラーが発生しました");
+        } else {
+          handleSuccess();
+        }
+      } else {
+        // Registration mode
+        const amount = parseInt(chipAmount);
+        if (isNaN(amount) || amount <= 0) {
+          setError("チップ量を入力してください");
+          setIsSubmitting(false);
+          return;
+        }
 
-                if (eventType === "WITHDRAW" && amount > inStoreChipBalance) {
-                    setError(`預かりチップ残高(${inStoreChipBalance.toLocaleString()}点)を超える額は入力できません`)
-                    setIsSubmitting(false)
-                    return
-                }
+        if (eventType === "BUY_IN" && !selectedBuyInOptionId) {
+          setError("バイインオプションを選択してください");
+          setIsSubmitting(false);
+          return;
+        }
 
-                const result = await addRingGameEntry(visitId, amount, "IN_STORE", eventType)
-                if (!result.success) {
-                    setError(result.errors?._form?.[0] || "エラーが発生しました")
-                } else {
-                    handleSuccess()
-                }
+        if (eventType === "WITHDRAW" && amount > inStoreChipBalance) {
+          setError(
+            `預かりチップ残高(${inStoreChipBalance.toLocaleString()}点)を超える額は入力できません`
+          );
+          setIsSubmitting(false);
+          return;
+        }
+
+        const result = await addRingGameEntry(
+          visitId,
+          amount,
+          "IN_STORE",
+          eventType
+        );
+        if (!result.success) {
+          setError(result.errors?._form?.[0] || "エラーが発生しました");
+        } else {
+          handleSuccess();
+        }
+      }
+    } catch (e) {
+      setError("予期せぬエラーが発生しました");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSuccess = () => {
+    setOpen(false);
+    setChipAmount("");
+    setSelectedBuyInOptionId("");
+    setCashOutAmount("");
+    if (onSuccess) onSuccess();
+  };
+
+  const isJoin = !existingEntry;
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {trigger || (
+          <Button variant="outline" size="sm" className="h-8">
+            {isJoin ? (
+              <Plus className="w-4 h-4 mr-2" />
+            ) : (
+              <Settings2 className="w-4 h-4 mr-2" />
+            )}
+            {isJoin ? "店内リング参加" : "店内リング管理"}
+          </Button>
+        )}
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>
+            {isJoin ? "店内リング参加登録" : "店内リング管理"} ({playerName})
+          </DialogTitle>
+          <DialogDescription>
+            {isJoin
+              ? "バイインオプションを選択してください。"
+              : "チップの追加バイインまたはキャッシュアウトを記録します。"}
+          </DialogDescription>
+        </DialogHeader>
+
+        {isJoin ? (
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="eventType">開始方法</Label>
+              <Select value={eventType} onValueChange={setEventType}>
+                <SelectTrigger id="eventType">
+                  <SelectValue placeholder="種別を選択" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="BUY_IN">バイイン</SelectItem>
+                  <SelectItem value="WITHDRAW">
+                    引き出し（貯チップより）
+                  </SelectItem>
+                  <SelectItem value="GIFT">ギフト（プレゼント）</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {eventType === "BUY_IN" ? (
+              <>
+                <div className="grid gap-2">
+                  <Label htmlFor="buyInOption">バイインオプション</Label>
+                  <Select
+                    value={selectedBuyInOptionId}
+                    onValueChange={handleBuyInOptionChange}
+                  >
+                    <SelectTrigger id="buyInOption">
+                      <SelectValue placeholder="選択してください" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {buyInOptions.map((opt) => (
+                        <SelectItem key={opt.id} value={opt.id}>
+                          {opt.chipAmount.toLocaleString()}点 (¥
+                          {opt.chargeAmount.toLocaleString()})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="chipAmount">開始チップ量</Label>
+                  <Input
+                    id="chipAmount"
+                    type="number"
+                    placeholder="オプションを選択してください"
+                    value={chipAmount}
+                    readOnly
+                    className="bg-muted"
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="grid gap-2">
+                <div className="flex justify-between items-center">
+                  <Label htmlFor="chipAmountJoin">
+                    {eventType === "GIFT"
+                      ? "ギフトチップ量"
+                      : "引き出しチップ量"}
+                  </Label>
+                  {eventType === "WITHDRAW" && (
+                    <span className="text-xs text-muted-foreground">
+                      残高: {inStoreChipBalance.toLocaleString()}点
+                    </span>
+                  )}
+                </div>
+                <Input
+                  id="chipAmountJoin"
+                  type="number"
+                  placeholder="例: 100"
+                  value={chipAmount}
+                  onChange={(e) => setChipAmount(e.target.value)}
+                />
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="eventType">種別</Label>
+              <Select value={eventType} onValueChange={setEventType}>
+                <SelectTrigger id="eventType">
+                  <SelectValue placeholder="種別を選択" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="BUY_IN">バイイン追加</SelectItem>
+                  <SelectItem value="CASH_OUT">キャッシュアウト</SelectItem>
+                  <SelectItem value="GIFT">ギフト（プレゼント）</SelectItem>
+                  <SelectItem value="WITHDRAW">
+                    引き出し（貯チップより）
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {eventType === "BUY_IN" ? (
+              <>
+                <div className="grid gap-2">
+                  <Label htmlFor="buyInOptionManage">バイインオプション</Label>
+                  <Select
+                    value={selectedBuyInOptionId}
+                    onValueChange={handleBuyInOptionChange}
+                  >
+                    <SelectTrigger id="buyInOptionManage">
+                      <SelectValue placeholder="選択してください" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {buyInOptions.map((opt) => (
+                        <SelectItem key={opt.id} value={opt.id}>
+                          {opt.chipAmount.toLocaleString()}点 (¥
+                          {opt.chargeAmount.toLocaleString()})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="chipAmountManage">追加チップ量</Label>
+                  <Input
+                    id="chipAmountManage"
+                    type="number"
+                    value={chipAmount}
+                    readOnly
+                    className="bg-muted"
+                  />
+                </div>
+              </>
+            ) : eventType === "CASH_OUT" ? (
+              <div className="grid gap-2">
+                <Label htmlFor="cashOutAmount">
+                  キャッシュアウト額 (チップ量)
+                </Label>
+                <Input
+                  id="cashOutAmount"
+                  type="number"
+                  placeholder="例: 150"
+                  value={cashOutAmount}
+                  onChange={(e) => setCashOutAmount(e.target.value)}
+                />
+              </div>
+            ) : (
+              <div className="grid gap-2">
+                <div className="flex justify-between items-center">
+                  <Label htmlFor="chipAmountExtra">
+                    {eventType === "GIFT"
+                      ? "ギフトチップ量"
+                      : "引き出しチップ量"}
+                  </Label>
+                  {eventType === "WITHDRAW" && (
+                    <span className="text-xs text-muted-foreground">
+                      残高: {inStoreChipBalance.toLocaleString()}点
+                    </span>
+                  )}
+                </div>
+                <Input
+                  id="chipAmountExtra"
+                  type="number"
+                  placeholder="例: 100"
+                  value={chipAmount}
+                  onChange={(e) => setChipAmount(e.target.value)}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {error && <p className="text-sm text-red-500 font-medium">{error}</p>}
+
+        <DialogFooter>
+          <Button
+            onClick={handleSubmit}
+            disabled={
+              isSubmitting ||
+              (eventType === "CASH_OUT" ? !cashOutAmount : !chipAmount)
             }
-        } catch (e) {
-            setError("予期せぬエラーが発生しました")
-        } finally {
-            setIsSubmitting(false)
-        }
-    }
-
-    const handleSuccess = () => {
-        setOpen(false)
-        setChipAmount("")
-        setSelectedBuyInOptionId("")
-        setCashOutAmount("")
-        if (onSuccess) onSuccess()
-    }
-
-    const isJoin = !existingEntry
-
-    return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                {trigger || (
-                    <Button variant="outline" size="sm" className="h-8">
-                        {isJoin ? <Plus className="w-4 h-4 mr-2" /> : <Settings2 className="w-4 h-4 mr-2" />}
-                        {isJoin ? "店内リング参加" : "店内リング管理"}
-                    </Button>
-                )}
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                    <DialogTitle>
-                        {isJoin ? "店内リング参加登録" : "店内リング管理"} ({playerName})
-                    </DialogTitle>
-                    <DialogDescription>
-                        {isJoin
-                            ? "バイインオプションを選択してください。"
-                            : "チップの追加バイインまたはキャッシュアウトを記録します。"}
-                    </DialogDescription>
-                </DialogHeader>
-
-                {isJoin ? (
-                    <div className="grid gap-4 py-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="eventType">開始方法</Label>
-                            <Select value={eventType} onValueChange={setEventType}>
-                                <SelectTrigger id="eventType">
-                                    <SelectValue placeholder="種別を選択" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="BUY_IN">バイイン</SelectItem>
-                                    <SelectItem value="WITHDRAW">引き出し（貯チップより）</SelectItem>
-                                    <SelectItem value="GIFT">ギフト（プレゼント）</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        {eventType === "BUY_IN" ? (
-                            <>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="buyInOption">バイインオプション</Label>
-                                    <Select value={selectedBuyInOptionId} onValueChange={handleBuyInOptionChange}>
-                                        <SelectTrigger id="buyInOption">
-                                            <SelectValue placeholder="選択してください" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {buyInOptions.map((opt) => (
-                                                <SelectItem key={opt.id} value={opt.id}>
-                                                    {opt.chipAmount.toLocaleString()}点 (¥{opt.chargeAmount.toLocaleString()})
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div className="grid gap-2">
-                                    <Label htmlFor="chipAmount">開始チップ量</Label>
-                                    <Input
-                                        id="chipAmount"
-                                        type="number"
-                                        placeholder="オプションを選択してください"
-                                        value={chipAmount}
-                                        readOnly
-                                        className="bg-muted"
-                                    />
-                                </div>
-                            </>
-                        ) : (
-                            <div className="grid gap-2">
-                                <div className="flex justify-between items-center">
-                                    <Label htmlFor="chipAmountJoin">
-                                        {eventType === "GIFT" ? "ギフトチップ量" : "引き出しチップ量"}
-                                    </Label>
-                                    {eventType === "WITHDRAW" && (
-                                        <span className="text-xs text-muted-foreground">
-                                            残高: {inStoreChipBalance.toLocaleString()}点
-                                        </span>
-                                    )}
-                                </div>
-                                <Input
-                                    id="chipAmountJoin"
-                                    type="number"
-                                    placeholder="例: 100"
-                                    value={chipAmount}
-                                    onChange={(e) => setChipAmount(e.target.value)}
-                                />
-                            </div>
-                        )}
-                    </div>
-                ) : (
-                    <div className="grid gap-4 py-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="eventType">種別</Label>
-                            <Select value={eventType} onValueChange={setEventType}>
-                                <SelectTrigger id="eventType">
-                                    <SelectValue placeholder="種別を選択" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="BUY_IN">バイイン追加</SelectItem>
-                                    <SelectItem value="CASH_OUT">キャッシュアウト</SelectItem>
-                                    <SelectItem value="GIFT">ギフト（プレゼント）</SelectItem>
-                                    <SelectItem value="WITHDRAW">引き出し（貯チップより）</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        {eventType === "BUY_IN" ? (
-                            <>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="buyInOptionManage">バイインオプション</Label>
-                                    <Select value={selectedBuyInOptionId} onValueChange={handleBuyInOptionChange}>
-                                        <SelectTrigger id="buyInOptionManage">
-                                            <SelectValue placeholder="選択してください" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {buyInOptions.map((opt) => (
-                                                <SelectItem key={opt.id} value={opt.id}>
-                                                    {opt.chipAmount.toLocaleString()}点 (¥{opt.chargeAmount.toLocaleString()})
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="chipAmountManage">追加チップ量</Label>
-                                    <Input
-                                        id="chipAmountManage"
-                                        type="number"
-                                        value={chipAmount}
-                                        readOnly
-                                        className="bg-muted"
-                                    />
-                                </div>
-                            </>
-                        ) : eventType === "CASH_OUT" ? (
-                            <div className="grid gap-2">
-                                <Label htmlFor="cashOutAmount">キャッシュアウト額 (チップ量)</Label>
-                                <Input
-                                    id="cashOutAmount"
-                                    type="number"
-                                    placeholder="例: 150"
-                                    value={cashOutAmount}
-                                    onChange={(e) => setCashOutAmount(e.target.value)}
-                                />
-                            </div>
-                        ) : (
-                            <div className="grid gap-2">
-                                <div className="flex justify-between items-center">
-                                    <Label htmlFor="chipAmountExtra">
-                                        {eventType === "GIFT" ? "ギフトチップ量" : "引き出しチップ量"}
-                                    </Label>
-                                    {eventType === "WITHDRAW" && (
-                                        <span className="text-xs text-muted-foreground">
-                                            残高: {inStoreChipBalance.toLocaleString()}点
-                                        </span>
-                                    )}
-                                </div>
-                                <Input
-                                    id="chipAmountExtra"
-                                    type="number"
-                                    placeholder="例: 100"
-                                    value={chipAmount}
-                                    onChange={(e) => setChipAmount(e.target.value)}
-                                />
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {error && (
-                    <p className="text-sm text-red-500 font-medium">{error}</p>
-                )}
-
-                <DialogFooter>
-                    <Button
-                        onClick={handleSubmit}
-                        disabled={isSubmitting || (eventType === "CASH_OUT" ? !cashOutAmount : !chipAmount)}
-                    >
-                        {isSubmitting ? "処理中..." : (isJoin ? "参加する" : "登録する")}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    )
+          >
+            {isSubmitting ? "処理中..." : isJoin ? "参加する" : "登録する"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }

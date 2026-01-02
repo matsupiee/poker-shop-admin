@@ -1,24 +1,17 @@
 {
-    "rules": {
-        "field-name-mapping-snake-case": [
-            "error",
-            {
-                "compoundWords": [
-                    "ID",
-                    "URL",
-                    "PSA",
-                    "R18"
-                ]
-            }
-        ],
-        "field-name-camel-case": [
-            "error"
-        ],
-        "model-name-grammatical-number": [
-            "error",
-            {
-                "style": "singular"
-            }
-        ]
-    }
+  "rules": {
+    "field-name-mapping-snake-case": [
+      "error",
+      {
+        "compoundWords": ["ID", "URL", "PSA", "R18"]
+      }
+    ],
+    "field-name-camel-case": ["error"],
+    "model-name-grammatical-number": [
+      "error",
+      {
+        "style": "singular"
+      }
+    ]
+  }
 }
