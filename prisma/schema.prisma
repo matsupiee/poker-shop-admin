@@ -217,6 +217,7 @@ model TournamentEntry {
 
   finalRank   Int? @map("final_rank") // 特に入賞してない場合は何も書かなくていい
   bountyCount Int? @map("bounty_count") // そのエントリー中に飛ばした人数
+  prizeAmount Int? @map("prize_amount") // そのエントリーで獲得したprize
 
   visit      Visit                 @relation(fields: [visitId], references: [id])
   tournament Tournament            @relation(fields: [tournamentId], references: [id])

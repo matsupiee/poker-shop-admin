@@ -422,106 +422,91 @@ export async function getVisitSettlementDetails(visitId: string) {
         throw new Error("来店データが見つかりません")
     }
 
-    // 1. Entrance & Food
     const items = []
 
-    if (visit.entranceFee) {
-        items.push({
-            type: "entrance",
-            label: "入場料",
-            amount: -visit.entranceFee,
-            groupId: "entrance",
-            groupName: "入場料"
-        })
-    }
-    if (visit.foodFee) {
-        items.push({
-            type: "food",
-            label: "飲食代",
-            amount: -visit.foodFee,
-            groupId: "entrance",
-            groupName: "入場料"
-        })
-    }
-
-    // 2. Tournaments
+    // トーナメント
     for (const entry of visit.tournamentEntries) {
         const groupId = `tournament_${entry.tournamentId}`
         const groupName = entry.tournament.name
 
         // Detailed Cost Breakdown
-        for (const event of entry.chipEvents) {
-            if (event.chargeAmount > 0) {
-                let label = "エントリー"
-                if (event.eventType === "ADD_CHIP") label = "アドオン/リエントリー"
+        const totalChargeAmount = entry.chipEvents.reduce((total, event) => total + event.chargeAmount, 0)
 
-                items.push({
-                    type: "tournament_entry",
-                    label: label,
-                    amount: -event.chargeAmount,
-                    groupId,
-                    groupName
-                })
-            }
-        }
-
+        items.push({
+            type: "tournament_fee",
+            label: 'トーナメント費用',
+            amount: -totalChargeAmount,
+            groupId,
+            groupName
+        })
         // Prizes
-        if (entry.finalRank) {
-            const prize = entry.tournament.tournamentPrizes.find(p => p.rank === entry.finalRank)
-            if (prize) {
-                items.push({
-                    type: "tournament_prize",
-                    label: `入賞 (${entry.finalRank}位)`,
-                    amount: prize.amount,
-                    groupId,
-                    groupName
-                })
-            }
-        }
+        items.push({
+            type: "tournament_prize",
+            label: `トーナメント景品`,
+            amount: entry.prizeAmount ?? 0,
+            groupId,
+            groupName
+        })
     }
 
-    // 3. Ring Games
-    const processRingEntry = (entry: any, type: "WEB_COIN" | "IN_STORE") => {
-        const groupId = `ring_${type}`
-        const groupName = type === "WEB_COIN" ? "webコインリング" : "店内リング"
-        const events = type === "WEB_COIN" ? entry.webCoinRingChipEvents : entry.inStoreRingChipEvents
-
-        // Buy In (Cost)
-        const buyIns = events.filter((e: any) => e.eventType === "BUY_IN")
-        for (const event of buyIns) {
-            if (event.chipAmount > 0) {
-                items.push({
-                    type: "ring_game_buyin",
-                    label: "購入",
-                    amount: -event.chipAmount,
-                    groupId,
-                    groupName
-                })
-            }
-        }
-
-        // Cash Out (Credit)
-        const cashOuts = events.filter((e: any) => e.eventType === "CASH_OUT")
-        for (const event of cashOuts) {
-            if (event.chipAmount > 0) {
-                items.push({
-                    type: "ring_game_cashout",
-                    label: "換金",
-                    amount: event.chipAmount,
-                    groupId,
-                    groupName
-                })
-            }
-        }
-    }
-
+    // webコインリング
     if (visit.webCoinRingEntry) {
-        processRingEntry(visit.webCoinRingEntry, "WEB_COIN")
+        const chipEvents = visit.webCoinRingEntry.webCoinRingChipEvents
+
+        const webCoinRingTotalBuyIn = chipEvents.reduce((total, event) => total + (event.eventType === "BUY_IN" ? event.chipAmount : 0), 0)
+        const webCoinRingTotalCashOut = chipEvents.reduce((total, event) => total + (event.eventType === "CASH_OUT" ? event.chipAmount : 0), 0)
+        const webCoinRingNet = (webCoinRingTotalCashOut - webCoinRingTotalBuyIn) * 50
+
+        items.push({
+            type: "web_coin_ring",
+            label: "webコインリング",
+            amount: webCoinRingNet,
+            groupId: "web_coin_ring",
+            groupName: "webコインリング"
+        })
     }
 
+    // 店内リング
     if (visit.inStoreRingEntry) {
-        processRingEntry(visit.inStoreRingEntry, "IN_STORE")
+        const chipEvents = visit.inStoreRingEntry.inStoreRingChipEvents
+
+        const inStoreRingOptions = await prisma.inStoreRingBuyInOption.findMany()
+        const inStoreRingTotalBuyInFee = chipEvents.filter(e => e.eventType === "BUY_IN").reduce((total, event) => {
+            const option = inStoreRingOptions.find(o => o.chipAmount === event.chipAmount)
+            return total + (option?.chargeAmount ?? 0)
+        }, 0)
+
+        items.push({
+            type: "in_store_ring_buy_in_fee",
+            label: "店内リング BUY_IN 料金",
+            amount: -inStoreRingTotalBuyInFee,
+            groupId: "in_store_ring",
+            groupName: "店内リング"
+        })
+
+        const isWithdraw = chipEvents.some(e => e.eventType === "WITHDRAW")
+        if (isWithdraw) {
+            items.push({
+                type: "in_store_ring_withdraw_fee",
+                label: "店内リング 引き出し 料金",
+                amount: -3300,
+                groupId: "in_store_ring",
+                groupName: "店内リング"
+            })
+        }
     }
+
+    // その他
+    if (visit.foodFee) {
+        items.push({
+            type: "additional_drink",
+            label: "追加ドリンク",
+            amount: -visit.foodFee,
+            groupId: "other",
+            groupName: "その他"
+        })
+    }
+
 
     const netAmount = items.reduce((sum, item) => sum + item.amount, 0)
 
