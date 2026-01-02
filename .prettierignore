@@ -1,0 +1,33 @@
+# Dependencies
+node_modules
+
+# Build outputs
+.next
+out
+build
+dist
+
+# Generated files
+lib/generated
+generated
+*.tsbuildinfo
+next-env.d.ts
+
+# Database
+docker
+*.db
+*.sqlite
+
+# Logs
+*.log
+
+# Environment files
+.env*
+
+# Vercel
+.vercel
+
+# Prisma
+prisma/migrations
+
+
