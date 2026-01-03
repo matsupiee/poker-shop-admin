@@ -156,7 +156,13 @@ export default function DailyTournamentsPage() {
                                   ? "終了"
                                   : "中止"}
                         </Badge>
-                        <div className="flex items-center gap-2">
+                        <div
+                          className="flex items-center gap-2"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
+                        >
                           <div className="text-sm font-medium text-muted-foreground flex items-center">
                             <Clock className="w-3 h-3 mr-1" />
                             {startTime}
