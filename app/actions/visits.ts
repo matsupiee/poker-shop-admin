@@ -8,7 +8,10 @@ import {
 } from "@/lib/settlement/const";
 import { format } from "date-fns";
 import { revalidatePath } from "next/cache";
-import { withdrawWebCoinTransaction } from "./web-coin";
+import {
+  depositWebCoinWhenCheckout,
+  withdrawWebCoinTransaction,
+} from "./web-coin";
 import { SettlementItemType } from "@/lib/generated/prisma/client";
 import { depositInStoreChipWhenCheckout } from "./in-store-chip";
 
@@ -655,6 +658,10 @@ export async function settleVisit(input: {
           },
         },
       });
+
+      if (depositToSavings) {
+        await depositWebCoinWhenCheckout(visitId, finalNetAmount, ptx);
+      }
 
       await depositInStoreChipWhenCheckout(visitId, ptx);
     });

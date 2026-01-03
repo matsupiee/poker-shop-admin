@@ -38,20 +38,41 @@ export async function getWebCoinBalance(playerId: string): Promise<number> {
 }
 
 /**
- * Webコインを入金する
+ * 退店時にWebコインを入金する
  */
-export async function depositWebCoin(
-  playerId: string,
-  amount: number,
-  visitId?: string
+export async function depositWebCoinWhenCheckout(
+  visitId: string,
+  depositAmount: number,
+  ptx: Prisma.TransactionClient
 ) {
-  if (amount <= 0) throw new Error("入金額は0より大きい必要があります");
+  const visit = await ptx.visit.findUnique({
+    where: { id: visitId },
+    include: {
+      player: true,
+      webCoinRingEntry: { include: { webCoinRingChipEvents: true } },
+    },
+  });
+  if (!visit) {
+    throw new Error("来店データが見つかりません");
+  }
 
-  await prisma.webCoinDeposit.create({
+  await ptx.webCoinDeposit.create({
     data: {
-      playerId,
-      depositAmount: amount,
+      playerId: visit.playerId,
+      depositAmount,
       visitId,
+    },
+  });
+
+  await ptx.player.update({
+    where: {
+      id: visit.playerId,
+      webCoinBalance: visit.player.webCoinBalance,
+    },
+    data: {
+      webCoinBalance: {
+        increment: depositAmount,
+      },
     },
   });
 

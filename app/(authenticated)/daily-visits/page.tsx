@@ -737,10 +737,10 @@ export default function DailyVisitsPage() {
                       </TableCell>
                       <TableCell className="text-center">
                         <SettlementDialog
-                          visit={visit}
+                          visitId={visit.id}
                           playerName={visit.player.name}
                           webCoinBalance={visit.player.webCoinBalance}
-                          isSettled={!!visit.settlement}
+                          settlement={visit.settlement}
                           onSuccess={fetchData}
                         />
                       </TableCell>
