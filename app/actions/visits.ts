@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import { revalidatePath } from "next/cache";
 import { withdrawWebCoinTransaction } from "./web-coin";
 import { SettlementItemType } from "@/lib/generated/prisma/client";
+import { depositInStoreChipWhenCheckout } from "./in-store-chip";
 
 export type TournamentEventInfo = {
   eventId: string;
@@ -561,6 +562,32 @@ export async function settleVisit(input: {
   const { visitId, depositToSavings, webCoinWithdrawAmount } = input;
 
   try {
+    // 1. Settlement Logic
+    const visit = await prisma.visit.findUnique({
+      where: { id: visitId },
+      include: { player: true },
+    });
+
+    if (!visit) {
+      throw new Error("来店データが見つかりません");
+    }
+
+    // Validate webCoin withdrawal
+    if (
+      webCoinWithdrawAmount > 0 &&
+      webCoinWithdrawAmount > visit.player.webCoinBalance
+    ) {
+      throw new Error("web貯金コイン残高が不足しています");
+    }
+
+    const existingSettlement = await prisma.settlement.findFirst({
+      where: { visitId },
+    });
+
+    if (existingSettlement) {
+      throw new Error("既に決済が完了しています");
+    }
+
     const visitSettlementDetails = await getVisitSettlementDetails(visitId);
     const { consumptionTax } = calcTax({
       visitSettlementDetails,
@@ -573,34 +600,8 @@ export async function settleVisit(input: {
       consumptionTax,
     });
 
-    await prisma.$transaction(async (tx) => {
-      // 1. Settlement Logic
-      const visit = await tx.visit.findUnique({
-        where: { id: visitId },
-        include: { player: true },
-      });
-
-      if (!visit) {
-        throw new Error("来店データが見つかりません");
-      }
-
-      // Validate webCoin withdrawal
-      if (
-        webCoinWithdrawAmount > 0 &&
-        webCoinWithdrawAmount > visit.player.webCoinBalance
-      ) {
-        throw new Error("web貯金コイン残高が不足しています");
-      }
-
-      const existingSettlement = await tx.settlement.findFirst({
-        where: { visitId },
-      });
-
-      if (existingSettlement) {
-        throw new Error("既に決済が完了しています");
-      }
-
-      await tx.settlement.create({
+    await prisma.$transaction(async (ptx) => {
+      await ptx.settlement.create({
         data: {
           visitId,
           netAmount: finalNetAmount,
@@ -647,9 +648,11 @@ export async function settleVisit(input: {
           playerId: visit.player.id,
           amount: webCoinWithdrawAmount,
           currentBalance: visit.player.webCoinBalance,
-          ptx: tx,
+          ptx,
         });
       }
+
+      await depositInStoreChipWhenCheckout(visitId, ptx);
     });
 
     revalidatePath("/daily-visits");

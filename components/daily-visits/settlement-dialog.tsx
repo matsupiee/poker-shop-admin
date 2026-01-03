@@ -99,25 +99,23 @@ export function SettlementDialog({
       return;
     }
 
-    // try {
-    //   const result = await settleVisit(
-    //     visitId,
-    //     finalNetAmount,
-    //     depositToSavings,
-    //     webCoinWithdrawAmount,
-    //     consumptionTax
-    //   );
-    //   if (result.success) {
-    //     setOpen(false);
-    //     onSuccess?.();
-    //   } else {
-    //     setError(result.error || "エラーが発生しました");
-    //   }
-    // } catch {
-    //   setError("予期せぬエラーが発生しました");
-    // } finally {
-    //   setSubmitting(false);
-    // }
+    try {
+      const result = await settleVisit({
+        visitId,
+        depositToSavings,
+        webCoinWithdrawAmount,
+      });
+      if (result.success) {
+        setOpen(false);
+        onSuccess?.();
+      } else {
+        setError(result.error || "エラーが発生しました");
+      }
+    } catch {
+      setError("予期せぬエラーが発生しました");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (

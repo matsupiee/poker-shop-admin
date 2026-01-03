@@ -13,7 +13,7 @@ export const calcTax = (input: {
   const webCoinRingNet = webCoinRing.totalCashOut - webCoinRing.totalBuyIn;
 
   const net =
-    webCoinRingNet + tournament.totalPrizeAmount - webCoinWithdrawAmount;
+    webCoinRingNet + tournament.totalPrizeAmount + webCoinWithdrawAmount;
   if (net > 0) {
     return {
       consumptionTax: 0,

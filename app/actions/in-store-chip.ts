@@ -1,5 +1,6 @@
 "use server";
 
+import { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
@@ -37,20 +38,51 @@ export async function getInStoreChipBalance(playerId: string): Promise<number> {
 }
 
 /**
- * 店内チップを入金する
+ * 退店時に店内チップを入金する
  */
-export async function depositInStoreChip(
-  playerId: string,
-  amount: number,
-  visitId?: string
+export async function depositInStoreChipWhenCheckout(
+  visitId: string,
+  ptx: Prisma.TransactionClient
 ) {
-  if (amount <= 0) throw new Error("入金額は0より大きい必要があります");
+  const visit = await ptx.visit.findUnique({
+    where: { id: visitId },
+    include: {
+      player: true,
+      inStoreRingEntry: { include: { inStoreRingChipEvents: true } },
+    },
+  });
+  if (!visit) {
+    throw new Error("来店データが見つかりません");
+  }
 
-  await prisma.inStoreChipDeposit.create({
+  const remainingChip = visit.inStoreRingEntry?.inStoreRingChipEvents.find(
+    (e) => e.eventType === "CASH_OUT"
+  )?.chipAmount;
+
+  if (typeof remainingChip !== "number") {
+    return;
+  }
+  if (remainingChip <= 0) {
+    return;
+  }
+
+  await ptx.inStoreChipDeposit.create({
     data: {
-      playerId,
-      depositAmount: amount,
+      playerId: visit.playerId,
+      depositAmount: remainingChip,
       visitId,
+    },
+  });
+
+  await ptx.player.update({
+    where: {
+      id: visit.playerId,
+      inStoreChipBalance: visit.player.inStoreChipBalance,
+    },
+    data: {
+      inStoreChipBalance: {
+        increment: remainingChip,
+      },
     },
   });
 
