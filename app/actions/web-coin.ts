@@ -128,6 +128,8 @@ export async function withdrawWebCoinTransaction(input: {
       },
     },
   });
+
+  return withdraw;
 }
 
 /**

@@ -57,7 +57,6 @@ import { TournamentResultUpdate } from "@/components/daily-visits/tournament-res
 import { SettlementDialog } from "@/components/daily-visits/settlement-dialog";
 import { WebCoinRingGameDialog } from "@/components/daily-visits/web-coin-ring-game-dialog";
 import { InStoreRingGameDialog } from "@/components/daily-visits/in-store-ring-game-dialog";
-import { RingGameDetailsPopover } from "@/components/daily-visits/ring-game-details-popover";
 
 export default function DailyVisitsPage() {
   const [date, setDate] = React.useState<Date | undefined>(new Date());
@@ -738,7 +737,7 @@ export default function DailyVisitsPage() {
                       </TableCell>
                       <TableCell className="text-center">
                         <SettlementDialog
-                          visitId={visit.id}
+                          visit={visit}
                           playerName={visit.player.name}
                           webCoinBalance={visit.player.webCoinBalance}
                           isSettled={!!visit.settlement}

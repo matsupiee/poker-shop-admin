@@ -145,7 +145,7 @@ model Visit {
   tournamentEntries  TournamentEntry[]
   webCoinRingEntry   WebCoinRingEntry?
   inStoreRingEntry   InStoreRingEntry?
-  settlements        Settlement[]
+  settlement         Settlement?
   webCoinDeposit     WebCoinDeposit?
   inStoreChipDeposit InStoreChipDeposit?
 
@@ -399,14 +399,17 @@ model Settlement {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  visitId String @map("visit_id")
+  visitId String @unique @map("visit_id")
 
   // 最終的な収支
   // 支払う場合はマイナス、支払う必要がない場合はプラス
   netAmount Int @map("net_amount")
 
+  webCoinWithdrawId String? @unique @map("web_coin_withdraw_id")
+
   visit           Visit            @relation(fields: [visitId], references: [id])
   settlementItems SettlementItem[]
+  webCoinWithdraw WebCoinWithdraw? @relation(fields: [webCoinWithdrawId], references: [id])
 
   @@map("settlements")
 }
@@ -423,6 +426,8 @@ enum SettlementItemType {
   IN_STORE_CHIP_BUY_IN_FEE
   // 消費税
   CONSUMPTION_TAX
+  // webコイン 引き出し
+  WEB_COIN_WITHDRAW
 }
 
 model SettlementItem {
@@ -483,6 +488,7 @@ model WebCoinWithdraw {
 
   player                        Player                         @relation(fields: [playerId], references: [id])
   webCoinDepositWithdrawAmounts WebCoinDepositWithdrawAmount[]
+  settlement                    Settlement?
 
   @@map("web_coin_withdraws")
 }

@@ -22,7 +22,7 @@ export const calcTax = (input: {
 
   const taxableAmount = Math.abs(net);
   return {
-    consumptionTax: taxableAmount * CONSUMPTION_TAX_RATE,
+    consumptionTax: Math.ceil(taxableAmount * CONSUMPTION_TAX_RATE),
   };
 };
 

@@ -58,11 +58,15 @@ export type DailyVisit = {
   };
   tournaments: TournamentEventInfo[];
   ringGameEntries: RingGameInfo[];
-  settlement?: {
+  settlement: {
     id: string;
     netAmount: number;
     createdAt: Date;
-  };
+    webCoinWithdraw: {
+      id: string;
+      withdrawAmount: number;
+    } | null;
+  } | null;
 };
 
 export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
@@ -113,7 +117,11 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
           },
         },
       },
-      settlements: true,
+      settlement: {
+        include: {
+          webCoinWithdraw: true,
+        },
+      },
     },
     orderBy: {
       createdAt: "asc",
@@ -230,14 +238,6 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
       });
     }
 
-    const settlementInfo = visit.settlements[0]
-      ? {
-          id: visit.settlements[0].id,
-          netAmount: visit.settlements[0].netAmount,
-          createdAt: visit.settlements[0].createdAt,
-        }
-      : undefined;
-
     return {
       id: visit.id.toString(),
       visitDate: visit.createdAt.toISOString().split("T")[0],
@@ -252,7 +252,7 @@ export async function getDailyVisits(date: Date): Promise<DailyVisit[]> {
       },
       tournaments,
       ringGameEntries: ringGames,
-      settlement: settlementInfo,
+      settlement: visit.settlement,
     };
   });
 }
@@ -300,7 +300,7 @@ export async function registerVisit(
         playerId: playerId,
       },
       include: {
-        settlements: true,
+        settlement: true,
       },
       orderBy: [
         {
@@ -309,10 +309,8 @@ export async function registerVisit(
       ],
     });
 
-    console.log({ existing });
-
     // Only block if there's an existing visit without settlement
-    if (existing && existing.settlements.length === 0) {
+    if (existing && existing.settlement) {
       return {
         errors: {
           _form: [
@@ -562,7 +560,6 @@ export async function settleVisit(input: {
   const { visitId, depositToSavings, webCoinWithdrawAmount } = input;
 
   try {
-    // 1. Settlement Logic
     const visit = await prisma.visit.findUnique({
       where: { id: visitId },
       include: { player: true },
@@ -572,7 +569,6 @@ export async function settleVisit(input: {
       throw new Error("来店データが見つかりません");
     }
 
-    // Validate webCoin withdrawal
     if (
       webCoinWithdrawAmount > 0 &&
       webCoinWithdrawAmount > visit.player.webCoinBalance
@@ -601,16 +597,23 @@ export async function settleVisit(input: {
     });
 
     await prisma.$transaction(async (ptx) => {
+      const withdraw =
+        webCoinWithdrawAmount > 0
+          ? await withdrawWebCoinTransaction({
+              playerId: visit.player.id,
+              amount: webCoinWithdrawAmount,
+              currentBalance: visit.player.webCoinBalance,
+              ptx,
+            })
+          : null;
+
       await ptx.settlement.create({
         data: {
           visitId,
           netAmount: finalNetAmount,
+          webCoinWithdrawId: withdraw?.id,
           settlementItems: {
             create: [
-              {
-                settlementItemType: SettlementItemType.CONSUMPTION_TAX,
-                amount: consumptionTax,
-              },
               {
                 settlementItemType:
                   SettlementItemType.WEB_COIN_RING_TOTAL_CASH_OUT,
@@ -638,19 +641,20 @@ export async function settleVisit(input: {
                 settlementItemType: SettlementItemType.IN_STORE_CHIP_BUY_IN_FEE,
                 amount: visitSettlementDetails.inStoreRing.totalBuyInFee,
               },
+              // 消費税
+              {
+                settlementItemType: SettlementItemType.CONSUMPTION_TAX,
+                amount: consumptionTax,
+              },
+              // webコイン 引き出し
+              {
+                settlementItemType: SettlementItemType.WEB_COIN_WITHDRAW,
+                amount: webCoinWithdrawAmount,
+              },
             ],
           },
         },
       });
-
-      if (webCoinWithdrawAmount > 0) {
-        await withdrawWebCoinTransaction({
-          playerId: visit.player.id,
-          amount: webCoinWithdrawAmount,
-          currentBalance: visit.player.webCoinBalance,
-          ptx,
-        });
-      }
 
       await depositInStoreChipWhenCheckout(visitId, ptx);
     });

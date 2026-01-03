@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import {
+  DailyVisit,
   getVisitSettlementDetails,
   settleVisit,
   VisitSettlementDetails,
@@ -24,7 +25,7 @@ type SettlementDialogProps = {
   visitId: string;
   playerName: string;
   webCoinBalance: number;
-  isSettled?: boolean;
+  settlement: DailyVisit["settlement"];
   onSuccess?: () => void;
 };
 
@@ -34,7 +35,7 @@ export function SettlementDialog({
   visitId,
   playerName,
   webCoinBalance,
-  isSettled,
+  settlement,
   onSuccess,
 }: SettlementDialogProps) {
   const [open, setOpen] = React.useState(false);
@@ -69,6 +70,8 @@ export function SettlementDialog({
       });
   }, [open, visitId]);
 
+  const isSettled = !!settlement;
+
   // Calculate final net amount after web coin withdrawal and tax
   const webCoinWithdrawAmount = parseInt(webCoinWithdrawal) || 0;
 
@@ -79,13 +82,15 @@ export function SettlementDialog({
       })
     : { consumptionTax: 0 };
 
-  const finalNetAmount = visitSettlementDetails
-    ? calcFinalNetAmount({
-        visitSettlementDetails,
-        webCoinWithdrawAmount,
-        consumptionTax,
-      })
-    : 0;
+  const finalNetAmount = settlement
+    ? settlement.netAmount
+    : visitSettlementDetails
+      ? calcFinalNetAmount({
+          visitSettlementDetails,
+          webCoinWithdrawAmount,
+          consumptionTax,
+        })
+      : 0;
 
   const handleSettle = async () => {
     setSubmitting(true);
@@ -242,7 +247,13 @@ export function SettlementDialog({
                     min="0"
                     max={webCoinBalance}
                     placeholder="0"
-                    value={webCoinWithdrawal}
+                    value={
+                      settlement
+                        ? (
+                            settlement.webCoinWithdraw?.withdrawAmount || 0
+                          ).toLocaleString()
+                        : webCoinWithdrawal
+                    }
                     onChange={(e) => setWebCoinWithdrawal(e.target.value)}
                     className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                   />
